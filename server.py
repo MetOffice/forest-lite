@@ -1,4 +1,5 @@
 import argparse
+import glob
 import tornado.web
 import tornado.ioloop
 import bokeh.resources
@@ -37,12 +38,14 @@ class Datasets(tornado.web.RequestHandler):
 class Image(tornado.web.RequestHandler):
     def get(self, name):
         self.set_header("Cache-control", "max-age=31536000")
-        for dataset in CONFIG["datasets"]:
-            if dataset["name"] == name:
-                path = dataset["file_name"]
-                obj = lib.image_data(name, path)
-                self.set_header("Content-Type", "application/json")
-                self.write(serialize_json(obj))
+        for dataset in CONFIG.datasets:
+            if dataset.label == name:
+                pattern = dataset.driver.settings["pattern"]
+                paths = sorted(glob.glob(pattern))
+                if len(paths) > 0:
+                    obj = lib.image_data(name, paths[-1])
+                    self.set_header("Content-Type", "application/json")
+                    self.write(serialize_json(obj))
 
 
 class DataTime(tornado.web.RequestHandler):
