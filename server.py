@@ -6,6 +6,7 @@ import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
 import yaml
 import lib
+import lib.config
 
 
 CONFIG = None
@@ -28,7 +29,7 @@ class Data(tornado.web.RequestHandler):
 class Datasets(tornado.web.RequestHandler):
     def get(self):
         # self.set_header("Cache-control", "max-age=31536000")
-        obj = sorted([dataset["name"] for dataset in CONFIG["datasets"]])
+        obj = sorted([dataset.label for dataset in CONFIG.datasets])
         self.set_header("Content-Type", "application/json")
         self.write(serialize_json(obj))
 
@@ -77,7 +78,8 @@ def main():
     parser.add_argument("config_file")
     args = parser.parse_args()
     with open(args.config_file) as stream:
-        CONFIG = yaml.safe_load(stream)
+        data = yaml.safe_load(stream)
+        CONFIG = lib.config.Config(**data)
 
     app = tornado.web.Application([
         ("/", Index),
