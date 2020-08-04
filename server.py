@@ -9,6 +9,7 @@ from bokeh.core.json_encoder import serialize_json
 import yaml
 import lib
 import lib.config
+import lib.palette
 
 
 CONFIG = None
@@ -57,23 +58,11 @@ class DataTime(tornado.web.RequestHandler):
         self.write(serialize_json(obj))
 
 
-class PaletteNames(tornado.web.RequestHandler):
+class Palettes(tornado.web.RequestHandler):
     def get(self):
-        names = list(bokeh.palettes.all_palettes.keys())
-        self.write({"names": names})
-
-
-class Palette(tornado.web.RequestHandler):
-    def get(self, tail):
-        parts = tail.split("/")
-        if len(parts) == 1:
-            name, = parts
-            numbers = list(bokeh.palettes.all_palettes[name].keys())
-            self.write({"numbers": numbers})
-        elif len(parts) == 2:
-            name, number = parts
-            number = int(number)
-            self.write({"palette": bokeh.palettes.all_palettes[name][number]})
+        self.set_header("Content-Type", "application/json")
+        data = list(lib.palette.all_palettes())
+        self.write(serialize_json(data))
 
 
 def main():
@@ -94,8 +83,7 @@ def main():
         ("/datasets", Datasets),
         ("/data/(.*)/(.*)", Data),
         ("/image/(.*)", Image),
-        ("/palette", PaletteNames),
-        ("/palette/(.*)", Palette),
+        ("/palettes", Palettes),
         ("/time/(.*)", DataTime),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static_path})
     ])

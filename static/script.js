@@ -38,6 +38,8 @@ let main = function() {
                 return Object.assign({}, state, {url: action.payload})
             case 'SET_PALETTE':
                 return Object.assign({}, state, {palette: action.payload})
+            case 'SET_PALETTES':
+                return Object.assign({}, state, {palettes: action.payload})
             case 'SET_PALETTE_NAME':
                 return Object.assign({}, state, {palette_name: action.payload})
             case 'SET_PALETTE_NAMES':
@@ -58,31 +60,37 @@ let main = function() {
         if (action.type == "SET_PALETTE_NAME") {
             // Async get palette numbers
             let name = action.payload
-            let url = `./palette/${name}`
-            fetch(url).then((response) => {
-                return response.json()
-            }).then((data) => {
+            let state = store.getState()
+            if (typeof state.palettes !== "undefined") {
+                let numbers = state.palettes
+                    .filter((p) => p.name == name)
+                    .map((p) => parseInt(p.number))
+                    .concat()
+                    .sort((a, b) => a - b)
                 let action = {
                     type: "SET_PALETTE_NUMBERS",
-                    payload: data.numbers
+                    payload: numbers
                 }
                 store.dispatch(action)
-            })
+            }
         }
         else if (action.type == "SET_PALETTE_NUMBER") {
             // Async get palette numbers
-            let name = store.getState().palette_name
+            let state = store.getState()
+            let name = state.palette_name
             let number = action.payload
-            let url = `./palette/${name}/${number}`
-            fetch(url).then((response) => {
-                return response.json()
-            }).then((data) => {
-                let action = {
-                    type: "SET_PALETTE",
-                    payload: data.palette
+            if (typeof state.palettes !== "undefined") {
+                let palettes = state.palettes
+                    .filter((p) => p.name === name)
+                    .filter((p) => parseInt(p.number) === parseInt(number))
+                if (palettes.length > 0) {
+                    let action = {
+                        type: "SET_PALETTE",
+                        payload: palettes[0].palette
+                    }
+                    store.dispatch(action)
                 }
-                store.dispatch(action)
-            })
+            }
         }
 
         return next(action)
@@ -93,7 +101,7 @@ let main = function() {
     store.subscribe(() => { console.log(store.getState()) })
     store.subscribe(() => {
         dataset = store.getState().dataset
-        source.data_url = `/data/${dataset}/air_temperature`
+        source.data_url = `./data/${dataset}/air_temperature`
         source.get_data(source.mode,
                         source.max_size,
                         source.if_modified)
@@ -107,12 +115,21 @@ let main = function() {
     })
 
     // Async get palette names
-    fetch("./palette").then((response) => {
-        return response.json()
-    }).then((data) => {
-        let action = {type: "SET_PALETTE_NAMES", payload: data.names}
-        store.dispatch(action)
-    })
+    fetch("./palettes")
+        .then((response) => response.json())
+        .then((data) => {
+            let action = {type: "SET_PALETTES", payload: data}
+            store.dispatch(action)
+            return data
+        })
+        .then((data) => {
+            let names = data.map((p) => p.name)
+            return Array.from(new Set(names)).concat().sort()
+        })
+        .then((names) => {
+            let action = {type: "SET_PALETTE_NAMES", payload: names}
+            store.dispatch(action)
+        })
 
     // Wire-up form on-click
     let button = document.getElementById("tile-url-button")
@@ -174,11 +191,6 @@ let main = function() {
         "low": 200,
         "high": 300,
         "palette": ["#440154", "#208F8C", "#FDE724"]
-    })
-    fetch("./palette/Viridis/256").then((response) => {
-        return response.json()
-    }).then((data) => {
-        color_mapper.palette = data.palette
     })
 
     store.subscribe(() => {
