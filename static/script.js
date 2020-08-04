@@ -58,7 +58,7 @@ let main = function() {
         if (action.type == "SET_PALETTE_NAME") {
             // Async get palette numbers
             let name = action.payload
-            let url = `/palette/${name}`
+            let url = `./palette/${name}`
             fetch(url).then((response) => {
                 return response.json()
             }).then((data) => {
@@ -73,7 +73,7 @@ let main = function() {
             // Async get palette numbers
             let name = store.getState().palette_name
             let number = action.payload
-            let url = `/palette/${name}/${number}`
+            let url = `./palette/${name}/${number}`
             fetch(url).then((response) => {
                 return response.json()
             }).then((data) => {
@@ -107,7 +107,7 @@ let main = function() {
     })
 
     // Async get palette names
-    fetch("/palette").then((response) => {
+    fetch("./palette").then((response) => {
         return response.json()
     }).then((data) => {
         let action = {type: "SET_PALETTE_NAMES", payload: data.names}
@@ -125,7 +125,7 @@ let main = function() {
     let select = new Bokeh.Widgets.Select({
         options: [],
     })
-    fetch("/datasets").then((response) => {
+    fetch("./datasets").then((response) => {
         return response.json()
     }).then((data) => {
         select.options = data
@@ -175,7 +175,7 @@ let main = function() {
         "high": 300,
         "palette": ["#440154", "#208F8C", "#FDE724"]
     })
-    fetch("/palette/Viridis/256").then((response) => {
+    fetch("./palette/Viridis/256").then((response) => {
         return response.json()
     }).then((data) => {
         color_mapper.palette = data.palette
@@ -217,7 +217,7 @@ let main = function() {
         if (typeof state.dataset === "undefined") {
             return
         }
-        let url = `/image/${state.dataset}`
+        let url = `./image/${state.dataset}`
         fetch(url).then((response) => {
             return response.json()
         }).then((data) => {
