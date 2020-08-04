@@ -18,7 +18,8 @@ class Index(tornado.web.RequestHandler):
     def get(self):
         # self.render("index.html", resources=bokeh.resources.CDN.render())
         resources = bokeh.resources.Resources("cdn", minified=False)
-        self.render("index.html", resources=resources.render())
+        self.render("index.html", resources=resources.render(),
+                    version=bokeh.__version__)
 
 
 class Data(tornado.web.RequestHandler):
