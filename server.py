@@ -1,5 +1,6 @@
 import argparse
 import glob
+import os
 import tornado.web
 import tornado.ioloop
 import bokeh.resources
@@ -84,6 +85,9 @@ def main():
         data = yaml.safe_load(stream)
         CONFIG = lib.config.Config(**data)
 
+    static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "static")
+
     app = tornado.web.Application([
         ("/", Index),
         ("/datasets", Datasets),
@@ -92,7 +96,7 @@ def main():
         ("/palette", PaletteNames),
         ("/palette/(.*)", Palette),
         ("/time/(.*)", DataTime),
-        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": "./static"})
+        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static_path})
     ])
     app.listen(args.port)
     print(f"listening on localhost:{args.port}")
