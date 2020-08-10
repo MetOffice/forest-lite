@@ -1,4 +1,5 @@
 import argparse
+import glob
 import os
 import uvicorn
 import fastapi
@@ -9,7 +10,7 @@ import bokeh.resources
 import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
 import yaml
-import lib
+import lib.core
 import lib.config
 import lib.palette
 
@@ -54,7 +55,19 @@ async def datasets(response: Response):
 
 @app.get("/image/{dataset_name}")
 async def image(dataset_name):
-    return {}
+    for dataset in CONFIG.datasets:
+        if dataset.label == dataset_name:
+            pattern = dataset.driver.settings["pattern"]
+            paths = sorted(glob.glob(pattern))
+            if len(paths) > 0:
+                obj = lib.core.image_data(dataset_name, paths[-1])
+                content = serialize_json(obj)
+                return Response(content=content, media_type="application/json")
+
+
+@app.get("/palettes")
+async def palettes():
+    return list(lib.palette.all_palettes())
 
 
 def parse_args():

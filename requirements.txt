@@ -1,2 +1,6 @@
 fastapi
 uvicorn
+xarray
+forest
+h5netcdf
+datashader
