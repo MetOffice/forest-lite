@@ -73,6 +73,21 @@ async def palettes():
     return list(lib.palette.all_palettes())
 
 
+@app.get("/datasets/{dataset_name}/times")
+async def dataset_times(dataset_name, limit: int = 10):
+    for dataset in CONFIG.datasets:
+        if dataset.label == dataset_name:
+            pattern = dataset.driver.settings["pattern"]
+            paths = sorted(glob.glob(pattern))
+            if len(paths) > 0:
+                obj = lib.core.get_times(dataset_name, paths[-1])[-limit:]
+                content = serialize_json(obj)
+                response = Response(content=content,
+                                    media_type="application/json")
+                #  response.headers["Cache-Control"] = "max-age=31536000"
+                return response
+
+
 def parse_args():
     """Command line interface"""
     parser = argparse.ArgumentParser()

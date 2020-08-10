@@ -5,13 +5,6 @@ import datetime as dt
 import forest.geo
 
 
-def data_times(dataset):
-    """Datetime information related to dataset"""
-    return {
-        "x": [dt.datetime.now()]
-    }
-
-
 def xy_data(dataset, variable):
     """X-Y line/circle data related to a dataset"""
     # import time
@@ -26,6 +19,12 @@ def xy_data(dataset, variable):
             "x": [0, 1e5, 2e5],
             "y": [0, 3e5, 1e5]
         }
+
+
+def get_times(dataset_name, path):
+    with xarray.open_dataset(path, engine="h5netcdf") as nc:
+        times = nc.time.values
+    return times
 
 
 def image_data(name, path):
