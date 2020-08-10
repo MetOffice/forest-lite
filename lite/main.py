@@ -62,7 +62,10 @@ async def image(dataset_name):
             if len(paths) > 0:
                 obj = lib.core.image_data(dataset_name, paths[-1])
                 content = serialize_json(obj)
-                return Response(content=content, media_type="application/json")
+                response = Response(content=content,
+                                    media_type="application/json")
+                response.headers["Cache-Control"] = "max-age=31536000"
+                return response
 
 
 @app.get("/palettes")
