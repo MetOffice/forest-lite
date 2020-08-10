@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
-        <title>Tornado BokehJS</title>
-        {% raw resources %}
+        <title>{{ title }}</title>
+        {{ resources | safe }}
         <script src="https://cdn.bokeh.org/bokeh/release/bokeh-api-{{ version }}.min.js" charset="utf-8"></script>
         <script src="https://unpkg.com/redux@4.0.5/dist/redux.js" charset="utf-8"></script>
         <script src="./static/script.js" charset="utf-8"></script>
