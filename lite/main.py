@@ -1,19 +1,23 @@
 import os
 import uvicorn
 import fastapi
-from fastapi import Response
+from fastapi import Response, Request
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import FileResponse
+from starlette.templating import Jinja2Templates
 
 
 app = fastapi.FastAPI()
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+templates = Jinja2Templates(directory=templates_dir)
+
 
 @app.get("/")
-async def root():
-    return FileResponse(os.path.join(static_dir, "index.html"))
+async def root(request: Request):
+    settings = {"request": request, "title": "Hello, TemplateResponse!"}
+    return templates.TemplateResponse("index.html", settings)
 
 
 @app.get("/hello")
