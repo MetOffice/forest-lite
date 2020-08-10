@@ -1,3 +1,10 @@
+let providers = {
+    'Antique': 'https://cartocdn_d.global.ssl.fastly.net/base-antique/{Z}/{X}/{Y}.png',
+    'Midnight Commander': 'https://cartocdn_d.global.ssl.fastly.net/base-midnight/{Z}/{X}/{Y}.png',
+    'ESRI Nat Geo': 'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{Z}/{Y}/{X}',
+    'Voyager': 'https://d.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{Z}/{X}/{Y}.png'
+}
+
 let main = function() {
     // Geographical map
     let xdr = new Bokeh.Range1d({ start: 0, end: 1e6 })
@@ -20,14 +27,6 @@ let main = function() {
     let renderer = new Bokeh.TileRenderer({tile_source: tile_source})
     figure.renderers = figure.renderers.concat(renderer)
     Bokeh.Plotting.show(figure, "#map-figure")
-
-    // AJAX source
-    let source = new Bokeh.AjaxDataSource({
-        data_url: "/data/takm4p4/air_temperature",
-        method: "GET"
-    })
-    source.data = {x: [], y: []}
-    figure.circle({x: {field: "x"}, y: {field: "y"}, source: source, size: 20})
 
     // ReduxJS
     let reducer = (state = "", action) => {
@@ -100,13 +99,6 @@ let main = function() {
                                   Redux.applyMiddleware(colorPalette))
     store.subscribe(() => { console.log(store.getState()) })
     store.subscribe(() => {
-        dataset = store.getState().dataset
-        source.data_url = `./data/${dataset}/air_temperature`
-        source.get_data(source.mode,
-                        source.max_size,
-                        source.if_modified)
-    })
-    store.subscribe(() => {
         let url = store.getState().url
         if (typeof url === "undefined") {
             return
@@ -131,12 +123,14 @@ let main = function() {
             store.dispatch(action)
         })
 
-    // Wire-up form on-click
-    let button = document.getElementById("tile-url-button")
-    button.onclick = () => {
-        let el = document.getElementById("tile-url-select")
-        store.dispatch({type: "SET_URL", payload: el.value})
-    }
+    // WMTS select
+    let selectTile = new Bokeh.Widgets.Select({
+        options: Object.keys(providers)
+    })
+    selectTile.connect(selectTile.properties.value.change, () => {
+        store.dispatch({type: "SET_URL", payload: providers[selectTile.value]})
+    })
+    Bokeh.Plotting.show(selectTile, "#tile-url-select")
 
     // Select widget
     let select = new Bokeh.Widgets.Select({
