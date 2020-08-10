@@ -4,24 +4,43 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
         <title>{{ title }}</title>
+        {{ resources | safe }}
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-api-{{ version }}.min.js" charset="utf-8"></script>
+        <script src="https://unpkg.com/redux@4.0.5/dist/redux.js" charset="utf-8"></script>
+        <script src="./static/script.js" charset="utf-8"></script>
         <style type="text/css" media="all">
-body {
-    width: 760px;
-    margin: auto;
-    background-color: #333;
-    color: white;
-    font-family: Helvetica;
+html, body {
+    margin: 0;
+    padding: 0;
+}
+.full-window {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.wide {
+    width: 500px;
 }
         </style>
     </head>
     <body>
-        <h1 id="title">Hello, FastAPI</h1>
+        <div style="margin:20px;">
+            <select id="tile-url-select" name="">
+                <option value="https://cartocdn_d.global.ssl.fastly.net/base-antique/{Z}/{X}/{Y}.png">Antique</option>
+                <option value="https://cartocdn_d.global.ssl.fastly.net/base-midnight/{Z}/{X}/{Y}.png">Midnight Commander</option>
+                <option value="https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{Z}/{Y}/{X}">ESRI Nat Geo</option>
+                <option value="https://d.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{Z}/{X}/{Y}.png">Voyager</option>
+            </select>
+            <button id="tile-url-button" type="submit">Submit</button>
+            <div id="select"></div>
+            <div id="palette-select"></div>
+            <div id="palette-number-select"></div>
+        </div>
+        <div class="full-window" id="map-figure" style="z-index:-1;"></div>
         <script charset="utf-8">
-            fetch("/hello").then((response) => response.json())
-                .then((data) => {
-                    let el = document.getElementById("title")
-                    el.innerHTML = data.message
-                })
+            main()
         </script>
     </body>
 </html>
