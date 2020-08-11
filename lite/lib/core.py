@@ -27,14 +27,18 @@ def get_times(dataset_name, path):
     return times
 
 
-def image_data(name, path):
+def image_data(name, path, timestamp_ms):
     n = 256
-    print(path)
+    time = np.datetime64(timestamp_ms, 'ms')
+    print(path, time)
     if name == "EIDA50":
         with xarray.open_dataset(path, engine="h5netcdf") as nc:
             lons = nc["longitude"].values
             lats = nc["latitude"].values
-            values = nc["data"][0].values
+            pts = np.where(nc.time.values == time)
+            if len(pts[0]) > 0:
+                i = pts[0][0]
+                values = nc["data"][i].values
         data = forest.geo.stretch_image(lons,
                                         lats,
                                         values,

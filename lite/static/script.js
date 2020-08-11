@@ -49,6 +49,10 @@ let main = function() {
                 return Object.assign({}, state, {palette_numbers: action.payload})
             case 'SET_LIMITS':
                 return Object.assign({}, state, {limits: action.payload})
+            case 'SET_TIMES':
+                return Object.assign({}, state, {times: action.payload})
+            case 'SET_TIME_INDEX':
+                return Object.assign({}, state, {time_index: action.payload})
             default:
                 return state
         }
@@ -208,22 +212,29 @@ let main = function() {
             image: []
         }
     })
-    image_source.connect(image_source.properties.data.change, () => {
-        const arrayMax = array => array.reduce((a, b) => Math.max(a, b))
-        const arrayMin = array => array.reduce((a, b) => Math.min(a, b))
-        let image = image_source.data.image[0]
-        let low = arrayMin(image.map(arrayMin))
-        let high = arrayMax(image.map(arrayMax))
-        let payload = {low, high}
-        store.dispatch({type: "SET_LIMITS", payload: payload})
-    })
-    window.image_source = image_source
+    // image_source.connect(image_source.properties.data.change, () => {
+    //     const arrayMax = array => array.reduce((a, b) => Math.max(a, b))
+    //     const arrayMin = array => array.reduce((a, b) => Math.min(a, b))
+    //     let image = image_source.data.image[0]
+    //     let low = arrayMin(image.map(arrayMin))
+    //     let high = arrayMax(image.map(arrayMax))
+    //     let payload = {low, high}
+    //     store.dispatch({type: "SET_LIMITS", payload: payload})
+    // })
+    store.dispatch({type: "SET_LIMITS", payload: {low: 200, high: 300}})
     store.subscribe(() => {
         let state = store.getState()
         if (typeof state.dataset === "undefined") {
             return
         }
-        let url = `./image/${state.dataset}`
+        if (typeof state.time_index === "undefined") {
+            return
+        }
+        if (typeof state.times === "undefined") {
+            return
+        }
+        let time = state.times[state.time_index]
+        let url = `./datasets/${state.dataset}/times/${time}`
         fetch(url).then((response) => {
             return response.json()
         }).then((data) => {
@@ -247,4 +258,60 @@ let main = function() {
         color_mapper: color_mapper
     })
 
+    let title = new Title(document.getElementById("title-text"))
+    store.subscribe(() => {
+        let state = store.getState()
+        if (typeof state.time_index === "undefined") {
+            return
+        }
+        if (typeof state.times === "undefined") {
+            return
+        }
+        let time = new Date(state.times[state.time_index])
+        title.render(time.toUTCString())
+    })
+
+    // Initial times
+    store.dispatch({
+        type: "SET_TIME_INDEX",
+        payload: 0
+    })
+    fetch('./datasets/EIDA50/times?limit=20')
+        .then((response) => response.json())
+        .then((data) => {
+            let action = {
+                type: "SET_TIMES",
+                payload: data
+            }
+            store.dispatch(action)
+        })
+
+    let frame = () => {
+        let state = store.getState()
+        if (typeof state.time_index === "undefined") {
+            return
+        }
+        if (typeof state.times === "undefined") {
+            return
+        }
+        let index = (state.time_index + 1) % state.times.length
+        store.dispatch({
+            type: "SET_TIME_INDEX",
+            payload: index
+        })
+    }
+
+    // Animation mechanism
+    let interval = 100
+    setInterval(frame, interval)
+    // setTimeout(frame, interval)
+}
+
+
+// Title component
+function Title(el) {
+    this.el = el
+}
+Title.prototype.render = function(message) {
+    this.el.innerHTML = message
 }
