@@ -33,6 +33,8 @@ let main = function() {
         switch (action.type) {
             case 'SET_DATASET':
                 return Object.assign({}, state, {dataset: action.payload})
+            case 'SET_DATASETS':
+                return Object.assign({}, state, {datasets: action.payload})
             case 'SET_URL':
                 return Object.assign({}, state, {url: action.payload})
             case 'SET_PALETTE':
@@ -53,12 +55,16 @@ let main = function() {
                 return Object.assign({}, state, {times: action.payload})
             case 'SET_TIME_INDEX':
                 return Object.assign({}, state, {time_index: action.payload})
+            case 'FETCH_IMAGE':
+                return Object.assign({}, state, {is_fetching: true, image_url: action.payload})
+            case 'FETCH_IMAGE_SUCCESS':
+                return Object.assign({}, state, {is_fetching: false})
             default:
                 return state
         }
     }
 
-    let colorPalette = store => next => action => {
+    let colorPaletteMiddleware = store => next => action => {
         console.log(action)
         if (action.type == "SET_PALETTE_NAME") {
             // Async get palette numbers
@@ -99,8 +105,22 @@ let main = function() {
         return next(action)
     }
 
+    let datasetsMiddleware = store => next => action => {
+        next(action)
+        if (action.type == "SET_DATASETS") {
+            next({
+                type: "SET_DATASET",
+                payload: action.payload[0]
+            })
+        }
+        return
+    }
+
     let store = Redux.createStore(reducer,
-                                  Redux.applyMiddleware(colorPalette))
+                                  Redux.applyMiddleware(
+                                      colorPaletteMiddleware,
+                                      datasetsMiddleware,
+                                  ))
     store.subscribe(() => { console.log(store.getState()) })
     store.subscribe(() => {
         let url = store.getState().url
@@ -140,16 +160,28 @@ let main = function() {
     let select = new Bokeh.Widgets.Select({
         options: [],
     })
-    fetch("./datasets").then((response) => {
-        return response.json()
-    }).then((data) => {
-        select.options = data
-    })
     select.connect(select.properties.value.change, () => {
         store.dispatch({type: "SET_DATASET", payload: select.value})
     })
     Bokeh.Plotting.show(select, "#select")
+    store.subscribe(() => {
+        let state = store.getState()
+        if (typeof state.datasets === "undefined") {
+            return
+        }
+        if (typeof state.dataset === "undefined") {
+            return
+        }
+        select.options = state.datasets
+        select.value = state.dataset
+    })
 
+    // Fetch datasets from server
+    fetch("./datasets").then((response) => {
+        return response.json()
+    }).then((data) => {
+        store.dispatch({type: "SET_DATASETS", payload: data.names})
+    })
 
     // Select palette name widget
     let palette_select = new Bokeh.Widgets.Select({
@@ -224,6 +256,9 @@ let main = function() {
     store.dispatch({type: "SET_LIMITS", payload: {low: 200, high: 300}})
     store.subscribe(() => {
         let state = store.getState()
+        if (state.is_fetching) {
+            return
+        }
         if (typeof state.dataset === "undefined") {
             return
         }
@@ -233,8 +268,17 @@ let main = function() {
         if (typeof state.times === "undefined") {
             return
         }
+
+        // Fetch image if not already loaded
         let time = state.times[state.time_index]
         let url = `./datasets/${state.dataset}/times/${time}`
+        if (state.image_url === url) {
+            return
+        }
+        store.dispatch({
+            type: 'FETCH_IMAGE',
+            payload: url
+        })
         fetch(url).then((response) => {
             return response.json()
         }).then((data) => {
@@ -246,6 +290,10 @@ let main = function() {
             }
             image_source.data = data
             image_source.change.emit()
+        }).then(() => {
+            store.dispatch({
+                type: 'FETCH_IMAGE_SUCCESS',
+            })
         })
     })
     figure.image({
@@ -276,7 +324,7 @@ let main = function() {
         type: "SET_TIME_INDEX",
         payload: 0
     })
-    fetch('./datasets/EIDA50/times?limit=20')
+    fetch('./datasets/EIDA50/times?limit=50')
         .then((response) => response.json())
         .then((data) => {
             let action = {
@@ -288,6 +336,9 @@ let main = function() {
 
     let frame = () => {
         let state = store.getState()
+        if (state.is_fetching) {
+            return
+        }
         if (typeof state.time_index === "undefined") {
             return
         }
@@ -302,7 +353,7 @@ let main = function() {
     }
 
     // Animation mechanism
-    let interval = 100
+    let interval = 10
     setInterval(frame, interval)
     // setTimeout(frame, interval)
 }
