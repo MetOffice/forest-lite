@@ -241,8 +241,16 @@ let main = function() {
             y: [],
             dw: [],
             dh: [],
-            image: []
+            image: [],
+            url: []
         }
+    })
+    let filter = new Bokeh.IndexFilter({
+        indices: []
+    })
+    let view = new Bokeh.CDSView({
+        source: image_source,
+        filters: []
     })
     // image_source.connect(image_source.properties.data.change, () => {
     //     const arrayMax = array => array.reduce((a, b) => Math.max(a, b))
@@ -275,6 +283,14 @@ let main = function() {
         if (state.image_url === url) {
             return
         }
+
+        let index = image_source.data["url"].indexOf(url)
+        if (index >= 0) {
+            console.log(`${url} already seen`)
+            view.indices = [index]
+            return
+        }
+
         store.dispatch({
             type: 'FETCH_IMAGE',
             payload: url
@@ -283,12 +299,20 @@ let main = function() {
             return response.json()
         }).then((data) => {
             // fix missing wiring in image_base.ts
-            image_source._shapes = {
-                image: [
-                    []
-                ]
-            }
-            image_source.data = data
+            // image_source._shapes = {
+            //     image: [
+            //         []
+            //     ]
+            // }
+
+            let newData = Object.keys(data).reduce((acc, key) => {
+                acc[key] = image_source.data[key].concat(data[key])
+                return acc
+            }, {})
+            newData["url"] = image_source.data["url"].concat([url])
+
+            console.log(newData)
+            image_source.data = newData
             image_source.change.emit()
         }).then(() => {
             store.dispatch({
@@ -296,14 +320,20 @@ let main = function() {
             })
         })
     })
-    figure.image({
+
+    window.image_source = image_source
+    let glyph = figure.image({
         x: { field: "x" },
         y: { field: "y" },
         dw: { field: "dw" },
         dh: { field: "dh" },
         image: { field: "image" },
         source: image_source,
+        view: view,
         color_mapper: color_mapper
+    })
+    image_source.connect(image_source.properties.data.change, () => {
+        console.log("CDSView", view)
     })
 
     let title = new Title(document.getElementById("title-text"))
@@ -354,8 +384,10 @@ let main = function() {
 
     // Animation mechanism
     let interval = 10
-    setInterval(frame, interval)
+    // setInterval(frame, interval)
     // setTimeout(frame, interval)
+    frame()
+    setInterval(frame, interval)
 }
 
 
