@@ -6,36 +6,70 @@ let providers = {
 }
 
 
+// Action keywords
+const SET_URL = 'SET_URL'
+const SET_DATASET = 'SET_DATASET'
+const SET_DATASETS = 'SET_DATASETS'
+const SET_PALETTE = 'SET_PALETTE'
+const SET_PALETTES = 'SET_PALETTES'
+const SET_PALETTE_NAME = 'SET_PALETTE_NAME'
+const SET_PALETTE_NAMES = 'SET_PALETTE_NAMES'
+const SET_PALETTE_NUMBER = 'SET_PALETTE_NUMBER'
+const SET_PALETTE_NUMBERS = 'SET_PALETTE_NUMBERS'
+const SET_LIMITS = 'SET_LIMITS'
+const SET_TIMES = 'SET_TIMES'
+const SET_TIME_INDEX = 'SET_TIME_INDEX'
+const FETCH_IMAGE = 'FETCH_IMAGE'
+const FETCH_IMAGE_SUCCESS = 'FETCH_IMAGE_SUCCESS'
+
+
+// Action creators
+let set_url = url => { return { type: SET_URL, payload: url } }
+let set_dataset = name => { return { type: SET_DATASET, payload: name } }
+let set_datasets = names => { return { type: SET_DATASETS, payload: names } }
+let set_palette = name => { return { type: SET_PALETTE, payload: name } }
+let set_palettes = items => { return { type: SET_PALETTES, payload: items } }
+let set_palette_name = data => { return { type: SET_PALETTE_NAME, payload: data } }
+let set_palette_names = data => { return { type: SET_PALETTE_NAMES, payload: data } }
+let set_palette_number = data => { return { type: SET_PALETTE_NUMBER, payload: data } }
+let set_palette_numbers = data => { return { type: SET_PALETTE_NUMBERS, payload: data } }
+let set_limits = limits => { return { type: SET_LIMITS, payload: limits } }
+let set_times = times => { return { type: SET_TIMES, payload: times } }
+let set_time_index = index => { return { type: SET_TIME_INDEX, payload: index } }
+let fetch_image = url => { return { type: FETCH_IMAGE, payload: url } }
+let fetch_image_success = () => { return { type: FETCH_IMAGE_SUCCESS } }
+
+
 // ReduxJS
 let reducer = (state = "", action) => {
     switch (action.type) {
-        case 'SET_DATASET':
+        case SET_DATASET:
             return Object.assign({}, state, {dataset: action.payload})
-        case 'SET_DATASETS':
+        case SET_DATASETS:
             return Object.assign({}, state, {datasets: action.payload})
-        case 'SET_URL':
+        case SET_URL:
             return Object.assign({}, state, {url: action.payload})
-        case 'SET_PALETTE':
+        case SET_PALETTE:
             return Object.assign({}, state, {palette: action.payload})
-        case 'SET_PALETTES':
+        case SET_PALETTES:
             return Object.assign({}, state, {palettes: action.payload})
-        case 'SET_PALETTE_NAME':
+        case SET_PALETTE_NAME:
             return Object.assign({}, state, {palette_name: action.payload})
-        case 'SET_PALETTE_NAMES':
+        case SET_PALETTE_NAMES:
             return Object.assign({}, state, {palette_names: action.payload})
-        case 'SET_PALETTE_NUMBER':
+        case SET_PALETTE_NUMBER:
             return Object.assign({}, state, {palette_number: action.payload})
-        case 'SET_PALETTE_NUMBERS':
+        case SET_PALETTE_NUMBERS:
             return Object.assign({}, state, {palette_numbers: action.payload})
-        case 'SET_LIMITS':
+        case SET_LIMITS:
             return Object.assign({}, state, {limits: action.payload})
-        case 'SET_TIMES':
+        case SET_TIMES:
             return Object.assign({}, state, {times: action.payload})
-        case 'SET_TIME_INDEX':
+        case SET_TIME_INDEX:
             return Object.assign({}, state, {time_index: action.payload})
-        case 'FETCH_IMAGE':
+        case FETCH_IMAGE:
             return Object.assign({}, state, {is_fetching: true, image_url: action.payload})
-        case 'FETCH_IMAGE_SUCCESS':
+        case FETCH_IMAGE_SUCCESS:
             return Object.assign({}, state, {is_fetching: false})
         default:
             return state
@@ -68,7 +102,7 @@ let main = function() {
 
     let colorPaletteMiddleware = store => next => action => {
         console.log(action)
-        if (action.type == "SET_PALETTE_NAME") {
+        if (action.type == SET_PALETTE_NAME) {
             // Async get palette numbers
             let name = action.payload
             let state = store.getState()
@@ -78,14 +112,11 @@ let main = function() {
                     .map((p) => parseInt(p.number))
                     .concat()
                     .sort((a, b) => a - b)
-                let action = {
-                    type: "SET_PALETTE_NUMBERS",
-                    payload: numbers
-                }
+                let action = set_palette_numbers(numbers)
                 store.dispatch(action)
             }
         }
-        else if (action.type == "SET_PALETTE_NUMBER") {
+        else if (action.type == SET_PALETTE_NUMBER) {
             // Async get palette numbers
             let state = store.getState()
             let name = state.palette_name
@@ -95,10 +126,7 @@ let main = function() {
                     .filter((p) => p.name === name)
                     .filter((p) => parseInt(p.number) === parseInt(number))
                 if (palettes.length > 0) {
-                    let action = {
-                        type: "SET_PALETTE",
-                        payload: palettes[0].palette
-                    }
+                    let action = set_palette(palettes[0].palette)
                     store.dispatch(action)
                 }
             }
@@ -109,11 +137,9 @@ let main = function() {
 
     let datasetsMiddleware = store => next => action => {
         next(action)
-        if (action.type == "SET_DATASETS") {
-            next({
-                type: "SET_DATASET",
-                payload: action.payload[0]
-            })
+        if (action.type == SET_DATASETS) {
+            let name = action.payload[0]
+            next(set_dataset(name))
         }
         return
     }
@@ -136,7 +162,7 @@ let main = function() {
     fetch("./palettes")
         .then((response) => response.json())
         .then((data) => {
-            let action = {type: "SET_PALETTES", payload: data}
+            let action = set_palettes(data)
             store.dispatch(action)
             return data
         })
@@ -145,7 +171,7 @@ let main = function() {
             return Array.from(new Set(names)).concat().sort()
         })
         .then((names) => {
-            let action = {type: "SET_PALETTE_NAMES", payload: names}
+            let action = set_palette_names(names)
             store.dispatch(action)
         })
 
@@ -154,7 +180,7 @@ let main = function() {
         options: Object.keys(providers)
     })
     selectTile.connect(selectTile.properties.value.change, () => {
-        store.dispatch({type: "SET_URL", payload: providers[selectTile.value]})
+        store.dispatch(set_url(providers[selectTile.value]))
     })
     Bokeh.Plotting.show(selectTile, "#tile-url-select")
 
@@ -163,7 +189,7 @@ let main = function() {
         options: [],
     })
     select.connect(select.properties.value.change, () => {
-        store.dispatch({type: "SET_DATASET", payload: select.value})
+        store.dispatch({type: SET_DATASET, payload: select.value})
     })
     Bokeh.Plotting.show(select, "#select")
     store.subscribe(() => {
@@ -182,7 +208,7 @@ let main = function() {
     fetch("./datasets").then((response) => {
         return response.json()
     }).then((data) => {
-        store.dispatch({type: "SET_DATASETS", payload: data.names})
+        store.dispatch(set_datasets(data.names))
     })
 
     // Select palette name widget
@@ -196,8 +222,8 @@ let main = function() {
         }
     })
     palette_select.connect(palette_select.properties.value.change, () => {
-        let payload = palette_select.value
-        store.dispatch({type: "SET_PALETTE_NAME", payload: payload})
+        let action = set_palette_name(palette_select.value)
+        store.dispatch(action)
     })
     Bokeh.Plotting.show(palette_select, "#palette-select")
 
@@ -213,8 +239,8 @@ let main = function() {
         }
     })
     palette_number_select.connect(palette_number_select.properties.value.change, () => {
-        let payload = palette_number_select.value
-        store.dispatch({type: "SET_PALETTE_NUMBER", payload: payload})
+        let action = set_palette_number(palette_number_select.value)
+        store.dispatch(action)
     })
     Bokeh.Plotting.show(palette_number_select, "#palette-number-select")
 
@@ -260,10 +286,10 @@ let main = function() {
     //     let image = image_source.data.image[0]
     //     let low = arrayMin(image.map(arrayMin))
     //     let high = arrayMax(image.map(arrayMax))
-    //     let payload = {low, high}
-    //     store.dispatch({type: "SET_LIMITS", payload: payload})
+    //     let action = set_limits({low, high})
+    //     store.dispatch(action)
     // })
-    store.dispatch({type: "SET_LIMITS", payload: {low: 200, high: 300}})
+    store.dispatch(set_limits({low: 200, high: 300}))
     store.subscribe(() => {
         let state = store.getState()
         if (state.is_fetching) {
@@ -293,10 +319,7 @@ let main = function() {
             return
         }
 
-        store.dispatch({
-            type: 'FETCH_IMAGE',
-            payload: url
-        })
+        store.dispatch(fetch_image(url))
         fetch(url).then((response) => {
             return response.json()
         }).then((data) => {
@@ -317,9 +340,7 @@ let main = function() {
             image_source.data = newData
             image_source.change.emit()
         }).then(() => {
-            store.dispatch({
-                type: 'FETCH_IMAGE_SUCCESS',
-            })
+            store.dispatch(fetch_image_success())
         })
     })
 
@@ -352,17 +373,11 @@ let main = function() {
     })
 
     // Initial times
-    store.dispatch({
-        type: "SET_TIME_INDEX",
-        payload: 0
-    })
+    store.dispatch(set_time_index(0))
     fetch('./datasets/EIDA50/times?limit=50')
         .then((response) => response.json())
         .then((data) => {
-            let action = {
-                type: "SET_TIMES",
-                payload: data
-            }
+            let action = set_times(data)
             store.dispatch(action)
         })
 
@@ -378,10 +393,8 @@ let main = function() {
             return
         }
         let index = (state.time_index + 1) % state.times.length
-        store.dispatch({
-            type: "SET_TIME_INDEX",
-            payload: index
-        })
+        let action = set_time_index(index)
+        store.dispatch(action)
     }
 
     // Animation mechanism
