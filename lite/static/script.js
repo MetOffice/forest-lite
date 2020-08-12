@@ -80,6 +80,11 @@ let reducer = (state = "", action) => {
     }
 }
 
+let getPalettes = function(palettes, name, number) {
+    return palettes
+        .filter((p) => p.name === name)
+        .filter((p) => parseInt(p.number) === parseInt(number))
+}
 
 let main = function() {
     // Geographical map
@@ -126,14 +131,24 @@ let main = function() {
             let name = state.palette_name
             let number = action.payload
             if (typeof state.palettes !== "undefined") {
-                let palettes = state.palettes
-                    .filter((p) => p.name === name)
-                    .filter((p) => parseInt(p.number) === parseInt(number))
+                let palettes = getPalettes(state.palettes, name, number)
                 if (palettes.length > 0) {
                     let action = set_palette(palettes[0].palette)
                     store.dispatch(action)
                 }
             }
+        }
+        else if (action.type == SET_PALETTES) {
+            // Set initial palette to Blues 256
+            next(action)
+            next(set_palette_name("Blues"))
+            next(set_palette_number(256))
+            let palettes = getPalettes(action.payload, "Blues", 256)
+            if (palettes.length > 0) {
+                let action = set_palette(palettes[0].palette)
+                next(action)
+            }
+            return
         }
 
         return next(action)
@@ -224,6 +239,7 @@ let main = function() {
         if (typeof state.palette_names !== "undefined") {
             palette_select.options = state.palette_names
         }
+        // palette_select.value = state.palette_name // BokehJS BUG #10211
     })
     palette_select.connect(palette_select.properties.value.change, () => {
         let action = set_palette_name(palette_select.value)
