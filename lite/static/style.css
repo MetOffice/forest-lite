@@ -1,0 +1,27 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+.full-window {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.wide {
+    width: 500px;
+}
+.title {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%);
+    background-color: white;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    margin: 20px;
+    padding: 10px 20px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 1.2rem;
+}

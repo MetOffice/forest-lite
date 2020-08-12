@@ -5,13 +5,6 @@ import datetime as dt
 import forest.geo
 
 
-def data_times(dataset):
-    """Datetime information related to dataset"""
-    return {
-        "x": [dt.datetime.now()]
-    }
-
-
 def xy_data(dataset, variable):
     """X-Y line/circle data related to a dataset"""
     # import time
@@ -28,14 +21,24 @@ def xy_data(dataset, variable):
         }
 
 
-def image_data(name, path):
+def get_times(dataset_name, path):
+    with xarray.open_dataset(path, engine="h5netcdf") as nc:
+        times = nc.time.values
+    return times
+
+
+def image_data(name, path, timestamp_ms):
     n = 256
-    print(path)
+    time = np.datetime64(timestamp_ms, 'ms')
+    print(path, time)
     if name == "EIDA50":
         with xarray.open_dataset(path, engine="h5netcdf") as nc:
             lons = nc["longitude"].values
             lats = nc["latitude"].values
-            values = nc["data"][0].values
+            pts = np.where(nc.time.values == time)
+            if len(pts[0]) > 0:
+                i = pts[0][0]
+                values = nc["data"][i].values
         data = forest.geo.stretch_image(lons,
                                         lats,
                                         values,

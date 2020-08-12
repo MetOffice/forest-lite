@@ -53,14 +53,16 @@ async def datasets(response: Response):
     return {"names": sorted(dataset.label for dataset in CONFIG.datasets)}
 
 
-@app.get("/image/{dataset_name}")
-async def image(dataset_name):
+@app.get("/datasets/{dataset_name}/times/{time}")
+async def datasets_images(dataset_name: str, time: int):
     for dataset in CONFIG.datasets:
         if dataset.label == dataset_name:
             pattern = dataset.driver.settings["pattern"]
             paths = sorted(glob.glob(pattern))
             if len(paths) > 0:
-                obj = lib.core.image_data(dataset_name, paths[-1])
+                obj = lib.core.image_data(dataset_name,
+                                          paths[-1],
+                                          time)
                 content = serialize_json(obj)
                 response = Response(content=content,
                                     media_type="application/json")
@@ -71,6 +73,21 @@ async def image(dataset_name):
 @app.get("/palettes")
 async def palettes():
     return list(lib.palette.all_palettes())
+
+
+@app.get("/datasets/{dataset_name}/times")
+async def dataset_times(dataset_name, limit: int = 10):
+    for dataset in CONFIG.datasets:
+        if dataset.label == dataset_name:
+            pattern = dataset.driver.settings["pattern"]
+            paths = sorted(glob.glob(pattern))
+            if len(paths) > 0:
+                obj = lib.core.get_times(dataset_name, paths[-1])[-limit:]
+                content = serialize_json(obj)
+                response = Response(content=content,
+                                    media_type="application/json")
+                #  response.headers["Cache-Control"] = "max-age=31536000"
+                return response
 
 
 def parse_args():
