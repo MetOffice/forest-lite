@@ -84,6 +84,7 @@ let reducer = (state = "", action) => {
 // Middlewares
 let logActionMiddleware = store => next => action => {
     console.log(action)
+    next(action)
 }
 
 let colorPaletteMiddleware = store => next => action => {
