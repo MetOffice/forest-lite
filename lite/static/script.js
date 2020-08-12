@@ -20,6 +20,8 @@ const SET_PLAYING = 'SET_PLAYING'
 const SET_LIMITS = 'SET_LIMITS'
 const SET_TIMES = 'SET_TIMES'
 const SET_TIME_INDEX = 'SET_TIME_INDEX'
+const NEXT_TIME_INDEX = 'NEXT_TIME_INDEX'
+const PREVIOUS_TIME_INDEX = 'PREVIOUS_TIME_INDEX'
 const FETCH_IMAGE = 'FETCH_IMAGE'
 const FETCH_IMAGE_SUCCESS = 'FETCH_IMAGE_SUCCESS'
 
@@ -38,6 +40,8 @@ let set_playing = flag => { return { type: SET_PLAYING, payload: flag } }
 let set_limits = limits => { return { type: SET_LIMITS, payload: limits } }
 let set_times = times => { return { type: SET_TIMES, payload: times } }
 let set_time_index = index => { return { type: SET_TIME_INDEX, payload: index } }
+let next_time_index = () => { return { type: NEXT_TIME_INDEX } }
+let previous_time_index = () => { return { type: PREVIOUS_TIME_INDEX } }
 let fetch_image = url => { return { type: FETCH_IMAGE, payload: url } }
 let fetch_image_success = () => { return { type: FETCH_IMAGE_SUCCESS } }
 
@@ -85,6 +89,35 @@ let reducer = (state = "", action) => {
 let logActionMiddleware = store => next => action => {
     console.log(action)
     next(action)
+}
+
+
+let animationMiddleware = store => next => action => {
+    if (action.type === NEXT_TIME_INDEX) {
+        let state = store.getState()
+        if (typeof state.time_index === "undefined") {
+            return
+        }
+        if (typeof state.times === "undefined") {
+            return
+        }
+        let index = mod(state.time_index + 1, state.times.length)
+        let action = set_time_index(index)
+        next(action)
+    } else if (action.type === PREVIOUS_TIME_INDEX) {
+        let state = store.getState()
+        if (typeof state.time_index === "undefined") {
+            return
+        }
+        if (typeof state.times === "undefined") {
+            return
+        }
+        let index = mod(state.time_index - 1, state.times.length)
+        let action = set_time_index(index)
+        next(action)
+    } else {
+        next(action)
+    }
 }
 
 let colorPaletteMiddleware = store => next => action => {
@@ -142,6 +175,12 @@ let datasetsMiddleware = store => next => action => {
 
 
 // Helpers
+let mod = function(a, n) {
+    // Always return positive number, e.g. mod(-2, 5) -> 3
+    // Builtin % operator allows negatives, e.g. -2 % 5 -> -2
+    return ((a % n) + n) % n
+}
+
 let getPalettes = function(palettes, name, number) {
     return palettes
         .filter((p) => p.name === name)
@@ -175,6 +214,7 @@ let main = function() {
     let store = Redux.createStore(reducer,
                                   Redux.applyMiddleware(
                                       logActionMiddleware,
+                                      animationMiddleware,
                                       colorPaletteMiddleware,
                                       datasetsMiddleware,
                                   ))
@@ -416,21 +456,28 @@ let main = function() {
         if (state.is_fetching) {
             return
         }
-        if (typeof state.time_index === "undefined") {
-            return
-        }
-        if (typeof state.times === "undefined") {
-            return
-        }
-        let index = (state.time_index + 1) % state.times.length
-        let action = set_time_index(index)
         if (state.playing) {
+            let action = next_time_index()
             store.dispatch(action)
         }
     }
 
+    let controls = document.getElementById("controls")
+    let row = document.createElement("div")
+    row.classList.add("btn-row")
+    controls.appendChild(row)
+
+    // Previous button
+    let previousButton = new Previous({
+        onClick: () => {
+            let action = previous_time_index()
+            store.dispatch(action)
+        }
+    })
+    row.appendChild(previousButton.el)
+
     // Add Play button component
-    let play = new Play({
+    let playButton = new Play({
         onClick: function() {
             let state = store.getState()
             // Toggle play mode
@@ -444,12 +491,20 @@ let main = function() {
             store.dispatch(action)
         }
     })
-    let parent = document.getElementById("controls")
-    parent.appendChild(play.el)
     store.subscribe(() => {
         let state = store.getState()
-        play.render(state.playing)
+        playButton.render(state.playing)
     })
+    row.appendChild(playButton.el)
+
+    // Next button
+    let nextButton = new Next({
+        onClick: () => {
+            let action = next_time_index()
+            store.dispatch(action)
+        }
+    })
+    row.appendChild(nextButton.el)
 
     // Animation mechanism
     let interval = 100
@@ -472,19 +527,49 @@ Title.prototype.render = function(message) {
 // Play button
 function Play(props) {
     // Could replace with JSX in a React component
-    this.el = document.createElement("div")
     this.button = document.createElement("button")
-    this.button.classList.add("lite-btn")
-    this.button.innerHTML = "Play"
+    this.button.classList.add("lite-btn", "play-btn")
+    this.i = document.createElement("i")
+    this.i.classList.add("fas", "fa-play")
+    this.button.appendChild(this.i)
     this.button.onclick = props.onClick
-    this.el.appendChild(this.button)
+    this.el = this.button
 }
-Play.prototype.render = function(flag) {
+Play.prototype.render = function(playing) {
     let message
-    if (flag) {
-        message = "Pause"
+    if (playing) {
+        // Display pause symbol
+        this.i.classList.remove("fas", "fa-play")
+        this.i.classList.add("fas", "fa-pause")
     } else {
-        message = "Play"
+        // Display play symbol
+        this.i.classList.remove("fas", "fa-pause")
+        this.i.classList.add("fas", "fa-play")
     }
-    this.button.innerHTML = message
+}
+
+
+// Previous button
+function Previous(props) {
+    let button, i
+    button = document.createElement("button")
+    button.classList.add("lite-btn", "previous-btn")
+    button.onclick = props.onClick
+    i = document.createElement("i")
+    i.classList.add("fas", "fa-angle-left")
+    button.appendChild(i)
+    this.el = button
+}
+
+
+// Next button
+function Next(props) {
+    let button, i
+    button = document.createElement("button")
+    button.classList.add("lite-btn", "next-btn")
+    button.onclick = props.onClick
+    i = document.createElement("i")
+    i.classList.add("fas", "fa-angle-right")
+    button.appendChild(i)
+    this.el = button
 }
