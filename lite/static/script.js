@@ -16,6 +16,7 @@ const SET_PALETTE_NAME = 'SET_PALETTE_NAME'
 const SET_PALETTE_NAMES = 'SET_PALETTE_NAMES'
 const SET_PALETTE_NUMBER = 'SET_PALETTE_NUMBER'
 const SET_PALETTE_NUMBERS = 'SET_PALETTE_NUMBERS'
+const SET_PLAYING = 'SET_PLAYING'
 const SET_LIMITS = 'SET_LIMITS'
 const SET_TIMES = 'SET_TIMES'
 const SET_TIME_INDEX = 'SET_TIME_INDEX'
@@ -33,6 +34,7 @@ let set_palette_name = data => { return { type: SET_PALETTE_NAME, payload: data 
 let set_palette_names = data => { return { type: SET_PALETTE_NAMES, payload: data } }
 let set_palette_number = data => { return { type: SET_PALETTE_NUMBER, payload: data } }
 let set_palette_numbers = data => { return { type: SET_PALETTE_NUMBERS, payload: data } }
+let set_playing = flag => { return { type: SET_PLAYING, payload: flag } }
 let set_limits = limits => { return { type: SET_LIMITS, payload: limits } }
 let set_times = times => { return { type: SET_TIMES, payload: times } }
 let set_time_index = index => { return { type: SET_TIME_INDEX, payload: index } }
@@ -61,6 +63,8 @@ let reducer = (state = "", action) => {
             return Object.assign({}, state, {palette_number: action.payload})
         case SET_PALETTE_NUMBERS:
             return Object.assign({}, state, {palette_numbers: action.payload})
+        case SET_PLAYING:
+            return Object.assign({}, state, {playing: action.payload})
         case SET_LIMITS:
             return Object.assign({}, state, {limits: action.payload})
         case SET_TIMES:
@@ -374,7 +378,7 @@ let main = function() {
 
     // Initial times
     store.dispatch(set_time_index(0))
-    fetch('./datasets/EIDA50/times?limit=50')
+    fetch('./datasets/EIDA50/times?limit=10')
         .then((response) => response.json())
         .then((data) => {
             let action = set_times(data)
@@ -394,11 +398,35 @@ let main = function() {
         }
         let index = (state.time_index + 1) % state.times.length
         let action = set_time_index(index)
-        store.dispatch(action)
+        if (state.playing) {
+            store.dispatch(action)
+        }
     }
 
+    // Add Play button component
+    let play = new Play({
+        onClick: function() {
+            let state = store.getState()
+            // Toggle play mode
+            let flag
+            if (state.playing) {
+                flag = false
+            } else {
+                flag = true
+            }
+            let action = set_playing(flag)
+            store.dispatch(action)
+        }
+    })
+    let parent = document.getElementById("controls")
+    parent.appendChild(play.el)
+    store.subscribe(() => {
+        let state = store.getState()
+        play.render(state.playing)
+    })
+
     // Animation mechanism
-    let interval = 10
+    let interval = 100
     // setInterval(frame, interval)
     // setTimeout(frame, interval)
     frame()
@@ -412,4 +440,25 @@ function Title(el) {
 }
 Title.prototype.render = function(message) {
     this.el.innerHTML = message
+}
+
+
+// Play button
+function Play(props) {
+    // Could replace with JSX in a React component
+    this.el = document.createElement("div")
+    this.button = document.createElement("button")
+    this.button.classList.add("lite-btn")
+    this.button.innerHTML = "Play"
+    this.button.onclick = props.onClick
+    this.el.appendChild(this.button)
+}
+Play.prototype.render = function(flag) {
+    let message
+    if (flag) {
+        message = "Pause"
+    } else {
+        message = "Play"
+    }
+    this.button.innerHTML = message
 }
