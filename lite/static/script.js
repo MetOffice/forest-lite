@@ -429,8 +429,17 @@ let main = function() {
         }
     }
 
+    let controls = document.getElementById("controls")
+    let row = document.createElement("div")
+    row.classList.add("btn-row")
+    controls.appendChild(row)
+
+    // Next button
+    let previousButton = new Previous()
+    row.appendChild(previousButton.el)
+
     // Add Play button component
-    let play = new Play({
+    let playButton = new Play({
         onClick: function() {
             let state = store.getState()
             // Toggle play mode
@@ -444,12 +453,15 @@ let main = function() {
             store.dispatch(action)
         }
     })
-    let parent = document.getElementById("controls")
-    parent.appendChild(play.el)
     store.subscribe(() => {
         let state = store.getState()
-        play.render(state.playing)
+        playButton.render(state.playing)
     })
+    row.appendChild(playButton.el)
+
+    // Next button
+    let nextButton = new Next()
+    row.appendChild(nextButton.el)
 
     // Animation mechanism
     let interval = 100
@@ -472,19 +484,47 @@ Title.prototype.render = function(message) {
 // Play button
 function Play(props) {
     // Could replace with JSX in a React component
-    this.el = document.createElement("div")
     this.button = document.createElement("button")
-    this.button.classList.add("lite-btn")
-    this.button.innerHTML = "Play"
+    this.button.classList.add("lite-btn", "play-btn")
+    this.i = document.createElement("i")
+    this.i.classList.add("fas", "fa-play")
+    this.button.appendChild(this.i)
     this.button.onclick = props.onClick
-    this.el.appendChild(this.button)
+    this.el = this.button
 }
-Play.prototype.render = function(flag) {
+Play.prototype.render = function(playing) {
     let message
-    if (flag) {
-        message = "Pause"
+    if (playing) {
+        // Display pause symbol
+        this.i.classList.remove("fas", "fa-play")
+        this.i.classList.add("fas", "fa-pause")
     } else {
-        message = "Play"
+        // Display play symbol
+        this.i.classList.remove("fas", "fa-pause")
+        this.i.classList.add("fas", "fa-play")
     }
-    this.button.innerHTML = message
+}
+
+
+// Previous button
+function Previous() {
+    let button, i
+    button = document.createElement("button")
+    button.classList.add("lite-btn", "previous-btn")
+    i = document.createElement("i")
+    i.classList.add("fas", "fa-angle-left")
+    button.appendChild(i)
+    this.el = button
+}
+
+
+// Next button
+function Next() {
+    let button, i
+    button = document.createElement("button")
+    button.classList.add("lite-btn", "next-btn")
+    i = document.createElement("i")
+    i.classList.add("fas", "fa-angle-right")
+    button.appendChild(i)
+    this.el = button
 }

@@ -29,10 +29,28 @@ html, body {
     background-color: white;
     border: 1px solid #CCC;
     border-radius: 4px;
-    margin: 0 6px;
+    margin: 0 3px;
     padding: 4px 0;
-    width: 300px;
 }
 .lite-btn:hover {
     border: 1px solid #777;
+    color: #777;
+}
+
+.btn-row {
+    display: flex;
+    justify-content: space-between;
+    width: 300px;
+    margin: 6px;
+}
+.play-btn {
+    flex: 1 1 0;
+}
+.previous-btn {
+    flex: 1 1 0;
+    margin-left: 0;
+}
+.next-btn {
+    flex: 1 1 0;
+    margin-right: 0;
 }
