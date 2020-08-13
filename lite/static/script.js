@@ -203,18 +203,6 @@ let main = function() {
     figure.min_border = 0
     figure.select_one(Bokeh.WheelZoomTool).active = true
 
-    let limits
-    fetch("/google_limits").then(response => response.json()).then((data) => {
-        limits = data // TODO: Use async/await or Promise.resolve
-    })
-
-    // Connect to x-range change
-    let x_range = figure.x_range
-    let y_range = figure.y_range
-    x_range.connect(x_range.properties.start.change, () => {
-        console.log(tiling.tiles(x_range, y_range, limits))
-    })
-
     // Web map tiling background
     let tile_source = new Bokeh.WMTSTileSource({
         url: "https://cartocdn_d.global.ssl.fastly.net/base-antique/{Z}/{X}/{Y}.png"
@@ -231,17 +219,33 @@ let main = function() {
                                       datasetsMiddleware,
                                   ))
     // store.subscribe(() => { console.log(store.getState()) })
+
+    // DataTileRenderer
+    let tile_renderer = new tiling.DataTileRenderer(figure)
+    store.subscribe(() => {
+        let state = store.getState()
+        if (typeof state.dataset === "undefined") {
+            return
+        }
+        if (typeof state.time_index === "undefined") {
+            return
+        }
+        if (typeof state.times === "undefined") {
+            return
+        }
+        // Experimental tile server
+        let time = state.times[state.time_index]
+        let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
+        tile_renderer.setURL(url)
+    })
+
+    // WMTS Map layer
     store.subscribe(() => {
         let state = store.getState()
         if (typeof state.url === "undefined") {
             return
         }
-        // tile_source.url = state.url
-        // Experimental tile server
-        let time = state.times[state.time_index]
-        let url = `./wmts/times/${time}/tiles/{Z}/{X}/{Y}.png`
-        console.log(url)
-        tile_source.url = url
+        tile_source.url = state.url
     })
 
     // Async get palette names

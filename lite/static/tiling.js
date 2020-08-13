@@ -5,6 +5,44 @@ let tiling = (function() {
     let ns = {}
 
     /**
+     * Simple renderer to process image data endpoint
+     */
+    ns.DataTileRenderer = function(figure) {
+
+        // Example URL pattern
+        this.url = "/tiles/dataset/time/{Z}/{X}/{Y}"
+
+        // Google WebMercator limits
+        let limits
+        fetch("/google_limits")
+            .then(response => response.json())
+            .then((data) => {
+                limits = data // TODO: Use consts
+        })
+
+        // Connect to x-range change
+        let x_range = figure.x_range
+        let y_range = figure.y_range
+        let cache = {}
+        x_range.connect(x_range.properties.start.change, () => {
+            let tiles = tiling.tiles(x_range, y_range, limits)
+            for (let i=0; i<tiles.length; i++) {
+                let tile = tiles[i]
+                let key = this.url.replace("{Z}", tile.z)
+                                  .replace("{X}", tile.x)
+                                  .replace("{Y}", tile.y)
+                if (!(key in cache)) {
+                    cache[key] = true // Dummy value
+                    console.log(key)
+                }
+            }
+        })
+    }
+    ns.DataTileRenderer.prototype.setURL = function(url) {
+        this.url = url
+    }
+
+    /**
      * Estimate Z/X/Y tile indices related to viewport
      */
     ns.tiles = function(x_range, y_range, limits) {
