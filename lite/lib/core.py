@@ -1,11 +1,32 @@
 """Example Python I/O library"""
+import glob
 import xarray
 import numpy as np
 import datetime as dt
 import forest.geo
+import lib.tiling
 
 
 TILE_SIZE = 128
+
+
+def get_data_tile(config, dataset_name, timestamp_ms, z, x, y):
+    time = np.datetime64(timestamp_ms, 'ms')
+    for dataset in config.datasets:
+        if dataset.label == dataset_name:
+            pattern = dataset.driver.settings["pattern"]
+            paths = sorted(glob.glob(pattern))
+            if len(paths) > 0:
+                path = paths[-1]
+                zxy = (z, x, y)
+                with xarray.open_dataset(path, engine="h5netcdf") as nc:
+                    lons = nc["longitude"].values
+                    lats = nc["latitude"].values
+                    pts = np.where(nc.time.values == time)
+                    if len(pts[0]) > 0:
+                        i = pts[0][0]
+                        values = nc["data"][i].values
+                return lib.tiling.data_tile(lons, lats, values, zxy)
 
 
 def xy_data(dataset, variable):

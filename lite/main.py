@@ -92,10 +92,15 @@ async def dataset_times(dataset_name, limit: int = 10):
                 return response
 
 
-@app.get("/wmts/times/{T}/tiles/{Z}/{X}/{Y}.png")
-async def cat_wmts(T: int, Z: int, X: int, Y: int):
-    print(T, Z, X, Y)
-    return FileResponse(os.path.join(os.path.dirname(__file__), "cat.png"))
+@app.get("/tiles/{dataset}/{time}/{Z}/{X}/{Y}")
+async def tiles(dataset: str, time: int, Z: int, X: int, Y: int):
+    print(dataset, time, Z, X, Y)
+    obj = lib.core.get_data_tile(CONFIG, dataset, time, Z, X, Y)
+    content = serialize_json(obj)
+    response = Response(content=content,
+                        media_type="application/json")
+    #  response.headers["Cache-Control"] = "max-age=31536000"
+    return response
 
 
 @app.get("/google_limits")
