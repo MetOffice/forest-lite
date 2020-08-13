@@ -1,11 +1,13 @@
 import argparse
 import glob
 import os
+import cartopy
 import uvicorn
 import fastapi
 from fastapi import Response, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from starlette.responses import FileResponse
 import bokeh.resources
 import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
@@ -66,7 +68,7 @@ async def datasets_images(dataset_name: str, time: int):
                 content = serialize_json(obj)
                 response = Response(content=content,
                                     media_type="application/json")
-                response.headers["Cache-Control"] = "max-age=31536000"
+                #  response.headers["Cache-Control"] = "max-age=31536000"
                 return response
 
 
@@ -88,6 +90,20 @@ async def dataset_times(dataset_name, limit: int = 10):
                                     media_type="application/json")
                 #  response.headers["Cache-Control"] = "max-age=31536000"
                 return response
+
+
+@app.get("/wmts/times/{T}/tiles/{Z}/{X}/{Y}.png")
+async def cat_wmts(T: int, Z: int, X: int, Y: int):
+    print(T, Z, X, Y)
+    return FileResponse(os.path.join(os.path.dirname(__file__), "cat.png"))
+
+
+@app.get("/google_limits")
+async def google_limits():
+    return {
+        "x": cartopy.crs.Mercator.GOOGLE.x_limits,
+        "y": cartopy.crs.Mercator.GOOGLE.y_limits,
+    }
 
 
 def parse_args():

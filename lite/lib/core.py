@@ -5,6 +5,9 @@ import datetime as dt
 import forest.geo
 
 
+TILE_SIZE = 128
+
+
 def xy_data(dataset, variable):
     """X-Y line/circle data related to a dataset"""
     # import time
@@ -27,10 +30,9 @@ def get_times(dataset_name, path):
     return times
 
 
-def image_data(name, path, timestamp_ms):
-    n = 256
+def image_data(name, path, timestamp_ms, tile_size=TILE_SIZE):
+    n = tile_size
     time = np.datetime64(timestamp_ms, 'ms')
-    print(path, time)
     if name == "EIDA50":
         with xarray.open_dataset(path, engine="h5netcdf") as nc:
             lons = nc["longitude"].values
