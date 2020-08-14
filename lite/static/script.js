@@ -320,7 +320,8 @@ let main = function() {
     let color_mapper = new Bokeh.LinearColorMapper({
         "low": 200,
         "high": 300,
-        "palette": ["#440154", "#208F8C", "#FDE724"]
+        "palette": ["#440154", "#208F8C", "#FDE724"],
+        "nan_color": "rgba(0,0,0,0)"
     })
 
     store.subscribe(() => {

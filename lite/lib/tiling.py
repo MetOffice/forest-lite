@@ -18,6 +18,7 @@ def _extent(limits):
 
 def data_tile(lons, lats, values, zxy, tile_size=128):
     """Convenient function to generate data tile"""
+    level, _, _ = zxy
     gx, gy = web_mercator(lons, lats)
     x_range, y_range = tile_extents(zxy)
     image = forest.geo.datashader_stretch(values, gx, gy,
@@ -36,6 +37,7 @@ def data_tile(lons, lats, values, zxy, tile_size=128):
         "dw": [dw],
         "dh": [dh],
         "image": [image],
+        "level": [level]
     }
 
 

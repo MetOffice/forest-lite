@@ -8,6 +8,7 @@ let tiling = (function() {
      * Simple renderer to process image data endpoint
      */
     ns.DataTileRenderer = function(figure, color_mapper) {
+        this.figure = figure
         this.source = new Bokeh.ColumnDataSource({
             data: {
                 x: [],
@@ -15,6 +16,7 @@ let tiling = (function() {
                 dw: [],
                 dh: [],
                 image: [],
+                level: []
             }
         })
         figure.image({
@@ -31,50 +33,89 @@ let tiling = (function() {
         this.url = "/tiles/dataset/time/{Z}/{X}/{Y}"
 
         // Google WebMercator limits
-        let limits
         fetch("/google_limits")
             .then(response => response.json())
             .then((data) => {
-                limits = data // TODO: Use consts
+                this.limits = data // TODO: Use consts
         })
 
         // Connect to x-range change
-        let x_range = figure.x_range
-        let y_range = figure.y_range
-        let cache = {}
+        this.cache = {}
+        let x_range = this.figure.x_range
         x_range.connect(x_range.properties.start.change, () => {
-            if (typeof limits === "undefined") {
-                return
-            }
-            let tiles = tiling.tiles(x_range, y_range, limits)
-            for (let i=0; i<tiles.length; i++) {
-                let tile = tiles[i]
-                let key = this.url.replace("{Z}", tile.z)
-                                  .replace("{X}", tile.x)
-                                  .replace("{Y}", tile.y)
-                if (!(key in cache)) {
-                    cache[key] = true // Dummy value
-                    fetch(key)
-                        .then((response) => response.json())
-                        .then((data) => {
-                            console.log(tile)
-                            // Append data to source.data
-                            let source = this.source
-                            let updated = Object.keys(data)
-                                .reduce((acc, key) => {
-                                    acc[key] = source.data[key]
-                                        .concat(data[key])
-                                return acc
-                            }, {})
-                            source.data = updated
-                            source.change.emit()
-                        })
-                }
-            }
+            this.render()
         })
     }
     ns.DataTileRenderer.prototype.setURL = function(url) {
         this.url = url
+
+        // Reset image tiles
+        let empty = Object.keys(this.source.data).reduce((agg, key) => {
+            agg[key] = []
+            return agg
+        }, {})
+        this.source.data = empty
+        this.source.change.emit()
+
+        // Re-render
+        this.render()
+    }
+    ns.DataTileRenderer.prototype.render = function() {
+        if (typeof this.limits === "undefined") {
+            return
+        }
+        let x_range = this.figure.x_range
+        let y_range = this.figure.y_range
+        let tiles = tiling.tiles(x_range, y_range, this.limits)
+        for (let i=0; i<tiles.length; i++) {
+            let tile = tiles[i]
+            let key = this.url.replace("{Z}", tile.z)
+                              .replace("{X}", tile.x)
+                              .replace("{Y}", tile.y)
+            if (!(key in this.cache)) {
+                this.cache[key] = true // Dummy value
+                fetch(key)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        console.log(tile)
+                        // Append data to source.data
+                        let source = this.source
+                        let updated = Object.keys(data)
+                            .reduce((acc, key) => {
+                                acc[key] = source.data[key]
+                                    .concat(data[key])
+                            return acc
+                        }, {})
+
+                        // Split into images
+                        let images = Object.keys(updated)
+                            .reduce((agg, key) => {
+                                updated[key].forEach((array, index) => {
+                                    agg[index] = agg[index] || {}
+                                    agg[index][key] = array
+                                })
+                                return agg
+                            }, [])
+
+                        // Sort by level (in-place)
+                        images = images.sort((a, b) => {
+                            return a.level - b.level
+                        })
+
+                        // Combine into data object
+                        let combined = images.reduce((agg, obj) => {
+                            Object.keys(obj).forEach((key) => {
+                                agg[key] = agg[key] || []
+                                agg[key].push(obj[key])
+                            })
+                            return agg
+                        }, {})
+
+                        source.data = combined
+                        source.change.emit()
+                    })
+            }
+        }
     }
 
     /**
