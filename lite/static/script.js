@@ -529,6 +529,42 @@ let main = function() {
     // setTimeout(frame, interval)
     frame()
     setInterval(frame, interval)
+
+    // Coastlines
+    let coastlines = new Lines(figure)
+    fetch("./atlas/coastlines")
+        .then(response => response.json())
+        .then((data) => {
+            coastlines.source.data = data
+        })
+
+    // Country borders
+    let borders = new Lines(figure)
+    fetch("./atlas/borders")
+        .then(response => response.json())
+        .then((data) => {
+            borders.source.data = data
+        })
+}
+
+
+/**
+ * Annotate map with coastlines, borders and lake boundaries
+ */
+function Lines(figure) {
+    this.figure = figure
+    this.source = new Bokeh.ColumnDataSource({
+        data: {
+            xs: [[]],
+            ys: [[]]
+        }
+    })
+    this.figure.multi_line({
+        xs: { field: "xs" },
+        ys: { field: "ys" },
+        line_color: "black",
+        source: this.source
+    })
 }
 
 
