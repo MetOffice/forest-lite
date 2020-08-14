@@ -529,6 +529,49 @@ let main = function() {
     // setTimeout(frame, interval)
     frame()
     setInterval(frame, interval)
+
+    // Coastlines
+    let coastlines = new Lines(figure, "black")
+    coastlines.fetch("./atlas/coastlines")
+
+    // Country borders
+    let borders = new Lines(figure, "black")
+    borders.fetch("./atlas/borders")
+
+    // Disputed borders
+    let disputed = new Lines(figure, "red")
+    disputed.fetch("./atlas/disputed")
+
+    // Lakes
+    let lakes = new Lines(figure, "LightBlue")
+    lakes.fetch("./atlas/lakes")
+}
+
+
+/**
+ * Annotate map with coastlines, borders and lake boundaries
+ */
+function Lines(figure, line_color) {
+    this.figure = figure
+    this.source = new Bokeh.ColumnDataSource({
+        data: {
+            xs: [[]],
+            ys: [[]]
+        }
+    })
+    this.figure.multi_line({
+        xs: { field: "xs" },
+        ys: { field: "ys" },
+        line_color: line_color,
+        source: this.source
+    })
+}
+Lines.prototype.fetch = function(url) {
+    fetch(url)
+        .then(response => response.json())
+        .then((data) => {
+            this.source.data = data
+        })
 }
 
 
