@@ -532,19 +532,19 @@ let main = function() {
 
     // Coastlines
     let coastlines = new Lines(figure)
-    fetch("./atlas/coastlines")
-        .then(response => response.json())
-        .then((data) => {
-            coastlines.source.data = data
-        })
+    coastlines.fetch("./atlas/coastlines")
 
     // Country borders
     let borders = new Lines(figure)
-    fetch("./atlas/borders")
-        .then(response => response.json())
-        .then((data) => {
-            borders.source.data = data
-        })
+    borders.fetch("./atlas/borders")
+
+    // Disputed borders
+    let disputed = new Lines(figure)
+    disputed.fetch("./atlas/disputed")
+
+    // Lakes
+    let lakes = new Lines(figure)
+    lakes.fetch("./atlas/lakes")
 }
 
 
@@ -565,6 +565,13 @@ function Lines(figure) {
         line_color: "black",
         source: this.source
     })
+}
+Lines.prototype.fetch = function(url) {
+    fetch(url)
+        .then(response => response.json())
+        .then((data) => {
+            this.source.data = data
+        })
 }
 
 
