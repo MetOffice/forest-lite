@@ -531,19 +531,19 @@ let main = function() {
     setInterval(frame, interval)
 
     // Coastlines
-    let coastlines = new Lines(figure)
+    let coastlines = new Lines(figure, "black")
     coastlines.fetch("./atlas/coastlines")
 
     // Country borders
-    let borders = new Lines(figure)
+    let borders = new Lines(figure, "black")
     borders.fetch("./atlas/borders")
 
     // Disputed borders
-    let disputed = new Lines(figure)
+    let disputed = new Lines(figure, "red")
     disputed.fetch("./atlas/disputed")
 
     // Lakes
-    let lakes = new Lines(figure)
+    let lakes = new Lines(figure, "LightBlue")
     lakes.fetch("./atlas/lakes")
 }
 
@@ -551,7 +551,7 @@ let main = function() {
 /**
  * Annotate map with coastlines, borders and lake boundaries
  */
-function Lines(figure) {
+function Lines(figure, line_color) {
     this.figure = figure
     this.source = new Bokeh.ColumnDataSource({
         data: {
@@ -562,7 +562,7 @@ function Lines(figure) {
     this.figure.multi_line({
         xs: { field: "xs" },
         ys: { field: "ys" },
-        line_color: "black",
+        line_color: line_color,
         source: this.source
     })
 }
