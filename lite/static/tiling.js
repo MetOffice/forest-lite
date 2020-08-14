@@ -74,6 +74,10 @@ let tiling = (function() {
         let x_range = this.figure.x_range
         let y_range = this.figure.y_range
         let tiles = tiling.tiles(x_range, y_range, this.limits)
+        let urls = {
+            remote: [],
+            local: []
+        }
         for (let i=0; i<tiles.length; i++) {
             let tile = tiles[i]
             let key = this.url.replace("{Z}", tile.z)
@@ -82,20 +86,56 @@ let tiling = (function() {
             if (!(key in this.tileCache)) {
                 this.tileCache[key] = true // Dummy value
                 if (key in this.imageCache) {
-                    // Use in-memory copy
-                    this._addImage(this.imageCache[key])
+                    urls.local.push(key)
                 } else {
-                    // Fetch from server
-                    fetch(key)
-                        .then((response) => response.json())
-                        .then((data) => {
-                            this.imageCache[key] = data
-                            this._addImage(data)
-                        })
+                    urls.remote.push(key)
                 }
             }
         }
+
+        // Local images
+        let images = urls.local.map((url) => {
+            return this.imageCache[url]
+        })
+        if (images.length > 0) {
+            this._addImages(images)
+        }
+
+        // Remote images
+        urls.remote.forEach((url) => {
+            // Fetch from server
+            fetch(url)
+                .then((response) => response.json())
+                .then((data) => {
+                    this.imageCache[url] = data
+                    this._addImage(data)
+                })
+        })
     }
+
+    // Concat image(s) onto source
+    ns.DataTileRenderer.prototype._addImages = function(images) {
+        let source = this.source
+
+        // Split source.data into array
+        let currentImages = this.splitImages(source.data)
+
+        // Concat incoming images
+        let allImages = currentImages.concat(images)
+
+        // Sort by level (in-place)
+        allImages = allImages.sort((a, b) => {
+            return a.level[0] - b.level[0]
+        })
+
+        // Combine into source.data object
+        let data = this.mergeImages(allImages)
+
+        source.data = data
+        source.change.emit()
+    }
+
+    // Append single image onto source
     ns.DataTileRenderer.prototype._addImage = function(data) {
         // Append data to source.data
         let source = this.source
@@ -107,31 +147,39 @@ let tiling = (function() {
         }, {})
 
         // Split into images
-        let images = Object.keys(updated)
-            .reduce((agg, key) => {
-                updated[key].forEach((array, index) => {
-                    agg[index] = agg[index] || {}
-                    agg[index][key] = array
-                })
-                return agg
-            }, [])
+        let images = this.splitImages(updated)
 
         // Sort by level (in-place)
         images = images.sort((a, b) => {
-            return a.level - b.level
+            return a.level[0] - b.level[0]
         })
 
-        // Combine into data object
-        let combined = images.reduce((agg, obj) => {
-            Object.keys(obj).forEach((key) => {
-                agg[key] = agg[key] || []
-                agg[key].push(obj[key])
-            })
-            return agg
-        }, {})
+        // Combine into source.data object
+        let combined = this.mergeImages(images)
 
         source.data = combined
         source.change.emit()
+    }
+
+    ns.DataTileRenderer.prototype.splitImages = function(data) {
+        // Map from {image: []} to [{image: []}, {image: []}]
+        return Object.keys(data)
+            .reduce((agg, key) => {
+                data[key].forEach((array, index) => {
+                    agg[index] = agg[index] || {}
+                    agg[index][key] = [array]
+                })
+                return agg
+            }, [])
+    }
+    ns.DataTileRenderer.prototype.mergeImages = function(images) {
+        return images.reduce((agg, obj) => {
+            Object.keys(obj).forEach((key) => {
+                agg[key] = agg[key] || []
+                agg[key] = agg[key].concat(obj[key])
+            })
+            return agg
+        }, {})
     }
 
     /**
