@@ -1,11 +1,13 @@
 import argparse
 import glob
 import os
+import cartopy
 import uvicorn
 import fastapi
 from fastapi import Response, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from starlette.responses import FileResponse
 import bokeh.resources
 import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
@@ -66,7 +68,7 @@ async def datasets_images(dataset_name: str, time: int):
                 content = serialize_json(obj)
                 response = Response(content=content,
                                     media_type="application/json")
-                response.headers["Cache-Control"] = "max-age=31536000"
+                #  response.headers["Cache-Control"] = "max-age=31536000"
                 return response
 
 
@@ -88,6 +90,25 @@ async def dataset_times(dataset_name, limit: int = 10):
                                     media_type="application/json")
                 #  response.headers["Cache-Control"] = "max-age=31536000"
                 return response
+
+
+@app.get("/tiles/{dataset}/{time}/{Z}/{X}/{Y}")
+async def tiles(dataset: str, time: int, Z: int, X: int, Y: int):
+    print(dataset, time, Z, X, Y)
+    obj = lib.core.get_data_tile(CONFIG, dataset, time, Z, X, Y)
+    content = serialize_json(obj)
+    response = Response(content=content,
+                        media_type="application/json")
+    #  response.headers["Cache-Control"] = "max-age=31536000"
+    return response
+
+
+@app.get("/google_limits")
+async def google_limits():
+    return {
+        "x": cartopy.crs.Mercator.GOOGLE.x_limits,
+        "y": cartopy.crs.Mercator.GOOGLE.y_limits,
+    }
 
 
 def parse_args():
