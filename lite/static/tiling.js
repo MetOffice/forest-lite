@@ -40,13 +40,17 @@ let tiling = (function() {
         })
 
         // Connect to x-range change
-        this.cache = {}
+        this.tileCache = {}
+        this.imageCache = {}
         let x_range = this.figure.x_range
         x_range.connect(x_range.properties.start.change, () => {
             this.render()
         })
     }
     ns.DataTileRenderer.prototype.setURL = function(url) {
+        if (url === this.url) {
+            return
+        }
         this.url = url
 
         // Reset image tiles
@@ -56,6 +60,9 @@ let tiling = (function() {
         }, {})
         this.source.data = empty
         this.source.change.emit()
+
+        // Empty tile cache
+        this.tileCache = {}
 
         // Re-render
         this.render()
@@ -72,50 +79,59 @@ let tiling = (function() {
             let key = this.url.replace("{Z}", tile.z)
                               .replace("{X}", tile.x)
                               .replace("{Y}", tile.y)
-            if (!(key in this.cache)) {
-                this.cache[key] = true // Dummy value
-                fetch(key)
-                    .then((response) => response.json())
-                    .then((data) => {
-                        console.log(tile)
-                        // Append data to source.data
-                        let source = this.source
-                        let updated = Object.keys(data)
-                            .reduce((acc, key) => {
-                                acc[key] = source.data[key]
-                                    .concat(data[key])
-                            return acc
-                        }, {})
-
-                        // Split into images
-                        let images = Object.keys(updated)
-                            .reduce((agg, key) => {
-                                updated[key].forEach((array, index) => {
-                                    agg[index] = agg[index] || {}
-                                    agg[index][key] = array
-                                })
-                                return agg
-                            }, [])
-
-                        // Sort by level (in-place)
-                        images = images.sort((a, b) => {
-                            return a.level - b.level
+            if (!(key in this.tileCache)) {
+                this.tileCache[key] = true // Dummy value
+                if (key in this.imageCache) {
+                    // Use in-memory copy
+                    this._addImage(this.imageCache[key])
+                } else {
+                    // Fetch from server
+                    fetch(key)
+                        .then((response) => response.json())
+                        .then((data) => {
+                            this.imageCache[key] = data
+                            this._addImage(data)
                         })
-
-                        // Combine into data object
-                        let combined = images.reduce((agg, obj) => {
-                            Object.keys(obj).forEach((key) => {
-                                agg[key] = agg[key] || []
-                                agg[key].push(obj[key])
-                            })
-                            return agg
-                        }, {})
-
-                        source.data = combined
-                        source.change.emit()
-                    })
+                }
             }
         }
+    }
+    ns.DataTileRenderer.prototype._addImage = function(data) {
+        // Append data to source.data
+        let source = this.source
+        let updated = Object.keys(data)
+            .reduce((acc, key) => {
+                acc[key] = source.data[key]
+                    .concat(data[key])
+            return acc
+        }, {})
+
+        // Split into images
+        let images = Object.keys(updated)
+            .reduce((agg, key) => {
+                updated[key].forEach((array, index) => {
+                    agg[index] = agg[index] || {}
+                    agg[index][key] = array
+                })
+                return agg
+            }, [])
+
+        // Sort by level (in-place)
+        images = images.sort((a, b) => {
+            return a.level - b.level
+        })
+
+        // Combine into data object
+        let combined = images.reduce((agg, obj) => {
+            Object.keys(obj).forEach((key) => {
+                agg[key] = agg[key] || []
+                agg[key].push(obj[key])
+            })
+            return agg
+        }, {})
+
+        source.data = combined
+        source.change.emit()
     }
 
     /**
@@ -135,7 +151,7 @@ let tiling = (function() {
                 end: interpY(y_range.end)
             }
         }
-        let level = zoomLevel(world)
+        let level = zoomLevel(world) + 2
         // Calculate {Z} {X} {Y} values
         let indices = {
             x: {

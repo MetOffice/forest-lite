@@ -7,7 +7,7 @@ import forest.geo
 import lib.tiling
 
 
-TILE_SIZE = 256
+TILE_SIZE = 64  # 128
 
 
 def get_data_tile(config, dataset_name, timestamp_ms, z, x, y):
@@ -26,7 +26,8 @@ def get_data_tile(config, dataset_name, timestamp_ms, z, x, y):
                     if len(pts[0]) > 0:
                         i = pts[0][0]
                         values = nc["data"][i].values
-                return lib.tiling.data_tile(lons, lats, values, zxy)
+                return lib.tiling.data_tile(lons, lats, values, zxy,
+                                            tile_size=TILE_SIZE)
 
 
 def xy_data(dataset, variable):
