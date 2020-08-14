@@ -7,7 +7,25 @@ let tiling = (function() {
     /**
      * Simple renderer to process image data endpoint
      */
-    ns.DataTileRenderer = function(figure) {
+    ns.DataTileRenderer = function(figure, color_mapper) {
+        this.source = new Bokeh.ColumnDataSource({
+            data: {
+                x: [],
+                y: [],
+                dw: [],
+                dh: [],
+                image: [],
+            }
+        })
+        figure.image({
+            x: { field: "x" },
+            y: { field: "y" },
+            dw: { field: "dw" },
+            dh: { field: "dh" },
+            image: { field: "image" },
+            source: this.source,
+            color_mapper: color_mapper
+        })
 
         // Example URL pattern
         this.url = "/tiles/dataset/time/{Z}/{X}/{Y}"
@@ -25,6 +43,9 @@ let tiling = (function() {
         let y_range = figure.y_range
         let cache = {}
         x_range.connect(x_range.properties.start.change, () => {
+            if (typeof limits === "undefined") {
+                return
+            }
             let tiles = tiling.tiles(x_range, y_range, limits)
             for (let i=0; i<tiles.length; i++) {
                 let tile = tiles[i]
@@ -33,7 +54,21 @@ let tiling = (function() {
                                   .replace("{Y}", tile.y)
                 if (!(key in cache)) {
                     cache[key] = true // Dummy value
-                    console.log(key)
+                    fetch(key)
+                        .then((response) => response.json())
+                        .then((data) => {
+                            console.log(tile)
+                            // Append data to source.data
+                            let source = this.source
+                            let updated = Object.keys(data)
+                                .reduce((acc, key) => {
+                                    acc[key] = source.data[key]
+                                        .concat(data[key])
+                                return acc
+                            }, {})
+                            source.data = updated
+                            source.change.emit()
+                        })
                 }
             }
         })

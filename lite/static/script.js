@@ -220,25 +220,6 @@ let main = function() {
                                   ))
     // store.subscribe(() => { console.log(store.getState()) })
 
-    // DataTileRenderer
-    let tile_renderer = new tiling.DataTileRenderer(figure)
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.dataset === "undefined") {
-            return
-        }
-        if (typeof state.time_index === "undefined") {
-            return
-        }
-        if (typeof state.times === "undefined") {
-            return
-        }
-        // Experimental tile server
-        let time = state.times[state.time_index]
-        let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
-        tile_renderer.setURL(url)
-    })
-
     // WMTS Map layer
     store.subscribe(() => {
         let state = store.getState()
@@ -353,39 +334,10 @@ let main = function() {
         }
     })
 
-    // RESTful image
-    let image_source = new Bokeh.ColumnDataSource({
-        data: {
-            x: [],
-            y: [],
-            dw: [],
-            dh: [],
-            image: [],
-            url: []
-        }
-    })
-    let filter = new Bokeh.IndexFilter({
-        indices: []
-    })
-    let view = new Bokeh.CDSView({
-        source: image_source,
-        filters: []
-    })
-    // image_source.connect(image_source.properties.data.change, () => {
-    //     const arrayMax = array => array.reduce((a, b) => Math.max(a, b))
-    //     const arrayMin = array => array.reduce((a, b) => Math.min(a, b))
-    //     let image = image_source.data.image[0]
-    //     let low = arrayMin(image.map(arrayMin))
-    //     let high = arrayMax(image.map(arrayMax))
-    //     let action = set_limits({low, high})
-    //     store.dispatch(action)
-    // })
-    store.dispatch(set_limits({low: 200, high: 300}))
+    // DataTileRenderer
+    let tile_renderer = new tiling.DataTileRenderer(figure, color_mapper)
     store.subscribe(() => {
         let state = store.getState()
-        if (state.is_fetching) {
-            return
-        }
         if (typeof state.dataset === "undefined") {
             return
         }
@@ -395,55 +347,103 @@ let main = function() {
         if (typeof state.times === "undefined") {
             return
         }
-
-        // Fetch image if not already loaded
+        // Experimental tile server
         let time = state.times[state.time_index]
-        let url = `./datasets/${state.dataset}/times/${time}`
-        if (state.image_url === url) {
-            return
-        }
-
-        let index = image_source.data["url"].indexOf(url)
-        if (index >= 0) {
-            view.indices = [index]
-            return
-        }
-
-        store.dispatch(fetch_image(url))
-        fetch(url).then((response) => {
-            return response.json()
-        }).then((data) => {
-            // fix missing wiring in image_base.ts
-            // image_source._shapes = {
-            //     image: [
-            //         []
-            //     ]
-            // }
-
-            let newData = Object.keys(data).reduce((acc, key) => {
-                acc[key] = image_source.data[key].concat(data[key])
-                return acc
-            }, {})
-            newData["url"] = image_source.data["url"].concat([url])
-
-            image_source.data = newData
-            image_source.change.emit()
-        }).then(() => {
-            store.dispatch(fetch_image_success())
-        })
+        let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
+        tile_renderer.setURL(url)
     })
 
-    window.image_source = image_source
-    let glyph = figure.image({
-        x: { field: "x" },
-        y: { field: "y" },
-        dw: { field: "dw" },
-        dh: { field: "dh" },
-        image: { field: "image" },
-        source: image_source,
-        view: view,
-        color_mapper: color_mapper
-    })
+    //   // RESTful image
+    //   let image_source = new Bokeh.ColumnDataSource({
+    //       data: {
+    //           x: [],
+    //           y: [],
+    //           dw: [],
+    //           dh: [],
+    //           image: [],
+    //           url: []
+    //       }
+    //   })
+    //   let filter = new Bokeh.IndexFilter({
+    //       indices: []
+    //   })
+    //   let view = new Bokeh.CDSView({
+    //       source: image_source,
+    //       filters: []
+    //   })
+    //   // image_source.connect(image_source.properties.data.change, () => {
+    //   //     const arrayMax = array => array.reduce((a, b) => Math.max(a, b))
+    //   //     const arrayMin = array => array.reduce((a, b) => Math.min(a, b))
+    //   //     let image = image_source.data.image[0]
+    //   //     let low = arrayMin(image.map(arrayMin))
+    //   //     let high = arrayMax(image.map(arrayMax))
+    //   //     let action = set_limits({low, high})
+    //   //     store.dispatch(action)
+    //   // })
+    //   store.dispatch(set_limits({low: 200, high: 300}))
+    //   store.subscribe(() => {
+    //       let state = store.getState()
+    //       if (state.is_fetching) {
+    //           return
+    //       }
+    //       if (typeof state.dataset === "undefined") {
+    //           return
+    //       }
+    //       if (typeof state.time_index === "undefined") {
+    //           return
+    //       }
+    //       if (typeof state.times === "undefined") {
+    //           return
+    //       }
+
+    //       // Fetch image if not already loaded
+    //       let time = state.times[state.time_index]
+    //       let url = `./datasets/${state.dataset}/times/${time}`
+    //       if (state.image_url === url) {
+    //           return
+    //       }
+
+    //       let index = image_source.data["url"].indexOf(url)
+    //       if (index >= 0) {
+    //           view.indices = [index]
+    //           return
+    //       }
+
+    //       store.dispatch(fetch_image(url))
+    //       fetch(url).then((response) => {
+    //           return response.json()
+    //       }).then((data) => {
+    //           // fix missing wiring in image_base.ts
+    //           // image_source._shapes = {
+    //           //     image: [
+    //           //         []
+    //           //     ]
+    //           // }
+
+    //           let newData = Object.keys(data).reduce((acc, key) => {
+    //               acc[key] = image_source.data[key].concat(data[key])
+    //               return acc
+    //           }, {})
+    //           newData["url"] = image_source.data["url"].concat([url])
+
+    //           image_source.data = newData
+    //           image_source.change.emit()
+    //       }).then(() => {
+    //           store.dispatch(fetch_image_success())
+    //       })
+    //   })
+
+    //   window.image_source = image_source
+    //   let glyph = figure.image({
+    //       x: { field: "x" },
+    //       y: { field: "y" },
+    //       dw: { field: "dw" },
+    //       dh: { field: "dh" },
+    //       image: { field: "image" },
+    //       source: image_source,
+    //       view: view,
+    //       color_mapper: color_mapper
+    //   })
 
     let title = new Title(document.getElementById("title-text"))
     store.subscribe(() => {
