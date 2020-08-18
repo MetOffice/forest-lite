@@ -1,12 +1,14 @@
 import * as tiling from "./tiling.js"
 import * as contour from "./contour.js"
 import * as helpers from "@turf/helpers"
+import * as projection from "@turf/projection"
 import isolines from "@turf/isolines"
 import pointGrid from "@turf/point-grid"
 
 window.isolines = isolines
 window.pointGrid = pointGrid
 window.helpers = helpers
+window.projection = projection
 window.contour = contour
 
 let providers = {
@@ -346,28 +348,57 @@ window.main = function() {
         }
     })
 
-    // DataTileRenderer
-    let tile_renderer = new tiling.DataTileRenderer(figure, color_mapper)
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.dataset === "undefined") {
-            return
-        }
-        if (typeof state.time_index === "undefined") {
-            return
-        }
-        if (typeof state.times === "undefined") {
-            return
-        }
-        // Experimental tile server
-        let time = state.times[state.time_index]
-        let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
-        tile_renderer.setURL(url)
-    })
+    //  // DataTileRenderer
+    //  let tile_renderer = new tiling.DataTileRenderer(figure, color_mapper)
+    //  store.subscribe(() => {
+    //      let state = store.getState()
+    //      if (typeof state.dataset === "undefined") {
+    //          return
+    //      }
+    //      if (typeof state.time_index === "undefined") {
+    //          return
+    //      }
+    //      if (typeof state.times === "undefined") {
+    //          return
+    //      }
+    //      // Experimental tile server
+    //      let time = state.times[state.time_index]
+    //      let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
+    //      tile_renderer.setURL(url)
+    //  })
 
     // Isolines
-    let contourRenderer = new contour.ContourRenderer(figure, tile_renderer.source)
-    console.log(contourRenderer)
+    let contourRenderer = new contour.ContourRenderer(figure)
+    let breaks = []
+    let z0 = 100
+    let z1 = 300
+    let zn = 10
+    let dz = (z1 - z0) / zn
+    for (let k=0; k<zn; k++) {
+        let value = z0 + (k * dz)
+        breaks.push(value)
+    }
+
+    let x0 = 5
+    let dx = 10 / 256
+    let y0 = 5
+    let dy = 10 / 256
+    let image = []
+    for (let i=0; i<256; i++) {
+        let row = []
+        for (let j=0; j<256; j++) {
+            let value = (i / 256) * 300
+            row.push(value)
+        }
+        image.push(row)
+    }
+    contourRenderer.render({
+        x: 0,
+        y: 0,
+        dw: 10,
+        dh: 10,
+        image: image
+    }, breaks)
 
     //   // RESTful image
     //   let image_source = new Bokeh.ColumnDataSource({

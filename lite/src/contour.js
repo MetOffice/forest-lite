@@ -2,12 +2,42 @@
  * Convert tiled arrays into isolines
  */
 import * as helpers from "@turf/helpers"
+import * as projection from "@turf/projection"
+import isolines from "@turf/isolines"
 
 
-export const ContourRenderer = function(figure, source) {
-    source.connect(source.properties.data.change, () => {
-        console.log("ContourRenderer")
+export const ContourRenderer = function(figure) {
+    let line = helpers.lineString([[0, 0], [1e6, 1e6]])
+    let lines = helpers.featureCollection([line])
+    console.log("constructor", lines)
+    let geojson = JSON.stringify(lines)
+    this.source = new Bokeh.GeoJSONDataSource({ geojson: geojson })
+    this.figure = figure
+    this.figure.multi_line({
+        xs: {field: "xs"},
+        ys: {field: "ys"},
+        line_color: "black",
+        source: this.source
     })
+
+}
+ContourRenderer.prototype.render = function(data, breaks) {
+    let points = helpers.featureCollection(toPoints(data))
+    let lines = projection.toMercator(
+        isolines(points, breaks, {zProperty: "value"})
+    )
+    console.log(lines)
+
+    // Filter zero-length lines
+    lines.features = lines.features.concat().filter((feature) => {
+        return feature.geometry.coordinates.length > 0
+    })
+    console.log(lines)
+
+    if (lines.features.length > 0) {
+        this.source.geojson = JSON.stringify(lines)
+        this.source.change.emit()
+    }
 }
 
 /**
