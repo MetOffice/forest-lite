@@ -1,4 +1,13 @@
 import * as tiling from "./tiling.js"
+import * as contour from "./contour.js"
+import * as helpers from "@turf/helpers"
+import isolines from "@turf/isolines"
+import pointGrid from "@turf/point-grid"
+
+window.isolines = isolines
+window.pointGrid = pointGrid
+window.helpers = helpers
+window.contour = contour
 
 let providers = {
     'Antique': 'https://cartocdn_d.global.ssl.fastly.net/base-antique/{Z}/{X}/{Y}.png',
@@ -355,6 +364,10 @@ window.main = function() {
         let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
         tile_renderer.setURL(url)
     })
+
+    // Isolines
+    let contourRenderer = new contour.ContourRenderer(figure, tile_renderer.source)
+    console.log(contourRenderer)
 
     //   // RESTful image
     //   let image_source = new Bokeh.ColumnDataSource({
