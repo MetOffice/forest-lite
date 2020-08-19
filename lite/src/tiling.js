@@ -20,7 +20,7 @@ export let DataTileRenderer = function(figure, color_mapper, source) {
         })
     }
     this.source = source
-    figure.image({
+    const renderer = figure.image({
         x: { field: "x" },
         y: { field: "y" },
         dw: { field: "dw" },
@@ -29,6 +29,14 @@ export let DataTileRenderer = function(figure, color_mapper, source) {
         source: this.source,
         color_mapper: color_mapper
     })
+
+    // HoverTool
+    const tooltip = "value: @image"
+    const tool = new Bokeh.HoverTool({
+        renderers: [renderer],
+        tooltips: tooltip
+    })
+    figure.add_tools(tool)
 
     // Example URL pattern
     this.url = "/tiles/dataset/time/{Z}/{X}/{Y}"
