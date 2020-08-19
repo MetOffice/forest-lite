@@ -1,0 +1,2 @@
+export const SET_HOVER_TOOL = "SET_HOVER_TOOL"
+export const TOGGLE_HOVER_TOOL = "TOGGLE_HOVER_TOOL"

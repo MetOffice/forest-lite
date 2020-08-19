@@ -1,6 +1,13 @@
 import * as tiling from "./tiling.js"
 import * as contour from "./contour.js"
 import * as helpers from "@turf/helpers"
+import * as Redux from "redux"
+import React from "react"
+import ReactDOM from "react-dom"
+import { Provider } from "react-redux"
+import App from "./App.js"
+import { SET_HOVER_TOOL, TOGGLE_HOVER_TOOL } from "./action-types.js"
+import { setHoverTool } from "./actions.js"
 
 
 let providers = {
@@ -54,6 +61,8 @@ let fetch_image_success = () => { return { type: FETCH_IMAGE_SUCCESS } }
 // ReduxJS
 let reducer = (state = "", action) => {
     switch (action.type) {
+        case SET_HOVER_TOOL:
+            return Object.assign({}, state, {hover_tool: action.payload})
         case SET_DATASET:
             return Object.assign({}, state, {dataset: action.payload})
         case SET_DATASETS:
@@ -92,10 +101,24 @@ let reducer = (state = "", action) => {
 
 // Middlewares
 let logActionMiddleware = store => next => action => {
-    // console.log(action)
+    console.log(action)
     next(action)
 }
 
+let toolMiddleware = store => next => action => {
+    if (action.type === TOGGLE_HOVER_TOOL) {
+        let flag
+        let state = store.getState()
+        if (typeof state.hover_tool === "undefined") {
+            flag = true
+        } else {
+            flag = !state.hover_tool
+        }
+        next(setHoverTool(flag))
+    } else {
+        next(action)
+    }
+}
 
 let animationMiddleware = store => next => action => {
     if (action.type === NEXT_TIME_INDEX) {
@@ -194,6 +217,7 @@ let getPalettes = function(palettes, name, number) {
 
 
 window.main = function() {
+
     // Geographical map
     let xdr = new Bokeh.Range1d({ start: 0, end: 1e6 })
     let ydr = new Bokeh.Range1d({ start: 0, end: 1e6 })
@@ -219,11 +243,19 @@ window.main = function() {
     let store = Redux.createStore(reducer,
                                   Redux.applyMiddleware(
                                       logActionMiddleware,
+                                      toolMiddleware,
                                       animationMiddleware,
                                       colorPaletteMiddleware,
                                       datasetsMiddleware,
                                   ))
-    // store.subscribe(() => { console.log(store.getState()) })
+    store.subscribe(() => { console.log(store.getState()) })
+
+    // Use React to manage components
+    ReactDOM.render(
+        <Provider store={store}>
+            <App />
+        </Provider>,
+        document.getElementById("root"))
 
     // WMTS Map layer
     store.subscribe(() => {
@@ -357,6 +389,13 @@ window.main = function() {
         let time = state.times[state.time_index]
         let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
         tile_renderer.setURL(url)
+
+        // HoverTool
+        if (typeof state.hover_tool === "undefined") {
+            return
+        } else {
+            tile_renderer.tool.active = state.hover_tool
+        }
     })
 
     // Isolines
@@ -522,10 +561,8 @@ window.main = function() {
         }
     }
 
-    let controls = document.getElementById("controls")
-    let row = document.createElement("div")
+    let row = document.getElementById("animate-controls")
     row.classList.add("btn-row")
-    controls.appendChild(row)
 
     // Previous button
     let previousButton = new Previous({
