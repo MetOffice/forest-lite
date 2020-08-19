@@ -1,15 +1,7 @@
 import * as tiling from "./tiling.js"
 import * as contour from "./contour.js"
 import * as helpers from "@turf/helpers"
-import * as projection from "@turf/projection"
-import isolines from "@turf/isolines"
-import pointGrid from "@turf/point-grid"
 
-window.isolines = isolines
-window.pointGrid = pointGrid
-window.helpers = helpers
-window.projection = projection
-window.contour = contour
 
 let providers = {
     'Antique': 'https://cartocdn_d.global.ssl.fastly.net/base-antique/{Z}/{X}/{Y}.png',
@@ -366,8 +358,6 @@ window.main = function() {
         let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
         tile_renderer.setURL(url)
     })
-    
-    
 
     // Isolines
     let contourRenderer = new contour.ContourRenderer(figure)
@@ -387,7 +377,6 @@ window.main = function() {
         fetch(url)
             .then(response => response.json())
             .then((data) => {
-                console.log(data)
                 let lats = data.coords.latitude.data
                 let lons = data.coords.longitude.data
                 let values = data.data
@@ -403,7 +392,6 @@ window.main = function() {
                 return helpers.featureCollection(points)
             })
             .then((feature) => {
-                console.log(feature)
                 let breaks = [280, 290, 300]
                 contourRenderer.renderFeature(feature, breaks)
             })
