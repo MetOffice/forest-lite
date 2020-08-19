@@ -16,16 +16,24 @@ export const ContourRenderer = function(figure) {
     this.figure.multi_line({
         xs: {field: "xs"},
         ys: {field: "ys"},
-        line_color: "black",
+        line_color: "gray",
         source: this.source
     })
 
 }
 ContourRenderer.prototype.render = function(data, breaks) {
-    let points = helpers.featureCollection(toPoints(data))
-    let lines = projection.toMercator(
-        isolines(points, breaks, {zProperty: "value"})
-    )
+    let feature = helpers.featureCollection(toPoints(data))
+    this.renderFeature(feature, breaks)
+}
+ContourRenderer.prototype.renderFeature = function(points, breaks) {
+    // Map into WebMercator space
+    points = projection.toMercator(points)
+
+    console.log(points)
+
+    // Use turf.js to contour data
+    let lines = isolines(points, breaks, {zProperty: "value"})
+
     console.log(lines)
 
     // Filter zero-length lines

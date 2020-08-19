@@ -12,22 +12,36 @@ TILE_SIZE = 64  # 128
 
 def get_data_tile(config, dataset_name, timestamp_ms, z, x, y):
     time = np.datetime64(timestamp_ms, 'ms')
+    path = get_path(config, dataset_name)
+    zxy = (z, x, y)
+    with xarray.open_dataset(path, engine="h5netcdf") as nc:
+        lons = nc["longitude"].values
+        lats = nc["latitude"].values
+        pts = np.where(nc.time.values == time)
+        if len(pts[0]) > 0:
+            i = pts[0][0]
+            values = nc["data"][i].values
+    return lib.tiling.data_tile(lons, lats, values, zxy,
+                                tile_size=TILE_SIZE)
+
+
+def get_points(path, time):
+    with xarray.open_dataset(path, engine="h5netcdf") as nc:
+        pts = np.where(nc.time.values == time)
+        if len(pts[0]) > 0:
+            i = pts[0][0]
+            data_array = nc["data"][i][::10, ::20]
+    return data_array.to_dict()
+
+
+def get_path(config, dataset_name):
     for dataset in config.datasets:
         if dataset.label == dataset_name:
             pattern = dataset.driver.settings["pattern"]
             paths = sorted(glob.glob(pattern))
             if len(paths) > 0:
-                path = paths[-1]
-                zxy = (z, x, y)
-                with xarray.open_dataset(path, engine="h5netcdf") as nc:
-                    lons = nc["longitude"].values
-                    lats = nc["latitude"].values
-                    pts = np.where(nc.time.values == time)
-                    if len(pts[0]) > 0:
-                        i = pts[0][0]
-                        values = nc["data"][i].values
-                return lib.tiling.data_tile(lons, lats, values, zxy,
-                                            tile_size=TILE_SIZE)
+                return paths[-1]
+    raise Exception(f"{dataset_name} path not found")
 
 
 def xy_data(dataset, variable):
