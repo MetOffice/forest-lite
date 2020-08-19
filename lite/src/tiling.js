@@ -15,7 +15,8 @@ export let DataTileRenderer = function(figure, color_mapper, source) {
                 dw: [],
                 dh: [],
                 image: [],
-                level: []
+                level: [],
+                units: []
             }
         })
     }
@@ -31,7 +32,7 @@ export let DataTileRenderer = function(figure, color_mapper, source) {
     })
 
     // HoverTool
-    const tooltip = "value: @image"
+    const tooltip = "Value: @image @units"
     const tool = new Bokeh.HoverTool({
         renderers: [renderer],
         tooltips: tooltip

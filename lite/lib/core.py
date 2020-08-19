@@ -17,12 +17,18 @@ def get_data_tile(config, dataset_name, timestamp_ms, z, x, y):
     with xarray.open_dataset(path, engine="h5netcdf") as nc:
         lons = nc["longitude"].values
         lats = nc["latitude"].values
+        units = nc.data.units
         pts = np.where(nc.time.values == time)
         if len(pts[0]) > 0:
             i = pts[0][0]
             values = nc["data"][i].values
-    return lib.tiling.data_tile(lons, lats, values, zxy,
+
+    data = lib.tiling.data_tile(lons, lats, values, zxy,
                                 tile_size=TILE_SIZE)
+    data.update({
+        "units": [units]
+    })
+    return data
 
 
 def get_points(path, time):
