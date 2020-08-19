@@ -5,9 +5,14 @@ import { toggleHoverTool } from "./actions"
 
 class ConnectedToggle extends React.Component {
     render() {
-        console.log(this.props)
+        let text
+        if (this.props.flag) {
+            text = "On"
+        } else {
+            text = "Off"
+        }
         return (
-            <i className="fa-play fas" onClick={ () => this.handleClick() }></i>
+            <p onClick={ () => this.handleClick() }>{ text }</p>
         )
     }
 
