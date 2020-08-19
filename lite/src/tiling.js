@@ -7,6 +7,7 @@
  */
 export let DataTileRenderer = function(figure, color_mapper, source) {
     this.figure = figure
+    window.figure = figure
     if (typeof source === "undefined") {
         source = new Bokeh.ColumnDataSource({
             data: {
@@ -33,11 +34,11 @@ export let DataTileRenderer = function(figure, color_mapper, source) {
 
     // HoverTool
     const tooltip = "Value: @image @units"
-    const tool = new Bokeh.HoverTool({
+    this.tool = new Bokeh.HoverTool({
         renderers: [renderer],
         tooltips: tooltip
     })
-    figure.add_tools(tool)
+    figure.add_tools(this.tool)
 
     // Example URL pattern
     this.url = "/tiles/dataset/time/{Z}/{X}/{Y}"
@@ -57,6 +58,7 @@ export let DataTileRenderer = function(figure, color_mapper, source) {
         this.render()
     })
 }
+
 DataTileRenderer.prototype.setURL = function(url) {
     if (url === this.url) {
         return
