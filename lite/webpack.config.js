@@ -3,9 +3,10 @@ const path = require('path')
 
 module.exports = {
     entry: {
-        script: './src/script.js'
+        lite: './src/index.js'
     },
     output: {
+        filename: '[name].min.js',
         path: path.resolve(__dirname, "static")
     }
 }
