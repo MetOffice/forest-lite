@@ -8,6 +8,7 @@ import { Provider } from "react-redux"
 import App from "./App.js"
 import { SET_HOVER_TOOL, TOGGLE_HOVER_TOOL } from "./action-types.js"
 import { setHoverTool } from "./actions.js"
+import { Colorbar } from "./Colorbar.js"
 
 
 let providers = {
@@ -527,6 +528,10 @@ window.main = function() {
     //       view: view,
     //       color_mapper: color_mapper
     //   })
+    //
+
+    // Set static limits
+    store.dispatch(set_limits({low: 200, high: 300}))
 
     let title = new Title(document.getElementById("title-text"))
     store.subscribe(() => {
@@ -625,6 +630,29 @@ window.main = function() {
     // Lakes
     let lakes = new Lines(figure, "LightBlue")
     lakes.fetch("./atlas/lakes")
+
+    // Colorbar figure
+    const colorbar = new Colorbar(document.getElementById("colorbar-figure"))
+    store.subscribe(() => {
+        let state = store.getState()
+        if (typeof state.limits === "undefined") {
+            return
+        }
+        if (typeof state.limits.low === "undefined") {
+            return
+        }
+        if (typeof state.limits.high === "undefined") {
+            return
+        }
+        if (typeof state.palette === "undefined") {
+            return
+        }
+        colorbar.render({
+            low: state.limits.low,
+            high: state.limits.high,
+            palette: state.palette,
+        })
+    })
 }
 
 
