@@ -16,6 +16,16 @@ html, body {
     position: absolute;
     top: 0;
 }
+.abs-bottom {
+    position: absolute;
+    bottom: 0;
+}
+.left {
+    left: 0;
+}
+.margin-20 {
+    margin: 20px;
+}
 .center {
     left: 50%;
     transform: translate(-50%);
@@ -28,6 +38,13 @@ html, body {
     padding: 10px 20px;
     font-family: Helvetica, Arial, sans-serif;
     font-size: 1.2rem;
+}
+.colorbar {
+    background-color: white;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    padding: 10px;
+    padding-bottom: 0;
 }
 .lite-btn {
     background-color: white;
