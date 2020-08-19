@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "test": "jest",
+    "watch": "jest --watch",
     "build": "webpack"
   },
   "author": "andrewgryan",
@@ -15,5 +16,8 @@
     "jest": "^26.4.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
+  },
+  "dependencies": {
+    "@turf/turf": "^5.1.6"
   }
 }

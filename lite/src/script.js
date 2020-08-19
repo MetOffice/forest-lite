@@ -1,4 +1,7 @@
 import * as tiling from "./tiling.js"
+import * as contour from "./contour.js"
+import * as helpers from "@turf/helpers"
+
 
 let providers = {
     'Antique': 'https://cartocdn_d.global.ssl.fastly.net/base-antique/{Z}/{X}/{Y}.png',
@@ -354,6 +357,44 @@ window.main = function() {
         let time = state.times[state.time_index]
         let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
         tile_renderer.setURL(url)
+    })
+
+    // Isolines
+    let contourRenderer = new contour.ContourRenderer(figure)
+    store.subscribe(() => {
+        let state = store.getState()
+        if (typeof state.time_index === "undefined") {
+            return
+        }
+        if (typeof state.times === "undefined") {
+            return
+        }
+        if (typeof state.dataset === "undefined") {
+            return
+        }
+        let timestamp_ms = state.times[state.time_index]
+        let url = `./points/${state.dataset}/${timestamp_ms}`
+        fetch(url)
+            .then(response => response.json())
+            .then((data) => {
+                let lats = data.coords.latitude.data
+                let lons = data.coords.longitude.data
+                let values = data.data
+                let points = []
+                for (let i=0; i<lats.length; i++) {
+                    for (let j=0; j<lons.length; j++) {
+                        let point = helpers.point(
+                            [lons[j], lats[i]],
+                            {value: values[i][j]})
+                        points.push(point)
+                    }
+                }
+                return helpers.featureCollection(points)
+            })
+            .then((feature) => {
+                let breaks = [280, 290, 300]
+                contourRenderer.renderFeature(feature, breaks)
+            })
     })
 
     //   // RESTful image

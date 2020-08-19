@@ -2,6 +2,7 @@ import argparse
 import glob
 import os
 import cartopy
+import numpy as np
 import uvicorn
 import fastapi
 from fastapi import Response, Request
@@ -97,6 +98,18 @@ async def dataset_times(dataset_name, limit: int = 10):
 async def tiles(dataset: str, time: int, Z: int, X: int, Y: int):
     print(dataset, time, Z, X, Y)
     obj = lib.core.get_data_tile(CONFIG, dataset, time, Z, X, Y)
+    content = serialize_json(obj)
+    response = Response(content=content,
+                        media_type="application/json")
+    #  response.headers["Cache-Control"] = "max-age=31536000"
+    return response
+
+
+@app.get("/points/{dataset}/{timestamp_ms}")
+async def points(dataset: str, timestamp_ms: int):
+    time = np.datetime64(timestamp_ms, 'ms')
+    path = lib.core.get_path(CONFIG, dataset)
+    obj = lib.core.get_points(path, time)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")

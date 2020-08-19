@@ -5,18 +5,21 @@
 /**
  * Simple renderer to process image data endpoint
  */
-export let DataTileRenderer = function(figure, color_mapper) {
+export let DataTileRenderer = function(figure, color_mapper, source) {
     this.figure = figure
-    this.source = new Bokeh.ColumnDataSource({
-        data: {
-            x: [],
-            y: [],
-            dw: [],
-            dh: [],
-            image: [],
-            level: []
-        }
-    })
+    if (typeof source === "undefined") {
+        source = new Bokeh.ColumnDataSource({
+            data: {
+                x: [],
+                y: [],
+                dw: [],
+                dh: [],
+                image: [],
+                level: []
+            }
+        })
+    }
+    this.source = source
     figure.image({
         x: { field: "x" },
         y: { field: "y" },
