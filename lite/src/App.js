@@ -5,14 +5,25 @@ import { toggleHoverTool } from "./actions"
 
 class ConnectedToggle extends React.Component {
     render() {
-        let text
+        let spanStyle
+        let iconStyle
         if (this.props.flag) {
-            text = "On"
+            spanStyle = {
+            }
+            iconStyle = {
+            }
         } else {
-            text = "Off"
+            spanStyle = {
+                backgroundColor: "#EEE"
+            }
+            iconStyle = {
+                color: "#BBB"
+            }
         }
         return (
-            <p onClick={ () => this.handleClick() }>{ text }</p>
+            <span className="tool-icon fa-stack fa-1x" style={ spanStyle } onClick={ () => this.handleClick() }>
+                <i className="far fa-comment-alt fa-stack-1x" style={ iconStyle }></i>
+            </span>
         )
     }
 

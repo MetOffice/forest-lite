@@ -561,10 +561,8 @@ window.main = function() {
         }
     }
 
-    let controls = document.getElementById("controls")
-    let row = document.createElement("div")
+    let row = document.getElementById("animate-controls")
     row.classList.add("btn-row")
-    controls.appendChild(row)
 
     // Previous button
     let previousButton = new Previous({
