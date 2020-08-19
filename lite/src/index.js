@@ -1,6 +1,11 @@
 import * as tiling from "./tiling.js"
 import * as contour from "./contour.js"
 import * as helpers from "@turf/helpers"
+import * as Redux from "redux"
+import React from "react"
+import ReactDOM from "react-dom"
+import { Provider } from "react-redux"
+import App from "./App.js"
 
 
 let providers = {
@@ -194,6 +199,7 @@ let getPalettes = function(palettes, name, number) {
 
 
 window.main = function() {
+
     // Geographical map
     let xdr = new Bokeh.Range1d({ start: 0, end: 1e6 })
     let ydr = new Bokeh.Range1d({ start: 0, end: 1e6 })
@@ -224,6 +230,13 @@ window.main = function() {
                                       datasetsMiddleware,
                                   ))
     // store.subscribe(() => { console.log(store.getState()) })
+
+    // Use React to manage components
+    ReactDOM.render(
+        <Provider store={store}>
+            <App />
+        </Provider>,
+        document.getElementById("root"))
 
     // WMTS Map layer
     store.subscribe(() => {
