@@ -1,7 +1,7 @@
 import React from "react"
 import { connect } from "react-redux"
 import Toggle from "./Toggle.js"
-import { toggleHoverTool } from "./actions"
+import { toggleHoverTool, toggleColorbar } from "./actions"
 
 
 class Toolbar extends React.Component {
@@ -9,11 +9,11 @@ class Toolbar extends React.Component {
         return (
             <div>
                 <Toggle icon="far fa-comment-alt"
-                        active={ this.props.flag }
+                        active={ this.props.hover_tool }
                         onClick={ () => { this.handleClick("hovertool") } } />
                 <Toggle icon="fas fa-palette"
-                        active={ true }
-                        onClick={ () => { this.handleClick("palette") } } />
+                        active={ this.props.colorbar }
+                        onClick={ () => { this.handleClick("colorbar") } } />
             </div>
         )
     }
@@ -22,17 +22,21 @@ class Toolbar extends React.Component {
         if (icon === "hovertool") {
             this.props.dispatch(toggleHoverTool())
         } else {
-            console.log("Click", icon)
+            this.props.dispatch(toggleColorbar())
         }
     }
 }
 
 
 const mapStateToProps = (state) => {
-    if (typeof state.hover_tool === "undefined") {
-        return {flag: false}
+    let { hover_tool, colorbar } = state
+    if (typeof hover_tool === "undefined") {
+        hover_tool = false
     }
-    return {flag: state.hover_tool}
+    if (typeof colorbar === "undefined") {
+        colorbar = false
+    }
+    return { hover_tool, colorbar }
 }
 
 

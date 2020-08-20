@@ -585,6 +585,7 @@ window.main = function() {
             low: state.limits.low,
             high: state.limits.high,
             palette: state.palette,
+            visible: state.colorbar
         })
     })
 }

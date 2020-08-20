@@ -3,6 +3,7 @@
 
 
 export function Colorbar(el) {
+    this.el = el
     const padding = 10
     const margin = 20
     const colorbarHeight = 20
@@ -40,7 +41,15 @@ export function Colorbar(el) {
     figure.add_layout(colorbar, "center")
     Bokeh.Plotting.show(figure, el)
 }
-Colorbar.prototype.render = function({ low, high, palette }) {
+Colorbar.prototype.render = function({ low, high, palette, visible }) {
+    // Hide/show container element
+    if (visible) {
+        this.el.style.display = "block"
+    } else {
+        this.el.style.display = "none"
+    }
+
+    // Edit palette parameters
     this.color_mapper.low = low
     this.color_mapper.high = high
     this.color_mapper.palette = palette
