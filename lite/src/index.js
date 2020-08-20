@@ -6,9 +6,36 @@ import React from "react"
 import ReactDOM from "react-dom"
 import { Provider } from "react-redux"
 import App from "./App.js"
-import { SET_HOVER_TOOL, TOGGLE_HOVER_TOOL } from "./action-types.js"
-import { setHoverTool } from "./actions.js"
+import { rootReducer } from "./reducers.js"
 import { Colorbar } from "./Colorbar.js"
+import { toolMiddleware } from "./middlewares.js"
+import {
+    SET_DATASETS,
+    SET_PALETTE_NAME,
+    SET_PALETTE_NUMBER,
+    SET_PALETTES,
+    NEXT_TIME_INDEX,
+    PREVIOUS_TIME_INDEX
+} from "./action-types.js"
+import {
+    set_url,
+    set_dataset,
+    set_datasets,
+    set_palette,
+    set_palettes,
+    set_palette_name,
+    set_palette_names,
+    set_palette_number,
+    set_palette_numbers,
+    set_playing,
+    set_limits,
+    set_times,
+    set_time_index,
+    next_time_index,
+    previous_time_index,
+    fetch_image,
+    fetch_image_success
+} from "./actions.js"
 
 
 let providers = {
@@ -19,106 +46,12 @@ let providers = {
 }
 
 
-// Action keywords
-const SET_URL = 'SET_URL'
-const SET_DATASET = 'SET_DATASET'
-const SET_DATASETS = 'SET_DATASETS'
-const SET_PALETTE = 'SET_PALETTE'
-const SET_PALETTES = 'SET_PALETTES'
-const SET_PALETTE_NAME = 'SET_PALETTE_NAME'
-const SET_PALETTE_NAMES = 'SET_PALETTE_NAMES'
-const SET_PALETTE_NUMBER = 'SET_PALETTE_NUMBER'
-const SET_PALETTE_NUMBERS = 'SET_PALETTE_NUMBERS'
-const SET_PLAYING = 'SET_PLAYING'
-const SET_LIMITS = 'SET_LIMITS'
-const SET_TIMES = 'SET_TIMES'
-const SET_TIME_INDEX = 'SET_TIME_INDEX'
-const NEXT_TIME_INDEX = 'NEXT_TIME_INDEX'
-const PREVIOUS_TIME_INDEX = 'PREVIOUS_TIME_INDEX'
-const FETCH_IMAGE = 'FETCH_IMAGE'
-const FETCH_IMAGE_SUCCESS = 'FETCH_IMAGE_SUCCESS'
-
-
-// Action creators
-let set_url = url => { return { type: SET_URL, payload: url } }
-let set_dataset = name => { return { type: SET_DATASET, payload: name } }
-let set_datasets = names => { return { type: SET_DATASETS, payload: names } }
-let set_palette = name => { return { type: SET_PALETTE, payload: name } }
-let set_palettes = items => { return { type: SET_PALETTES, payload: items } }
-let set_palette_name = data => { return { type: SET_PALETTE_NAME, payload: data } }
-let set_palette_names = data => { return { type: SET_PALETTE_NAMES, payload: data } }
-let set_palette_number = data => { return { type: SET_PALETTE_NUMBER, payload: data } }
-let set_palette_numbers = data => { return { type: SET_PALETTE_NUMBERS, payload: data } }
-let set_playing = flag => { return { type: SET_PLAYING, payload: flag } }
-let set_limits = limits => { return { type: SET_LIMITS, payload: limits } }
-let set_times = times => { return { type: SET_TIMES, payload: times } }
-let set_time_index = index => { return { type: SET_TIME_INDEX, payload: index } }
-let next_time_index = () => { return { type: NEXT_TIME_INDEX } }
-let previous_time_index = () => { return { type: PREVIOUS_TIME_INDEX } }
-let fetch_image = url => { return { type: FETCH_IMAGE, payload: url } }
-let fetch_image_success = () => { return { type: FETCH_IMAGE_SUCCESS } }
-
-
 // ReduxJS
-let reducer = (state = "", action) => {
-    switch (action.type) {
-        case SET_HOVER_TOOL:
-            return Object.assign({}, state, {hover_tool: action.payload})
-        case SET_DATASET:
-            return Object.assign({}, state, {dataset: action.payload})
-        case SET_DATASETS:
-            return Object.assign({}, state, {datasets: action.payload})
-        case SET_URL:
-            return Object.assign({}, state, {url: action.payload})
-        case SET_PALETTE:
-            return Object.assign({}, state, {palette: action.payload})
-        case SET_PALETTES:
-            return Object.assign({}, state, {palettes: action.payload})
-        case SET_PALETTE_NAME:
-            return Object.assign({}, state, {palette_name: action.payload})
-        case SET_PALETTE_NAMES:
-            return Object.assign({}, state, {palette_names: action.payload})
-        case SET_PALETTE_NUMBER:
-            return Object.assign({}, state, {palette_number: action.payload})
-        case SET_PALETTE_NUMBERS:
-            return Object.assign({}, state, {palette_numbers: action.payload})
-        case SET_PLAYING:
-            return Object.assign({}, state, {playing: action.payload})
-        case SET_LIMITS:
-            return Object.assign({}, state, {limits: action.payload})
-        case SET_TIMES:
-            return Object.assign({}, state, {times: action.payload})
-        case SET_TIME_INDEX:
-            return Object.assign({}, state, {time_index: action.payload})
-        case FETCH_IMAGE:
-            return Object.assign({}, state, {is_fetching: true, image_url: action.payload})
-        case FETCH_IMAGE_SUCCESS:
-            return Object.assign({}, state, {is_fetching: false})
-        default:
-            return state
-    }
-}
-
 
 // Middlewares
 let logActionMiddleware = store => next => action => {
     console.log(action)
     next(action)
-}
-
-let toolMiddleware = store => next => action => {
-    if (action.type === TOGGLE_HOVER_TOOL) {
-        let flag
-        let state = store.getState()
-        if (typeof state.hover_tool === "undefined") {
-            flag = true
-        } else {
-            flag = !state.hover_tool
-        }
-        next(setHoverTool(flag))
-    } else {
-        next(action)
-    }
 }
 
 let animationMiddleware = store => next => action => {
@@ -241,7 +174,7 @@ window.main = function() {
     figure.renderers = figure.renderers.concat(renderer)
     Bokeh.Plotting.show(figure, "#map-figure")
 
-    let store = Redux.createStore(reducer,
+    let store = Redux.createStore(rootReducer,
                                   Redux.applyMiddleware(
                                       logActionMiddleware,
                                       toolMiddleware,
@@ -298,7 +231,8 @@ window.main = function() {
         options: [],
     })
     select.connect(select.properties.value.change, () => {
-        store.dispatch({type: SET_DATASET, payload: select.value})
+        let action = set_dataset(select.value)
+        store.dispatch(action)
     })
     Bokeh.Plotting.show(select, "#select")
     store.subscribe(() => {
@@ -651,6 +585,7 @@ window.main = function() {
             low: state.limits.low,
             high: state.limits.high,
             palette: state.palette,
+            visible: state.colorbar
         })
     })
 }
