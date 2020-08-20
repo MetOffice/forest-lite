@@ -1,10 +1,10 @@
 import React from "react"
-import Toggle from "./Toggle.js"
+import Toolbar from "./Toolbar.js"
 
 
 class App extends React.Component {
     render() {
-        return <Toggle></Toggle>
+        return <Toolbar />
     }
 }
 
