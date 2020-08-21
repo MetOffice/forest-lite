@@ -11,15 +11,21 @@
   "author": "andrewgryan",
   "license": "BSD-3-Clause",
   "devDependencies": {
+    "@babel/core": "^7.11.4",
+    "@babel/plugin-proposal-export-namespace-from": "^7.10.4",
+    "@babel/plugin-transform-runtime": "^7.11.0",
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-react": "^7.10.4",
     "babel-loader": "^8.1.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
+    "css-loader": "^4.2.1",
     "jest": "^26.4.0",
+    "style-loader": "^1.2.1",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
+    "@bokeh/bokehjs": "^2.1.1",
     "@turf/turf": "^5.1.6",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

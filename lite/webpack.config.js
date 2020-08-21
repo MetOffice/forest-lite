@@ -11,11 +11,18 @@ module.exports = {
     },
     module: {
         rules: [{
+            test: /\.css$/,
+            use: ["style-loader", "css-loader"]
+        }, {
             test: /\.js$/,
-            exclude: /node_modules/,
             loader: "babel-loader",
             options: {
-                presets: ["@babel/preset-env", "@babel/preset-react"]
+                sourceType: "unambiguous",
+                presets: ["@babel/preset-env", "@babel/preset-react"],
+                plugins: [
+                    ["@babel/plugin-transform-runtime", { regenerator: true }],
+                    "@babel/plugin-proposal-export-namespace-from"
+                ]
             }
         }]
     }

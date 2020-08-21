@@ -1,6 +1,7 @@
 /**
  * Simple Web Map tile algorithm
  */
+import * as Bokeh from "@bokeh/bokehjs"
 
 /**
  * Simple renderer to process image data endpoint

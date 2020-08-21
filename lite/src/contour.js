@@ -4,6 +4,7 @@
 import * as helpers from "@turf/helpers"
 import * as projection from "@turf/projection"
 import isolines from "@turf/isolines"
+import * as Bokeh from "@bokeh/bokehjs"
 
 
 export const ContourRenderer = function(figure) {

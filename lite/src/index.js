@@ -36,6 +36,7 @@ import {
     fetch_image,
     fetch_image_success
 } from "./actions.js"
+import * as Bokeh from "@bokeh/bokehjs"
 
 
 let providers = {
