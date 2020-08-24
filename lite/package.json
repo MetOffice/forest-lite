@@ -20,6 +20,8 @@
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "css-loader": "^4.2.1",
     "jest": "^26.4.0",
+    "jest-canvas-mock": "^2.2.0",
+    "react-test-renderer": "^16.13.1",
     "style-loader": "^1.2.1",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
