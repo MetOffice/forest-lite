@@ -1,7 +1,6 @@
 import argparse
 import glob
 import os
-import cartopy
 import numpy as np
 import uvicorn
 import fastapi
@@ -111,14 +110,6 @@ async def points(dataset: str, timestamp_ms: int):
                         media_type="application/json")
     #  response.headers["Cache-Control"] = "max-age=31536000"
     return response
-
-
-@app.get("/google_limits")
-async def google_limits():
-    return {
-        "x": cartopy.crs.Mercator.GOOGLE.x_limits,
-        "y": cartopy.crs.Mercator.GOOGLE.y_limits,
-    }
 
 
 @app.get("/atlas/{feature}")

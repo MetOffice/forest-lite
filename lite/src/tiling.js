@@ -3,6 +3,13 @@
  */
 import * as Bokeh from "@bokeh/bokehjs"
 
+// NOTE: y extents slightly different to x extents
+export const WEB_MERCATOR_EXTENT = {
+    x: [-20037508.342789244, 20037508.342789244],
+    y: [ -20037508.342789255, 20037508.342789244 ]
+}
+
+
 /**
  * Simple renderer to process image data endpoint
  */
@@ -46,11 +53,7 @@ export let DataTileRenderer = function(figure, color_mapper, source) {
     this.url = "/tiles/dataset/time/{Z}/{X}/{Y}"
 
     // Google WebMercator limits
-    fetch("/google_limits")
-        .then(response => response.json())
-        .then((data) => {
-            this.limits = data // TODO: Use consts
-    })
+    this.limits = WEB_MERCATOR_EXTENT
 
     // Connect to x-range change
     this.tileCache = {}
