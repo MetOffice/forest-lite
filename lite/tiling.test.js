@@ -34,7 +34,7 @@ const mercatorExtent = () => {
     return {x0, y0, x1, y1}
 }
 
-describe("extentFromXYZ()", () => {
+describe("extentFromXYZ([X, Y, Z])", () => {
 
     test("0:0:0", () => {
         let actual = tiling.extentFromXYZ([0, 0, 0])
@@ -119,4 +119,21 @@ test("precision", () => {
     const actual = y0 + ((y1 - y0) / 2)
     const expected = (y0 + y1) / 2
     expect(actual).toBeCloseTo(expected)
+})
+
+
+describe("getCenter(x0, y0, x1, y1)", () => {
+    test.each`
+      x0   | y0   | x1   | y1   | xc     | yc     | msg
+      ${0} | ${0} | ${1} | ${1} | ${0.5} | ${0.5} | ${'unit square'}
+      ${0} | ${0} | ${2} | ${1} | ${1.0} | ${0.5} | ${'double width'}
+      ${0} | ${0} | ${1} | ${2} | ${0.5} | ${1.0} | ${'double height'}
+      ${4} | ${0} | ${5} | ${1} | ${4.5} | ${0.5} | ${'move x'}
+      ${0} | ${8} | ${1} | ${9} | ${0.5} | ${8.5} | ${'move y'}
+    `("$msg", ({ x0, y0, x1, y1, xc, yc }) => {
+        const actual = tiling.getCenter(x0, y0, x1, y1)
+        const expected = [ xc, yc ]
+        expect(actual[0]).toBeCloseTo(expected[0])
+        expect(actual[1]).toBeCloseTo(expected[1])
+    })
 })

@@ -286,3 +286,11 @@ export const extentFromXYZ = (XYZ) => {
         ]
     }
 }
+
+
+/**
+ * Get center coordinates of arbitrary rectangle in 2D plane
+ */
+export const getCenter = (x0, y0, x1, y1) => {
+    return [ (x0 + x1) / 2, (y0 + y1) / 2 ]
+}
