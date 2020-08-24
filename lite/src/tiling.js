@@ -5,7 +5,7 @@ import * as Bokeh from "@bokeh/bokehjs"
 
 // NOTE: y extents slightly different to x extents
 export const WEB_MERCATOR_EXTENT = {
-    x: [-20037508.342789244, 20037508.342789244],
+    x: [ -20037508.342789244, 20037508.342789244 ],
     y: [ -20037508.342789255, 20037508.342789244 ]
 }
 
@@ -266,4 +266,23 @@ export let zoomLevel = function(world) {
     let dy = world.y.end - world.y.start
     let dw = Math.min(dx, dy)
     return Math.floor(Math.log2(256 / dw))
+}
+
+
+// Extents as a function of tile number XYZ
+export const extentFromXYZ = (XYZ) => {
+    const extent = WEB_MERCATOR_EXTENT
+    const [X, Y, Z] = XYZ
+    const dx = (extent.x[1] - extent.x[0]) / (2 ** Z)
+    const dy = (extent.y[1] - extent.y[0]) / (2 ** Z)
+    return {
+        x: [
+            extent.x[0] + (X * dx),
+            extent.x[0] + ((X + 1) * dx)
+        ],
+        y: [
+            extent.y[0] + (Y * dy),
+            extent.y[0] + ((Y + 1) * dy)
+        ]
+    }
 }
