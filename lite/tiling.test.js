@@ -179,3 +179,35 @@ describe("distance", () => {
         expect(actual).toBeCloseTo(expected)
     })
 })
+
+
+describe("priority", () => {
+    test("given Tile [0, 0, 0] and Mercator extent figure", () => {
+        let tile = [0, 0, 0]
+        let figure = {
+            x_range: {
+                start: tiling.WEB_MERCATOR_EXTENT.x[0],
+                end: tiling.WEB_MERCATOR_EXTENT.x[1]
+            },
+            y_range: {
+                start: tiling.WEB_MERCATOR_EXTENT.y[0],
+                end: tiling.WEB_MERCATOR_EXTENT.y[1]
+            }
+        }
+        let actual = tiling.priority(figure, tile)
+        let expected = 0
+        expect(actual).toBeCloseTo(expected)
+    })
+    test("given Tile [0, 0, 1] and Mercator extent figure", () => {
+        let tile = [0, 0, 1]
+        let [x0, x1] = tiling.WEB_MERCATOR_EXTENT.x
+        let [y0, y1] = tiling.WEB_MERCATOR_EXTENT.y
+        let figure = {
+            x_range: { start: x0, end: x1 },
+            y_range: { start: y0, end: y1 }
+        }
+        let actual = tiling.priority(figure, tile)
+        let expected = tiling.distance(x0, y0, x1, y1) / 4
+        expect(actual).toBeCloseTo(expected)
+    })
+})

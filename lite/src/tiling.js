@@ -269,6 +269,21 @@ export let zoomLevel = function(world) {
 }
 
 
+// Tile priority relative to viewport
+export const priority = (figure, tile) => {
+    let _extent = extentFromXYZ(tile)
+    let extents = {
+        figure: figureExtent(figure),
+        tile: [_extent.x[0], _extent.y[0], _extent.x[1], _extent.y[1]]
+    }
+    let centers = {
+        figure: getCenter(...extents.figure),
+        tile: getCenter(...extents.tile)
+    }
+    return distance(...centers.figure, ...centers.tile)
+}
+
+
 // Extents as a function of tile number XYZ
 export const extentFromXYZ = (XYZ) => {
     const extent = WEB_MERCATOR_EXTENT
