@@ -137,3 +137,45 @@ describe("getCenter(x0, y0, x1, y1)", () => {
         expect(actual[1]).toBeCloseTo(expected[1])
     })
 })
+
+
+test("figureExtent(figure)", () => {
+    const figure = {
+        x_range: { start: 0, end: 1 },
+        y_range: { start: 2, end: 3 }
+    }
+    const actual = tiling.figureExtent(figure)
+    const expected = [0, 2, 1, 3]
+    expect(actual).toEqual(expected)
+})
+
+
+test("getCenter(figureExtent(figure))", () => {
+    const figure = {
+        x_range: { start: 0, end: 1 },
+        y_range: { start: 2, end: 3 }
+    }
+    const actual = tiling.getCenter(...tiling.figureExtent(figure))
+    const expected = [0.5, 2.5]
+    expect(actual).toEqual(expected)
+})
+
+
+describe("distance", () => {
+    test.each`
+        x0    | y0    | x1    | y1   | expected | message
+        ${0}  | ${0}  | ${0}  | ${0} | ${0} | ${"same point"}
+        ${0}  | ${0}  | ${1}  | ${0} | ${1} | ${"unit segment x"}
+        ${5}  | ${0}  | ${6}  | ${0} | ${1} | ${"move segment x"}
+        ${-1} | ${0}  | ${1}  | ${0} | ${2} | ${"dilate segment x"}
+        ${1}  | ${0}  | ${0}  | ${0} | ${1} | ${"flip segment x"}
+        ${0}  | ${0}  | ${0}  | ${1} | ${1} | ${"unit segment y"}
+        ${0}  | ${5}  | ${0}  | ${6} | ${1} | ${"move segment y"}
+        ${0}  | ${-1} | ${0}  | ${1} | ${2} | ${"dilate segment y"}
+        ${0}  | ${1}  | ${0}  | ${0} | ${1} | ${"flip segment y"}
+        ${0}  | ${0}  | ${1}  | ${1} | ${Math.sqrt(2)} | ${"rotate segment"}
+    `("$message", ({ x0, y0, x1, y1, expected }) => {
+        const actual = tiling.distance(x0, y0, x1, y1)
+        expect(actual).toBeCloseTo(expected)
+    })
+})

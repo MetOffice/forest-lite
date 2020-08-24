@@ -288,9 +288,28 @@ export const extentFromXYZ = (XYZ) => {
 }
 
 
+// Bokeh Figure extent helper function
+export const figureExtent = (figure) => {
+    return [
+        figure.x_range.start,
+        figure.y_range.start,
+        figure.x_range.end,
+        figure.y_range.end
+    ]
+}
+
+
 /**
  * Get center coordinates of arbitrary rectangle in 2D plane
  */
 export const getCenter = (x0, y0, x1, y1) => {
     return [ (x0 + x1) / 2, (y0 + y1) / 2 ]
+}
+
+
+/**
+ * Cartesian distance formula
+ */
+export const distance = (x0, y0, x1, y1) => {
+    return Math.sqrt(((x1 - x0) ** 2) + ((y1 - y0) ** 2))
 }
