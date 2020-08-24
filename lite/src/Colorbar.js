@@ -1,5 +1,6 @@
 // NOTE: Bokeh import is not fully supported
 //       <script> tag is used instead
+import * as Bokeh from "@bokeh/bokehjs"
 
 
 export function Colorbar(el) {

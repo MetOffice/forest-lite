@@ -9,7 +9,6 @@ from fastapi import Response, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
-import bokeh.resources
 import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
 import yaml
@@ -43,11 +42,8 @@ async def startup_event():
 
 @app.get("/")
 async def root(request: Request):
-    resources = bokeh.resources.Resources("cdn", minified=False)
     context = {"request": request,
-               "title": "FOREST lite",
-               "resources": resources.render(),
-               "version": bokeh.__version__}
+               "title": "FOREST lite"}
     return templates.TemplateResponse("index.html", context)
 
 
