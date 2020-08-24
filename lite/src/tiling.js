@@ -91,6 +91,23 @@ DataTileRenderer.prototype.render = function() {
     let x_range = this.figure.x_range
     let y_range = this.figure.y_range
     let tiles = getTiles(x_range, y_range, this.limits)
+
+    // Order tile(s) by priority
+    tiles = tiles.map((tile) => {
+        const xyz = [tile.x, tile.y, tile.z]
+        const _priority = priority(this.figure, xyz)
+        return {
+            x: tile.x,
+            y: tile.y,
+            z: tile.z,
+            priority: _priority
+        }
+    })
+    tiles.sort((a, b) => {
+        return a.priority - b.priority
+    })
+
+    // Split into local/remote
     let urls = {
         remote: [],
         local: []
