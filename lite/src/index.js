@@ -309,7 +309,9 @@ window.main = function() {
     })
 
     // DataTileRenderer
-    let tile_renderer = new tiling.DataTileRenderer(figure, color_mapper)
+    let tile_renderer = new tiling.DataTileRenderer(
+        fetch.bind(window), figure, color_mapper
+    )
     store.subscribe(() => {
         let state = store.getState()
         if (typeof state.dataset === "undefined") {

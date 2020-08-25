@@ -13,7 +13,8 @@ export const WEB_MERCATOR_EXTENT = {
 /**
  * Simple renderer to process image data endpoint
  */
-export let DataTileRenderer = function(figure, color_mapper, source) {
+export let DataTileRenderer = function(fetch, figure, color_mapper, source) {
+    this.fetch = fetch
     this.figure = figure
     window.figure = figure
     if (typeof source === "undefined") {
@@ -121,11 +122,14 @@ DataTileRenderer.prototype.render = function() {
     // Remote images
     urls.remote.forEach((url) => {
         // Fetch from server
-        fetch(url)
+        this.fetch(url)
             .then((response) => response.json())
             .then((data) => {
                 this.imageCache[url] = data
                 this._addImage(data)
+            })
+            .catch((error) => {
+                console.log(error)
             })
     })
 }
