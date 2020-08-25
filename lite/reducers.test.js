@@ -1,18 +1,20 @@
 const { rootReducer } = require("./src/reducers.js")
-const actions = require("./src/actions.js")
+const {
+    setColorbar,
+    setHoverTool,
+    fetch_image,
+    fetch_image_success
+} = require("./src/actions.js")
 
 
-test("reducer given dummy action returns state", () => {
-    let action = {type: "DUMMY"}
-    expect(rootReducer({}, action)).toEqual({})
-})
-
-test("reducer given setHoverTool", () => {
-    let action = actions.setHoverTool(true)
-    expect(rootReducer({}, action)).toEqual({hover_tool: true})
-})
-
-test("reducer given setColorbar", () => {
-    let action = actions.setColorbar(true)
-    expect(rootReducer({}, action)).toEqual({colorbar: true})
+test.each([
+    [ {type: "DUMMY"}, {} ],
+    [ setHoverTool(true), { hover_tool: true } ],
+    [ setHoverTool(false), { hover_tool: false } ],
+    [ setColorbar(true), { colorbar: true } ],
+    [ setColorbar(false), { colorbar: false } ],
+    [ fetch_image("/uri"), { is_fetching: true, image_url: "/uri" } ],
+    [ fetch_image_success(), { is_fetching: false } ],
+])("%o -> %o", (action, expected) => {
+    expect(rootReducer({}, action)).toEqual(expected)
 })
