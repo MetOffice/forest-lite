@@ -1,7 +1,8 @@
 const { rootReducer } = require("./src/reducers.js")
 const {
     setHoverTool,
-    setColorbar
+    setColorbar,
+    setContours
 } = require("./src/actions.js")
 
 
@@ -14,7 +15,9 @@ describe("rootReducer(action, state)", () => {
       ${ dummy() } | ${ {} }
       ${ setHoverTool(true) } | ${ { hover_tool: true } }
       ${ setColorbar(true) } | ${ { colorbar: true } }
-    `("given $action returns $state", ({ action, state }) => {
+      ${ setContours(true) } | ${ { contours: true } }
+    `("given $action.type $action.payload returns $state",
+        ({ action, state }) => {
         expect(rootReducer({}, action)).toEqual(state)
     })
 })

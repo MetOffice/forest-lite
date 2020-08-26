@@ -2,8 +2,7 @@
  * Reducers combine state and actions to produce new state
  */
 import {
-    SET_COLORBAR,
-    SET_HOVER_TOOL,
+    SET_FLAG,
     SET_DATASET,
     SET_DATASETS,
     SET_URL,
@@ -24,10 +23,8 @@ import {
 
 export const rootReducer = (state = "", action) => {
     switch (action.type) {
-        case SET_COLORBAR:
-            return Object.assign({}, state, {colorbar: action.payload})
-        case SET_HOVER_TOOL:
-            return Object.assign({}, state, {hover_tool: action.payload})
+        case SET_FLAG:
+            return Object.assign({}, state, action.payload)
         case SET_DATASET:
             return Object.assign({}, state, {dataset: action.payload})
         case SET_DATASETS:

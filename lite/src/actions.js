@@ -16,6 +16,7 @@ import {
     PREVIOUS_TIME_INDEX,
     FETCH_IMAGE,
     FETCH_IMAGE_SUCCESS,
+    SET_FLAG,
     SET_COLORBAR,
     TOGGLE_COLORBAR,
     SET_HOVER_TOOL,
@@ -41,17 +42,14 @@ export const previous_time_index = () => { return { type: PREVIOUS_TIME_INDEX } 
 export const fetch_image = url => { return { type: FETCH_IMAGE, payload: url } }
 export const fetch_image_success = () => { return { type: FETCH_IMAGE_SUCCESS } }
 
-export const setColorbar = (flag) => {
-    return { type: SET_COLORBAR, payload: flag }
-}
-
 export const toggleColorbar = () => {
     return { type: TOGGLE_COLORBAR }
 }
 
-export const setHoverTool = (flag) => {
-    return { type: SET_HOVER_TOOL, payload: flag }
-}
+export const setColorbar = (flag) => setFlag({colorbar: flag})
+export const setContours = (flag) => setFlag({contours: flag})
+export const setHoverTool = (flag) => setFlag({hover_tool: flag})
+export const setFlag = (payload) => ({ type: SET_FLAG, payload: payload })
 
 export const toggleHoverTool = () => {
     return { type: TOGGLE_HOVER_TOOL }
