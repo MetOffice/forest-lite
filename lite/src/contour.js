@@ -14,7 +14,7 @@ export const ContourRenderer = function(figure) {
     let geojson = JSON.stringify(lines)
     this.source = new Bokeh.GeoJSONDataSource({ geojson: geojson })
     this.figure = figure
-    this.figure.multi_line({
+    this.renderer = this.figure.multi_line({
         xs: {field: "xs"},
         ys: {field: "ys"},
         line_color: "gray",
