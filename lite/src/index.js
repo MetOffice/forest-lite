@@ -347,29 +347,37 @@ window.main = function() {
         if (typeof state.dataset === "undefined") {
             return
         }
-        let timestamp_ms = state.times[state.time_index]
-        let url = `./points/${state.dataset}/${timestamp_ms}`
-        fetch(url)
-            .then(response => response.json())
-            .then((data) => {
-                let lats = data.coords.latitude.data
-                let lons = data.coords.longitude.data
-                let values = data.data
-                let points = []
-                for (let i=0; i<lats.length; i++) {
-                    for (let j=0; j<lons.length; j++) {
-                        let point = helpers.point(
-                            [lons[j], lats[i]],
-                            {value: values[i][j]})
-                        points.push(point)
+        if (state.contours) {
+            // Fetch data, draw and reveal contours
+            // (TODO: separate concerns)
+            let timestamp_ms = state.times[state.time_index]
+            let url = `./points/${state.dataset}/${timestamp_ms}`
+            fetch(url)
+                .then(response => response.json())
+                .then((data) => {
+                    let lats = data.coords.latitude.data
+                    let lons = data.coords.longitude.data
+                    let values = data.data
+                    let points = []
+                    for (let i=0; i<lats.length; i++) {
+                        for (let j=0; j<lons.length; j++) {
+                            let point = helpers.point(
+                                [lons[j], lats[i]],
+                                {value: values[i][j]})
+                            points.push(point)
+                        }
                     }
-                }
-                return helpers.featureCollection(points)
-            })
-            .then((feature) => {
-                let breaks = [280, 290, 300]
-                contourRenderer.renderFeature(feature, breaks)
-            })
+                    return helpers.featureCollection(points)
+                })
+                .then((feature) => {
+                    let breaks = [280, 290, 300]
+                    contourRenderer.renderFeature(feature, breaks)
+                    contourRenderer.renderer.visible = true
+                })
+        } else {
+            // Take no action and hide contours
+            contourRenderer.renderer.visible = false
+        }
     })
 
     //   // RESTful image
