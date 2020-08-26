@@ -1,4 +1,5 @@
 import * as tiling from "./tiling.js"
+import { makeOnPanZoom } from "./tiling.js"
 import * as contour from "./contour.js"
 import * as helpers from "@turf/helpers"
 import * as Redux from "redux"
@@ -308,10 +309,20 @@ window.main = function() {
         }
     })
 
+    // On Pan/Zoom callback
+    const onPanZoom = makeOnPanZoom(figure)
+    onPanZoom(console.log)
+
     // DataTileRenderer
     let tile_renderer = new tiling.DataTileRenderer(
         fetch.bind(window), figure, color_mapper
     )
+
+    onPanZoom((figure) => {
+        let promises = tile_renderer.render(figure)
+        console.log(promises)
+    })
+
     store.subscribe(() => {
         let state = store.getState()
         if (typeof state.dataset === "undefined") {

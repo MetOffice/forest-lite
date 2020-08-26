@@ -11,12 +11,20 @@ export const WEB_MERCATOR_EXTENT = {
 
 
 /**
+ * Mechanism to monitor axis changes
+ */
+export const makeOnPanZoom = figure => cb => {
+    const x_range = figure.x_range
+    x_range.connect(x_range.properties.start.change, () => cb(figure))
+}
+
+
+/**
  * Simple renderer to process image data endpoint
  */
 export let DataTileRenderer = function(fetch, figure, color_mapper, source) {
     this.fetch = fetch
     this.figure = figure
-    window.figure = figure
     if (typeof source === "undefined") {
         source = new Bokeh.ColumnDataSource({
             data: {
@@ -59,10 +67,6 @@ export let DataTileRenderer = function(fetch, figure, color_mapper, source) {
     // Connect to x-range change
     this.tileCache = {}
     this.imageCache = {}
-    let x_range = this.figure.x_range
-    x_range.connect(x_range.properties.start.change, () => {
-        this.render()
-    })
 }
 
 DataTileRenderer.prototype.setURL = function(url) {
@@ -83,14 +87,14 @@ DataTileRenderer.prototype.setURL = function(url) {
     this.tileCache = {}
 
     // Re-render
-    this.render()
+    this.render(this.figure)
 }
-DataTileRenderer.prototype.render = function() {
+DataTileRenderer.prototype.render = function(figure) {
     if (typeof this.limits === "undefined") {
         return
     }
-    let x_range = this.figure.x_range
-    let y_range = this.figure.y_range
+    let x_range = figure.x_range
+    let y_range = figure.y_range
     let tiles = getTiles(x_range, y_range, this.limits)
     let urls = {
         remote: [],
@@ -120,16 +124,18 @@ DataTileRenderer.prototype.render = function() {
     }
 
     // Remote images
-    urls.remote.forEach((url) => {
+    return urls.remote.map((url) => {
         // Fetch from server
-        this.fetch(url)
+        return this.fetch(url)
             .then((response) => response.json())
             .then((data) => {
                 this.imageCache[url] = data
                 this._addImage(data)
+                return data
             })
             .catch((error) => {
                 console.log(error)
+                return undefined
             })
     })
 }
