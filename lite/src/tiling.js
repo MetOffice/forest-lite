@@ -20,6 +20,20 @@ export const makeOnPanZoom = figure => cb => {
 
 
 /**
+ * Debounce
+ */
+export const debounce = (cb, delay) => {
+    let inDebounce
+    return function() {
+        const context = this
+        const args = arguments
+        clearTimeout(inDebounce)
+        inDebounce = setTimeout(() => cb.apply(context, args), delay)
+    }
+}
+
+
+/**
  * Simple renderer to process image data endpoint
  */
 export let DataTileRenderer = function(fetch, figure, color_mapper, source) {
@@ -277,3 +291,6 @@ export let zoomLevel = function(world) {
     let dw = Math.min(dx, dy)
     return Math.floor(Math.log2(256 / dw))
 }
+
+// Helper to convert between object and array representation
+export const toArray = ({ x, y, z }) => [x, y, z]

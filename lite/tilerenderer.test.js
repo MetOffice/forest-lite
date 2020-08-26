@@ -1,4 +1,5 @@
 const {
+    toArray,
     DataTileRenderer,
     getTiles,
     WEB_MERCATOR_EXTENT
@@ -28,7 +29,7 @@ test("constructor", () => {
         }
     }
     const renderer = new DataTileRenderer(fetch, figure)
-    renderer.render()
+    renderer.render(figure)
     // expect(renderer.tileCache).toEqual({})
     expect(renderer.imageCache).toEqual({})
     expect(fetch.mock.calls.length).toBe(9)
@@ -51,5 +52,12 @@ test("getTiles", () => {
         {x: 514, y: 513, z: 10},
         {x: 514, y: 514, z: 10},
     ]
+    expect(actual).toEqual(expected)
+})
+
+
+test("toArray", () => {
+    const actual = toArray({z:2, x:0, y:1})
+    const expected = [0, 1, 2]
     expect(actual).toEqual(expected)
 })
