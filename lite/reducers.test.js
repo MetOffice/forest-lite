@@ -1,18 +1,20 @@
 const { rootReducer } = require("./src/reducers.js")
-const actions = require("./src/actions.js")
+const {
+    setHoverTool,
+    setColorbar
+} = require("./src/actions.js")
 
 
-test("reducer given dummy action returns state", () => {
-    let action = {type: "DUMMY"}
-    expect(rootReducer({}, action)).toEqual({})
-})
+const dummy = () => ({ type: "DUMMY" })
 
-test("reducer given setHoverTool", () => {
-    let action = actions.setHoverTool(true)
-    expect(rootReducer({}, action)).toEqual({hover_tool: true})
-})
 
-test("reducer given setColorbar", () => {
-    let action = actions.setColorbar(true)
-    expect(rootReducer({}, action)).toEqual({colorbar: true})
+describe("rootReducer(action, state)", () => {
+    test.each`
+      action | state
+      ${ dummy() } | ${ {} }
+      ${ setHoverTool(true) } | ${ { hover_tool: true } }
+      ${ setColorbar(true) } | ${ { colorbar: true } }
+    `("given $action returns $state", ({ action, state }) => {
+        expect(rootReducer({}, action)).toEqual(state)
+    })
 })
