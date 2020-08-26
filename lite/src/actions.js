@@ -17,10 +17,7 @@ import {
     FETCH_IMAGE,
     FETCH_IMAGE_SUCCESS,
     SET_FLAG,
-    SET_COLORBAR,
-    TOGGLE_COLORBAR,
-    SET_HOVER_TOOL,
-    TOGGLE_HOVER_TOOL,
+    TOGGLE_FLAG,
 } from "./action-types"
 
 // Action creators
@@ -42,15 +39,12 @@ export const previous_time_index = () => { return { type: PREVIOUS_TIME_INDEX } 
 export const fetch_image = url => { return { type: FETCH_IMAGE, payload: url } }
 export const fetch_image_success = () => { return { type: FETCH_IMAGE_SUCCESS } }
 
-export const toggleColorbar = () => {
-    return { type: TOGGLE_COLORBAR }
-}
-
 export const setColorbar = (flag) => setFlag({colorbar: flag})
 export const setContours = (flag) => setFlag({contours: flag})
 export const setHoverTool = (flag) => setFlag({hover_tool: flag})
 export const setFlag = (payload) => ({ type: SET_FLAG, payload: payload })
 
-export const toggleHoverTool = () => {
-    return { type: TOGGLE_HOVER_TOOL }
-}
+export const toggleColorbar = () => toggleFlag("colorbar")
+export const toggleContours = () => toggleFlag("contours")
+export const toggleHoverTool = () => toggleFlag("hover_tool")
+export const toggleFlag = (prop) => ({ type: TOGGLE_FLAG, payload: prop })

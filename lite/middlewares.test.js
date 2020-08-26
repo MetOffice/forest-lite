@@ -1,5 +1,10 @@
 const { toolMiddleware } = require("./src/middlewares.js")
-const { toggleColorbar, setColorbar } = require("./src/actions.js")
+const {
+    toggleColorbar,
+    toggleContours,
+    setColorbar,
+    setContours
+} = require("./src/actions.js")
 
 
 test("toggle middleware", () => {
@@ -13,6 +18,20 @@ test("toggle middleware", () => {
     toolMiddleware(store)(mockNext)(action)
 
     const expected = setColorbar(false)
+    expect(mockNext.mock.calls.length).toEqual(1)
+    expect(mockNext.mock.calls[0][0]).toEqual(expected)
+})
+
+
+test("toggle contours", () => {
+    const store = {
+        getState: () => { return {  contours: true } }
+    }
+    const mockNext = jest.fn()
+    const action = toggleContours()
+    toolMiddleware(store)(mockNext)(action)
+
+    const expected = setContours(false)
     expect(mockNext.mock.calls.length).toEqual(1)
     expect(mockNext.mock.calls[0][0]).toEqual(expected)
 })

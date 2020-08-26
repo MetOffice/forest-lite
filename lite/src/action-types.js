@@ -1,6 +1,4 @@
 // Action keywords
-export const SET_COLORBAR = 'SET_COLORBAR'
-export const TOGGLE_COLORBAR = 'TOGGLE_COLORBAR'
 export const SET_URL = 'SET_URL'
 export const SET_DATASET = 'SET_DATASET'
 export const SET_DATASETS = 'SET_DATASETS'
@@ -19,5 +17,4 @@ export const PREVIOUS_TIME_INDEX = 'PREVIOUS_TIME_INDEX'
 export const FETCH_IMAGE = 'FETCH_IMAGE'
 export const FETCH_IMAGE_SUCCESS = 'FETCH_IMAGE_SUCCESS'
 export const SET_FLAG = "SET_FLAG"
-export const SET_HOVER_TOOL = "SET_HOVER_TOOL"
-export const TOGGLE_HOVER_TOOL = "TOGGLE_HOVER_TOOL"
+export const TOGGLE_FLAG = "TOGGLE_FLAG"
