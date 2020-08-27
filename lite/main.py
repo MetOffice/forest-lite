@@ -4,17 +4,19 @@ import os
 import numpy as np
 import uvicorn
 import fastapi
-from fastapi import Response, Request
+from fastapi import Depends, Response, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
 import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
+from functools import lru_cache
 import yaml
 import lib.core
 import lib.config
 import lib.palette
 import lib.atlas
+import config
 
 
 app = fastapi.FastAPI()
@@ -25,18 +27,16 @@ templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
 
 
-CONFIG = None  # TODO: Remove global variable
+@lru_cache
+def get_settings():
+    return config.Settings()
 
 
-@app.on_event("startup")
-async def startup_event():
-    global CONFIG
-
-    # Configure application
-    args = parse_args()
-    with open(args.config_file) as stream:
+@lru_cache
+def load_config(path):
+    with open(path) as stream:
         data = yaml.safe_load(stream)
-        CONFIG = lib.config.Config(**data)
+    return lib.config.Config(**data)
 
 
 @app.get("/")
@@ -47,14 +47,18 @@ async def root(request: Request):
 
 
 @app.get("/datasets")
-async def datasets(response: Response):
+async def datasets(response: Response,
+                   settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
     response.headers["Cache-Control"] = "max-age=31536000"
-    return {"names": sorted(dataset.label for dataset in CONFIG.datasets)}
+    return {"names": sorted(dataset.label for dataset in config.datasets)}
 
 
 @app.get("/datasets/{dataset_name}/times/{time}")
-async def datasets_images(dataset_name: str, time: int):
-    for dataset in CONFIG.datasets:
+async def datasets_images(dataset_name: str, time: int,
+                          settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
+    for dataset in config.datasets:
         if dataset.label == dataset_name:
             pattern = dataset.driver.settings["pattern"]
             paths = sorted(glob.glob(pattern))
@@ -75,8 +79,10 @@ async def palettes():
 
 
 @app.get("/datasets/{dataset_name}/times")
-async def dataset_times(dataset_name, limit: int = 10):
-    for dataset in CONFIG.datasets:
+async def dataset_times(dataset_name, limit: int = 10,
+                        settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
+    for dataset in config.datasets:
         if dataset.label == dataset_name:
             pattern = dataset.driver.settings["pattern"]
             paths = sorted(glob.glob(pattern))
@@ -90,9 +96,11 @@ async def dataset_times(dataset_name, limit: int = 10):
 
 
 @app.get("/tiles/{dataset}/{time}/{Z}/{X}/{Y}")
-async def tiles(dataset: str, time: int, Z: int, X: int, Y: int):
+async def tiles(dataset: str, time: int, Z: int, X: int, Y: int,
+                settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
     print(dataset, time, Z, X, Y)
-    obj = lib.core.get_data_tile(CONFIG, dataset, time, Z, X, Y)
+    obj = lib.core.get_data_tile(config, dataset, time, Z, X, Y)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")
@@ -101,9 +109,11 @@ async def tiles(dataset: str, time: int, Z: int, X: int, Y: int):
 
 
 @app.get("/points/{dataset}/{timestamp_ms}")
-async def points(dataset: str, timestamp_ms: int):
+async def points(dataset: str, timestamp_ms: int,
+                 settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
     time = np.datetime64(timestamp_ms, 'ms')
-    path = lib.core.get_path(CONFIG, dataset)
+    path = lib.core.get_path(config, dataset)
     obj = lib.core.get_points(path, time)
     content = serialize_json(obj)
     response = Response(content=content,
@@ -126,7 +136,6 @@ def parse_args():
     """Command line interface"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8888)
-    parser.add_argument("config_file")
     return parser.parse_args()
 
 
