@@ -13,7 +13,7 @@ To start the FastAPI server run a command similar to the following
 CONFIG_FILE=config.yaml python ${REPO_DIR}/lite/main.py --port 8080
 ```
 
-Then navigate to `localhost:8000` to view the application.
+Then navigate to `localhost:8080` to view the application.
 
 ## Build
 
@@ -39,6 +39,6 @@ datasets:
 
 ## REST API
 
-Since backend is a FastAPI app to view the Swagger documentation of the API visit the `/docs` endpoint, e.g. `localhost:8888/docs`.
+Since the backend is powered by FastAPI to view the API Swagger documentation visit the `/docs` endpoint, e.g. `localhost:8080/docs`.
 
-**Note:** For simplicity `/` has been overwritten to serve `index.html`, future releases may consider decoupling the API server from the HTML server to scale them independently of each other
+**Note:** For simplicity `/` serves `index.html`. Future releases may decouple the API server from the front-end server thus enabling independent scaling and a discoverable API
