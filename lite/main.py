@@ -51,7 +51,8 @@ async def datasets(response: Response,
                    settings: config.Settings = Depends(get_settings)):
     config = load_config(settings.config_file)
     response.headers["Cache-Control"] = "max-age=31536000"
-    return {"names": sorted(dataset.label for dataset in config.datasets)}
+    return {"datasets": [{"label": dataset.label, "id": i}
+                         for i, dataset in enumerate(config.datasets)]}
 
 
 @app.get("/datasets/{dataset_name}/times/{time}")

@@ -123,6 +123,7 @@ DataTileRenderer.prototype.render = function() {
         // Fetch from server
         fetch(url)
             .then((response) => response.json())
+            .then(data => data.data)
             .then((data) => {
                 this.imageCache[url] = data
                 this._addImage(data)

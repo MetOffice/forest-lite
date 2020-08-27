@@ -130,8 +130,8 @@ let colorPaletteMiddleware = store => next => action => {
 let datasetsMiddleware = store => next => action => {
     next(action)
     if (action.type == SET_DATASETS) {
-        let name = action.payload[0]
-        next(set_dataset(name))
+        let dataset_id = action.payload[0].id
+        next(set_dataset(dataset_id))
     }
     return
 }
@@ -232,7 +232,20 @@ window.main = function() {
         options: [],
     })
     select.connect(select.properties.value.change, () => {
-        let action = set_dataset(select.value)
+        let state = store.getState()
+        if (typeof state.datasets === "undefined") {
+            return
+        }
+
+        // Find dataset id
+        const table = state.datasets.reduce((obj, entry) => {
+            obj[entry.label] = entry.id
+            return obj
+        }, {})
+        const id = table[select.value]
+
+        // Set dataset id
+        let action = set_dataset(id)
         store.dispatch(action)
     })
     Bokeh.Plotting.show(select, "#select")
@@ -244,16 +257,22 @@ window.main = function() {
         if (typeof state.dataset === "undefined") {
             return
         }
-        select.options = state.datasets
-        select.value = state.dataset
+        const options = state.datasets.map(d => d.label)
+        const value = state.datasets.reduce(
+            (obj, entry) => {
+                obj[entry.id] = entry.label
+                return obj
+            }, {})[state.dataset]
+
+        select.options = options
+        select.value = value
     })
 
     // Fetch datasets from server
-    fetch("./datasets").then((response) => {
-        return response.json()
-    }).then((data) => {
-        store.dispatch(set_datasets(data.names))
-    })
+    fetch("./datasets")
+        .then(response => response.json())
+        .then(data => data.datasets)
+        .then(datasets => store.dispatch(set_datasets(datasets)))
 
     // Select palette name widget
     let palette_select = new Bokeh.Widgets.Select({
@@ -323,7 +342,7 @@ window.main = function() {
         }
         // Experimental tile server
         let time = state.times[state.time_index]
-        let url = `./tiles/${state.dataset}/${time}/{Z}/{X}/{Y}`
+        let url = `./datasets/${state.dataset}/times/${time}/tiles/{Z}/{X}/{Y}`
         tile_renderer.setURL(url)
 
         // HoverTool
