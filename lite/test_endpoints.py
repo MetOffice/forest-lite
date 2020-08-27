@@ -56,25 +56,29 @@ def sample_h5netcdf(path):
         })
 
 
+def sample_config(netcdf_path):
+    return {
+        "datasets": [
+            {
+                "label": "dataset-0",
+                "driver": {
+                    "name": "eida50",
+                    "settings": {
+                        "pattern": netcdf_path
+                    }
+                }
+            }
+        ]
+    }
+
+
 def test_tile_endpoint(tmpdir):
     config_path = str(tmpdir / "test-config.yaml")
     netcdf_path = str(tmpdir / "test-netcdf.nc")
 
     # Config file
     with open(config_path, "w") as stream:
-        yaml.dump({
-            "datasets": [
-                {
-                    "label": "dataset-0",
-                    "driver": {
-                        "name": "eida50",
-                        "settings": {
-                            "pattern": netcdf_path
-                        }
-                    }
-                }
-            ]
-        }, stream)
+        yaml.dump(sample_config(netcdf_path), stream)
 
     # NetCDF file
     sample_h5netcdf(netcdf_path)
@@ -94,3 +98,26 @@ def test_tile_endpoint(tmpdir):
     assert actual["data"]["dw"] == [40075016.68557849]
     assert actual["data"]["dh"] == [40075016.685578495]
     assert np.shape(actual["data"]["image"][0]) == (64, 64)
+
+
+def test_points_endpoint(tmpdir):
+    config_path = str(tmpdir / "test-config.yaml")
+    netcdf_path = str(tmpdir / "test-netcdf.nc")
+
+    # Config file
+    with open(config_path, "w") as stream:
+        yaml.dump(sample_config(netcdf_path), stream)
+
+    # NetCDF file
+    sample_h5netcdf(netcdf_path)
+
+    # Patch config
+    settings = config.Settings(config_file=config_path)
+    main.app.dependency_overrides[main.get_settings] = lambda: settings
+
+    # System under test
+    response = client.get("/datasets/0/times/0/points")
+
+    # Assert response
+    actual = response.json()
+    assert actual["attrs"]["long_name"] == "toa_brightness_temperature"
