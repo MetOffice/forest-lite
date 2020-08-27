@@ -108,6 +108,26 @@ async def tiles(dataset: str, time: int, Z: int, X: int, Y: int,
     return response
 
 
+@app.get("/datasets/{dataset_id}/times/{timestamp_ms}/tiles/{Z}/{X}/{Y}")
+async def data_tiles(dataset_id: int, timestamp_ms: int,
+                     Z: int, X: int, Y: int):
+    """GET data tile from dataset at particular time"""
+    time = np.datetime64(timestamp_ms, 'ms')
+    dataset = lib.core.get_dataset(dataset_id)
+    data = dataset.data_tile(time, Z, X, Y)
+    obj = {
+        "dataset_id": dataset_id,
+        "timestamp_ms": timestamp_ms,
+        "tile": [X, Y, Z],
+        "data": data
+    }
+    content = serialize_json(obj)
+    response = Response(content=content,
+                        media_type="application/json")
+    #  response.headers["Cache-Control"] = "max-age=31536000"
+    return response
+
+
 @app.get("/points/{dataset}/{timestamp_ms}")
 async def points(dataset: str, timestamp_ms: int,
                  settings: config.Settings = Depends(get_settings)):
