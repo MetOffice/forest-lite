@@ -4,17 +4,19 @@ import os
 import numpy as np
 import uvicorn
 import fastapi
-from fastapi import Response, Request
+from fastapi import Depends, Response, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
 import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
+from functools import lru_cache
 import yaml
 import lib.core
 import lib.config
 import lib.palette
 import lib.atlas
+import config
 
 
 app = fastapi.FastAPI()
@@ -28,6 +30,11 @@ templates = Jinja2Templates(directory=templates_dir)
 CONFIG = None  # TODO: Remove global variable
 
 
+@lru_cache
+def get_settings():
+    return config.Settings()
+
+
 @app.on_event("startup")
 async def startup_event():
     global CONFIG
@@ -39,6 +46,12 @@ async def startup_event():
         CONFIG = lib.config.Config(**data)
 
 
+def load_config(path):
+    with open(path) as stream:
+        data = yaml.safe_load(stream)
+    return lib.config.Config(**data)
+
+
 @app.get("/")
 async def root(request: Request):
     context = {"request": request,
@@ -47,9 +60,11 @@ async def root(request: Request):
 
 
 @app.get("/datasets")
-async def datasets(response: Response):
+async def datasets(response: Response,
+                   settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
     response.headers["Cache-Control"] = "max-age=31536000"
-    return {"names": sorted(dataset.label for dataset in CONFIG.datasets)}
+    return {"names": sorted(dataset.label for dataset in config.datasets)}
 
 
 @app.get("/datasets/{dataset_name}/times/{time}")
