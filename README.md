@@ -17,9 +17,9 @@ Then navigate to `localhost:8000` to view the application.
 
 ## Build
 
-For simplicity, at present the repository ships with a built version `static/lite.min.js`.
+For simplicity the repository ships with pre-built assets, e.g. `static/lite.min.js`. Apart from the Python dependencies found in `requirements.txt` the app should just work out of the box.
 
-For developers, the project uses `npm` and `webpack` to create the bundled JS and other assets.
+For developers working on the client-side code, the project uses `npm` and `webpack` to create the bundled JS and other assets. `jest` is the preferred test framework.
 
 ## Configuration
 
