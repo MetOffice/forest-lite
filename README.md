@@ -13,6 +13,14 @@ To start the FastAPI server run a command similar to the following
 CONFIG_FILE=config.yaml python ${REPO_DIR}/lite/main.py --port 8080
 ```
 
+Then navigate to `localhost:8000` to view the application.
+
+## Build
+
+For simplicity, at present the repository ships with a built version `static/lite.min.js`.
+
+For developers, the project uses `npm` and `webpack` to create the bundled JS and other assets.
+
 ## Configuration
 
 The specification for config files has not yet been formalised but
