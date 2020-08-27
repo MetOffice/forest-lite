@@ -110,11 +110,13 @@ async def tiles(dataset: str, time: int, Z: int, X: int, Y: int,
 
 @app.get("/datasets/{dataset_id}/times/{timestamp_ms}/tiles/{Z}/{X}/{Y}")
 async def data_tiles(dataset_id: int, timestamp_ms: int,
-                     Z: int, X: int, Y: int):
+                     Z: int, X: int, Y: int,
+                     settings: config.Settings = Depends(get_settings)):
     """GET data tile from dataset at particular time"""
-    time = np.datetime64(timestamp_ms, 'ms')
-    dataset = lib.core.get_dataset(dataset_id)
-    data = dataset.data_tile(time, Z, X, Y)
+    print(settings)
+    config = load_config(settings.config_file)
+    dataset = config.datasets[dataset_id].label
+    data = lib.core.get_data_tile(config, dataset, timestamp_ms, Z, X, Y)
     obj = {
         "dataset_id": dataset_id,
         "timestamp_ms": timestamp_ms,
