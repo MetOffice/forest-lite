@@ -37,3 +37,8 @@ datasets:
 
 **Note:** This schema may change in future releases
 
+## REST API
+
+Since backend is a FastAPI app to view the Swagger documentation of the API visit the `/docs` endpoint, e.g. `localhost:8888/docs`.
+
+**Note:** For simplicity `/` has been overwritten to serve `index.html`, future releases may consider decoupling the API server from the HTML server to scale them independently of each other
