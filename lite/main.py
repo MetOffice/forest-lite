@@ -96,19 +96,6 @@ async def dataset_times(dataset_name, limit: int = 10,
                 return response
 
 
-@app.get("/tiles/{dataset}/{time}/{Z}/{X}/{Y}")
-async def tiles(dataset: str, time: int, Z: int, X: int, Y: int,
-                settings: config.Settings = Depends(get_settings)):
-    config = load_config(settings.config_file)
-    print(dataset, time, Z, X, Y)
-    obj = lib.core.get_data_tile(config, dataset, time, Z, X, Y)
-    content = serialize_json(obj)
-    response = Response(content=content,
-                        media_type="application/json")
-    #  response.headers["Cache-Control"] = "max-age=31536000"
-    return response
-
-
 @app.get("/datasets/{dataset_id}/times/{timestamp_ms}/tiles/{Z}/{X}/{Y}")
 async def data_tiles(dataset_id: int, timestamp_ms: int,
                      Z: int, X: int, Y: int,
