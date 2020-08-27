@@ -117,12 +117,13 @@ async def data_tiles(dataset_id: int, timestamp_ms: int,
     return response
 
 
-@app.get("/points/{dataset}/{timestamp_ms}")
-async def points(dataset: str, timestamp_ms: int,
+@app.get("/datasets/{dataset_id}/times/{timestamp_ms}/points")
+async def points(dataset_id: int, timestamp_ms: int,
                  settings: config.Settings = Depends(get_settings)):
     config = load_config(settings.config_file)
     time = np.datetime64(timestamp_ms, 'ms')
-    path = lib.core.get_path(config, dataset)
+    dataset_name = config.datasets[dataset_id].label
+    path = lib.core.get_path(config, dataset_name)
     obj = lib.core.get_points(path, time)
     content = serialize_json(obj)
     response = Response(content=content,

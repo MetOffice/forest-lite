@@ -370,7 +370,8 @@ window.main = function() {
             // Fetch data, draw and reveal contours
             // (TODO: separate concerns)
             let timestamp_ms = state.times[state.time_index]
-            let url = `./points/${state.dataset}/${timestamp_ms}`
+            let id = state.dataset
+            let url = `./datasets/${id}/times/${timestamp_ms}/points`
             fetch(url)
                 .then(response => response.json())
                 .then((data) => {
