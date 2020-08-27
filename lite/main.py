@@ -32,6 +32,7 @@ def get_settings():
     return config.Settings()
 
 
+@lru_cache
 def load_config(path):
     with open(path) as stream:
         data = yaml.safe_load(stream)
