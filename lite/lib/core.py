@@ -5,14 +5,20 @@ import numpy as np
 import datetime as dt
 import forest.geo
 import lib.tiling
+from functools import lru_cache
 
 
 TILE_SIZE = 64  # 128
 
 
 def get_data_tile(config, dataset_name, timestamp_ms, z, x, y):
-    time = np.datetime64(timestamp_ms, 'ms')
     path = get_path(config, dataset_name)
+    return _data_tile(path, timestamp_ms, z, x, y)
+
+
+@lru_cache
+def _data_tile(path, timestamp_ms, z, x, y):
+    time = np.datetime64(timestamp_ms, 'ms')
     zxy = (z, x, y)
     with xarray.open_dataset(path, engine="h5netcdf") as nc:
         lons = nc["longitude"].values

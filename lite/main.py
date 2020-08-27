@@ -51,7 +51,8 @@ async def datasets(response: Response,
                    settings: config.Settings = Depends(get_settings)):
     config = load_config(settings.config_file)
     response.headers["Cache-Control"] = "max-age=31536000"
-    return {"names": sorted(dataset.label for dataset in config.datasets)}
+    return {"datasets": [{"label": dataset.label, "id": i}
+                         for i, dataset in enumerate(config.datasets)]}
 
 
 @app.get("/datasets/{dataset_name}/times/{time}")
@@ -95,12 +96,20 @@ async def dataset_times(dataset_name, limit: int = 10,
                 return response
 
 
-@app.get("/tiles/{dataset}/{time}/{Z}/{X}/{Y}")
-async def tiles(dataset: str, time: int, Z: int, X: int, Y: int,
-                settings: config.Settings = Depends(get_settings)):
+@app.get("/datasets/{dataset_id}/times/{timestamp_ms}/tiles/{Z}/{X}/{Y}")
+async def data_tiles(dataset_id: int, timestamp_ms: int,
+                     Z: int, X: int, Y: int,
+                     settings: config.Settings = Depends(get_settings)):
+    """GET data tile from dataset at particular time"""
     config = load_config(settings.config_file)
-    print(dataset, time, Z, X, Y)
-    obj = lib.core.get_data_tile(config, dataset, time, Z, X, Y)
+    dataset_name = config.datasets[dataset_id].label
+    data = lib.core.get_data_tile(config, dataset_name, timestamp_ms, Z, X, Y)
+    obj = {
+        "dataset_id": dataset_id,
+        "timestamp_ms": timestamp_ms,
+        "tile": [X, Y, Z],
+        "data": data
+    }
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")

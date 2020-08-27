@@ -49,8 +49,7 @@ export let DataTileRenderer = function(figure, color_mapper, source) {
     })
     figure.add_tools(this.tool)
 
-    // Example URL pattern
-    this.url = "/tiles/dataset/time/{Z}/{X}/{Y}"
+    this.url = null
 
     // Google WebMercator limits
     this.limits = WEB_MERCATOR_EXTENT
@@ -88,6 +87,7 @@ DataTileRenderer.prototype.render = function() {
     if (typeof this.limits === "undefined") {
         return
     }
+    if (this.url === null) return
     let x_range = this.figure.x_range
     let y_range = this.figure.y_range
     let tiles = getTiles(x_range, y_range, this.limits)
@@ -123,6 +123,7 @@ DataTileRenderer.prototype.render = function() {
         // Fetch from server
         fetch(url)
             .then((response) => response.json())
+            .then(data => data.data)
             .then((data) => {
                 this.imageCache[url] = data
                 this._addImage(data)
