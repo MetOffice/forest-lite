@@ -88,6 +88,7 @@ DataTileRenderer.prototype.render = function() {
         return
     }
     if (this.url === null) return
+    console.log("render")
     let x_range = this.figure.x_range
     let y_range = this.figure.y_range
     let tiles = getTiles(x_range, y_range, this.limits)
