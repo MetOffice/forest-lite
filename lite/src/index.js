@@ -1,3 +1,4 @@
+import debounce from "lodash/debounce"
 import * as tiling from "./tiling.js"
 import * as contour from "./contour.js"
 import * as helpers from "@turf/helpers"
@@ -9,6 +10,7 @@ import App from "./App.js"
 import { rootReducer } from "./reducers.js"
 import { Colorbar } from "./Colorbar.js"
 import { toolMiddleware } from "./middlewares.js"
+import { makeOnPanZoom } from "./on-pan-zoom.js"
 import {
     SET_DATASETS,
     SET_PALETTE_NAME,
@@ -34,7 +36,8 @@ import {
     next_time_index,
     previous_time_index,
     fetch_image,
-    fetch_image_success
+    fetch_image_success,
+    setViewport
 } from "./actions.js"
 import * as Bokeh from "@bokeh/bokehjs"
 
@@ -327,7 +330,7 @@ window.main = function() {
         }
     })
 
-    // DataTileRenderer
+    // // DataTileRenderer
     let tile_renderer = new tiling.DataTileRenderer(figure, color_mapper)
     store.subscribe(() => {
         let state = store.getState()
@@ -352,6 +355,28 @@ window.main = function() {
             tile_renderer.tool.active = state.hover_tool
         }
     })
+
+    // Curry render
+    const _render = tiling.render(tile_renderer)
+
+    // Listen to x_range.start changes
+    let onPanZoom = makeOnPanZoom(figure.x_range)
+    let fn = () => {
+        const level = tiling.findZoomLevel(
+            figure.x_range,
+            figure.y_range,
+            tiling.WEB_MERCATOR_EXTENT
+        )
+        console.log(level)
+        const tiles = tiling.getTiles(
+            figure.x_range,
+            figure.y_range,
+            tiling.WEB_MERCATOR_EXTENT,
+            level
+        ).map(({x, y, z}) => [x, y, z])
+        console.log(_render(tiles))
+    }
+    onPanZoom(debounce(fn, 400))
 
     // Isolines
     let contourRenderer = new contour.ContourRenderer(figure)
