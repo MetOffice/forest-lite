@@ -1,9 +1,9 @@
 # FOREST-lite
 
-Minimal implementation of FOREST. It uses FastAPI to expose data via
-a REST API. The client application uses Redux and React to manage
-state and components. For visualisation, BokehJS and Turf.js have
-been chosen for their composability and ease-of-use.
+Minimal implementation of FOREST. It uses [FastAPI](https://fastapi.tiangolo.com/) to expose data via
+a REST API. The client application uses [Redux](https://redux.js.org/) and [React](https://reactjs.org/) to manage
+state and components. For visualisation, [BokehJS](https://docs.bokeh.org/en/latest/docs/dev_guide/bokehjs.html)
+and [Turf.js](https://turfjs.org/) have been chosen for their composability and ease-of-use.
 
 ## Getting started
 
@@ -24,7 +24,7 @@ For developers working on the client-side code, the project uses `npm` and `webp
 ## Configuration
 
 The specification for config files has not yet been formalised but
-for now it takes lessons learned from the FOREST project
+for now it takes lessons learned from the [FOREST](https://github.com/MetOffice/forest) project
 
 ```yaml
 datasets:
