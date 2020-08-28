@@ -97,9 +97,7 @@ DataTileRenderer.prototype.render = function() {
     }
     for (let i=0; i<tiles.length; i++) {
         let tile = tiles[i]
-        let key = this.url.replace("{Z}", tile.z)
-                          .replace("{X}", tile.x)
-                          .replace("{Y}", tile.y)
+        let key = getURL(this.url, tile.x, tile.y, tile.z)
         if (!(key in this.tileCache)) {
             this.tileCache[key] = true // Dummy value
             if (key in this.imageCache) {
@@ -129,6 +127,13 @@ DataTileRenderer.prototype.render = function() {
                 this._addImage(data)
             })
     })
+}
+
+// Interpolate URL from tile parameters
+export const getURL = (url, x, y, z) => {
+    return url.replace("{X}", x)
+              .replace("{Y}", y)
+              .replace("{Z}", z)
 }
 
 // Concat image(s) onto source
@@ -203,21 +208,10 @@ DataTileRenderer.prototype.mergeImages = function(images) {
 /**
  * Estimate Z/X/Y tile indices related to viewport
  */
-export let getTiles = function(x_range, y_range, limits) {
-    // World coordinates in Google Maps API terminology
-    let interpX = interp1d(limits.x[0], limits.x[1], 0, 256)
-    let interpY = interp1d(limits.y[0], limits.y[1], 0, 256)
-    let world = {
-        x: {
-            start: interpX(x_range.start),
-            end: interpX(x_range.end)
-        },
-        y: {
-            start: interpY(y_range.start),
-            end: interpY(y_range.end)
-        }
-    }
-    let level = zoomLevel(world) + 2
+export let getTiles = function(x_range, y_range, limits, extraZoom = 2) {
+    let world = worldCoordinates(x_range, y_range, limits)
+
+    let level = zoomLevel(world) + extraZoom
     // Calculate {Z} {X} {Y} values
     let indices = {
         x: {
@@ -239,7 +233,31 @@ export let getTiles = function(x_range, y_range, limits) {
             })
         }
     }
+
+    // Remove impossible tiles
+    tiles = tiles
+        .map(({x, y, z}) => [x, y, z])
+        .filter(validTile)
+        .map(([x, y, z]) => ({x, y, z}))
     return tiles
+}
+
+export const validTile = ([x, y, z]) => ((x < 2**z) && (y < 2**z))
+
+// World coordinates in Google Maps API terminology
+export const worldCoordinates = (x_range, y_range, limits) => {
+    let interpX = interp1d(limits.x[0], limits.x[1], 0, 256)
+    let interpY = interp1d(limits.y[0], limits.y[1], 0, 256)
+    return {
+        x: {
+            start: interpX(x_range.start),
+            end: interpX(x_range.end)
+        },
+        y: {
+            start: interpY(y_range.start),
+            end: interpY(y_range.end)
+        }
+    }
 }
 
 // Simple 1d interpolator
