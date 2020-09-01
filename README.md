@@ -27,6 +27,10 @@ For simplicity the repository ships with pre-built assets, e.g. `static/lite.min
 
 For developers working on the client-side code, the project uses `npm` and `webpack` to create the bundled JS and other assets. `jest` is the preferred test framework.
 
+## Documentation
+
+Full documentation is available at [https://metoffice.github.io/forest-lite/](https://metoffice.github.io/forest-lite/)
+
 ## Configuration
 
 The specification for config files has not yet been formalised but
