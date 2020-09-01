@@ -1,0 +1,9 @@
+site_name: FOREST Lite
+theme:
+  name: material
+  palette:
+    scheme: default
+    primary: cyan
+    accent: blue
+  favicon: favicon.png
+  logo: img/logo_transparent_notext_white.png
