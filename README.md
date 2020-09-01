@@ -1,4 +1,10 @@
-# FOREST-lite
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/MetOffice/forest-lite/master/logo_transparent.png"
+        width="350px" align="center" alt="FOREST-lite">
+</p>
+
+# Introduction
 
 Minimal implementation of FOREST. It uses [FastAPI](https://fastapi.tiangolo.com/) to expose data via
 a REST API. The client application uses [Redux](https://redux.js.org/) and [React](https://reactjs.org/) to manage
