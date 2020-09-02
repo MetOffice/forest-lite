@@ -1,4 +1,5 @@
 site_name: FOREST Lite
+repo_url: https://github.com/MetOffice/forest-lite
 theme:
   name: material
   palette:
