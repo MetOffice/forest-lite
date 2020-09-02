@@ -367,13 +367,13 @@ window.main = function() {
             figure.y_range,
             tiling.WEB_MERCATOR_EXTENT
         )
-        console.log(level)
         const tiles = tiling.getTiles(
             figure.x_range,
             figure.y_range,
             tiling.WEB_MERCATOR_EXTENT,
             level
         ).map(({x, y, z}) => [x, y, z])
+        console.log(tiles)
         console.log(_render(tiles))
     }
     onPanZoom(debounce(fn, 400))

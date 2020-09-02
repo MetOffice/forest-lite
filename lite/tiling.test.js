@@ -70,7 +70,7 @@ describe("tiling", () => {
 test("zoomLevel", () => {
     const extent = {x: {start: 0, end: 256}, y: {start: 0, end: 256}}
     const actual = tiling.zoomLevel(extent)
-    const expected = 0
+    const expected = -1
     expect(actual).toEqual(expected)
 })
 
