@@ -5,5 +5,5 @@ theme:
     scheme: default
     primary: cyan
     accent: blue
-  favicon: favicon.png
+  favicon: img/favicon.png
   logo: img/logo_transparent_notext_white.png
