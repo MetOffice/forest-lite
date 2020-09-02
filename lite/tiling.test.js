@@ -29,8 +29,8 @@ describe("tiling", () => {
         const limits = {x: [0, 1], y: [0, 1]}
         const x_range = {start: 0, end: 1}
         const y_range = {start: 0, end: 1}
-        const extraZoom = 0
-        const actual = tiling.getTiles(x_range, y_range, limits, extraZoom)
+        const level = 0
+        const actual = tiling.getTiles(x_range, y_range, limits, level)
         const expected = [
             {x: 0, y: 0, z: 0},
         ]
@@ -50,16 +50,6 @@ describe("tiling", () => {
         expect(actual).toEqual(expected)
     })
 
-    test("zoomLevel", () => {
-        const world = {
-            x: { start: 0, end: 256 },
-            y: { start: 0, end: 256 },
-        }
-        const actual = tiling.zoomLevel(world)
-        const expected = 0
-        expect(actual).toEqual(expected)
-    })
-
     test("pixelIndex", () => {
         const worldCoord = 256
         const level = 2
@@ -76,6 +66,25 @@ describe("tiling", () => {
     })
 })
 
+
+test("zoomLevel", () => {
+    const extent = {x: {start: 0, end: 256}, y: {start: 0, end: 256}}
+    const actual = tiling.zoomLevel(extent)
+    const expected = -1
+    expect(actual).toEqual(expected)
+})
+
+test.each`
+    extent            | expected
+    ${ [0, 0, 1, 1] } | ${ Math.sqrt(2) }
+`("viewportSize", ({ extent, expected }) => {
+    const [ x0, y0, x1, y1 ] = extent
+    const actual = tiling.viewportSize({
+        x: {start: x0, end: x1},
+        y: {start: y0, end: y1}
+    })
+    expect(actual).toEqual(expected)
+})
 
 test.each`
   tile | expected

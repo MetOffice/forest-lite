@@ -39,10 +39,10 @@ export const previous_time_index = () => { return { type: PREVIOUS_TIME_INDEX } 
 export const fetch_image = url => { return { type: FETCH_IMAGE, payload: url } }
 export const fetch_image_success = () => { return { type: FETCH_IMAGE_SUCCESS } }
 
-export const setColorbar = (flag) => setFlag({colorbar: flag})
-export const setContours = (flag) => setFlag({contours: flag})
-export const setHoverTool = (flag) => setFlag({hover_tool: flag})
-export const setFlag = (payload) => ({ type: SET_FLAG, payload: payload })
+export const setColorbar = flag => setFlag({colorbar: flag})
+export const setContours = flag => setFlag({contours: flag})
+export const setHoverTool = flag => setFlag({hover_tool: flag})
+export const setFlag = payload => ({ type: SET_FLAG, payload: payload })
 
 export const toggleColorbar = () => toggleFlag("colorbar")
 export const toggleContours = () => toggleFlag("contours")

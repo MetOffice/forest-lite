@@ -57,10 +57,10 @@ export let DataTileRenderer = function(figure, color_mapper, source) {
     // Connect to x-range change
     this.tileCache = {}
     this.imageCache = {}
-    let x_range = this.figure.x_range
-    x_range.connect(x_range.properties.start.change, () => {
-        this.render()
-    })
+    // let x_range = this.figure.x_range
+    // x_range.connect(x_range.properties.start.change, () => {
+    //     this.render()
+    // })
 }
 
 DataTileRenderer.prototype.setURL = function(url) {
@@ -81,7 +81,7 @@ DataTileRenderer.prototype.setURL = function(url) {
     this.tileCache = {}
 
     // Re-render
-    this.render()
+    // this.render()
 }
 DataTileRenderer.prototype.render = function() {
     if (typeof this.limits === "undefined") {
@@ -90,7 +90,10 @@ DataTileRenderer.prototype.render = function() {
     if (this.url === null) return
     let x_range = this.figure.x_range
     let y_range = this.figure.y_range
-    let tiles = getTiles(x_range, y_range, this.limits)
+
+    let level = findZoomLevel(x_range, y_range, this.limits)
+
+    let tiles = getTiles(x_range, y_range, this.limits, level)
     let urls = {
         remote: [],
         local: []
@@ -127,6 +130,25 @@ DataTileRenderer.prototype.render = function() {
                 this._addImage(data)
             })
     })
+}
+
+// Render tiles
+export const render = renderer => tiles => {
+    if (renderer.url === null) return
+    const urls = tiles.map(([x, y, z]) => getURL(renderer.url, x, y, z))
+    const promises = urls.map(url => {
+        return fetch(url)
+            .then(response => response.json())
+            .then(data => data.data)
+    })
+    return Promise.all(promises)
+        .then(images => images.reduce(imageReducer, {}))
+        .then(data => {
+            const source = renderer.source
+            console.log(data)
+            source.data = data
+            source.change.emit()
+        })
 }
 
 // Interpolate URL from tile parameters
@@ -196,22 +218,35 @@ DataTileRenderer.prototype.splitImages = function(data) {
         }, [])
 }
 DataTileRenderer.prototype.mergeImages = function(images) {
-    return images.reduce((agg, obj) => {
-        Object.keys(obj).forEach((key) => {
-            agg[key] = agg[key] || []
-            agg[key] = agg[key].concat(obj[key])
-        })
-        return agg
-    }, {})
+    return images.reduce(imageReducer, {})
 }
+
+
+// Reduce (collection, image) => collection
+export const imageReducer = (agg, obj) => {
+    Object.keys(obj).forEach((key) => {
+        agg[key] = agg[key] || []
+        agg[key] = agg[key].concat(obj[key])
+    })
+    return agg
+}
+
+
+/**
+ * Find appropriate zoom level
+ */
+export const findZoomLevel = (x_range, y_range, limits, extraZoom = 2) => {
+    let world = worldCoordinates(x_range, y_range, limits)
+    return zoomLevel(world) + extraZoom
+}
+
 
 /**
  * Estimate Z/X/Y tile indices related to viewport
  */
-export let getTiles = function(x_range, y_range, limits, extraZoom = 2) {
+export let getTiles = function(x_range, y_range, limits, level) {
     let world = worldCoordinates(x_range, y_range, limits)
 
-    let level = zoomLevel(world) + extraZoom
     // Calculate {Z} {X} {Y} values
     let indices = {
         x: {
@@ -279,10 +314,14 @@ export let tileIndex = function(pixel) {
 }
 
 // Optimal zoom level given world coordinates
-export let zoomLevel = function(world) {
+export let zoomLevel = function(extent) {
+    return Math.floor(Math.log2(256 / viewportSize(extent)))
+}
+
+// Estimate viewport size
+export const viewportSize = ({ x, y }) => {
     // TODO: support negative
-    let dx = world.x.end - world.x.start
-    let dy = world.y.end - world.y.start
-    let dw = Math.min(dx, dy)
-    return Math.floor(Math.log2(256 / dw))
+    let dx = x.end - x.start
+    let dy = y.end - y.start
+    return Math.sqrt(dx**2 + dy**2)
 }
