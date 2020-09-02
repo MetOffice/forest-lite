@@ -36,8 +36,7 @@ import {
     next_time_index,
     previous_time_index,
     fetch_image,
-    fetch_image_success,
-    setViewport
+    fetch_image_success
 } from "./actions.js"
 import * as Bokeh from "@bokeh/bokehjs"
 
