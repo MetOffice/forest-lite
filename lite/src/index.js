@@ -319,17 +319,6 @@ window.main = function() {
     })
     Bokeh.Plotting.show(palette_number_select, "#palette-number-select")
 
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.palette != "undefined") {
-            color_mapper.palette = state.palette
-        }
-        if (typeof state.limits != "undefined") {
-            color_mapper.low = state.limits.low
-            color_mapper.high = state.limits.high
-        }
-    })
-
     // Listen to x_range.start changes
     let onPanZoom = makeOnPanZoom(figure.x_range)
     let fn = () => {
