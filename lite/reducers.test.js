@@ -2,7 +2,8 @@ const { rootReducer } = require("./src/reducers.js")
 const {
     setHoverTool,
     setColorbar,
-    setContours
+    setContours,
+    setFigure
 } = require("./src/actions.js")
 
 
@@ -20,4 +21,21 @@ describe("rootReducer(action, state)", () => {
         ({ action, state }) => {
         expect(rootReducer({}, action)).toEqual(state)
     })
+})
+
+
+test("setFigure", () => {
+    const props = {
+        x_range: { start: 0, end: 2 },
+        y_range: { start: 1, end: 3 },
+    }
+    const action = setFigure(props)
+    const actual = rootReducer({}, action)
+    const expected = {
+        figure: {
+            x_range: { start: 0, end: 2 },
+            y_range: { start: 1, end: 3 },
+        }
+    }
+    expect(actual).toEqual(expected)
 })

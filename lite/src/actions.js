@@ -2,6 +2,7 @@ import {
     SET_URL,
     SET_DATASET,
     SET_DATASETS,
+    SET_FIGURE,
     SET_PALETTE,
     SET_PALETTES,
     SET_PALETTE_NAME,
@@ -38,6 +39,8 @@ export const next_time_index = () => { return { type: NEXT_TIME_INDEX } }
 export const previous_time_index = () => { return { type: PREVIOUS_TIME_INDEX } }
 export const fetch_image = url => { return { type: FETCH_IMAGE, payload: url } }
 export const fetch_image_success = () => { return { type: FETCH_IMAGE_SUCCESS } }
+
+export const setFigure = props => ({ type: SET_FIGURE, payload: props })
 
 export const setColorbar = flag => setFlag({colorbar: flag})
 export const setContours = flag => setFlag({contours: flag})

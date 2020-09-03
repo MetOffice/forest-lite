@@ -136,16 +136,30 @@ DataTileRenderer.prototype.render = function() {
 export const render = renderer => tiles => {
     if (renderer.url === null) return
     const urls = tiles.map(([x, y, z]) => getURL(renderer.url, x, y, z))
+    return renderTiles(renderer.source)(urls)
+}
+
+
+const _cache = {}
+
+// Render tiles
+export const renderTiles = source =>  urls => {
     const promises = urls.map(url => {
-        return fetch(url)
-            .then(response => response.json())
-            .then(data => data.data)
+        if (url in _cache) {
+            return Promise.resolve(_cache[url])
+        } else {
+            return fetch(url)
+                .then(response => response.json())
+                .then(data => data.data)
+                .then(data => {
+                    _cache[url] = data
+                    return data
+                })
+        }
     })
     return Promise.all(promises)
         .then(images => images.reduce(imageReducer, {}))
         .then(data => {
-            const source = renderer.source
-            console.log(data)
             source.data = data
             source.change.emit()
         })

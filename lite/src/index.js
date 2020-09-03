@@ -36,7 +36,8 @@ import {
     next_time_index,
     previous_time_index,
     fetch_image,
-    fetch_image_success
+    fetch_image_success,
+    setFigure
 } from "./actions.js"
 import * as Bokeh from "@bokeh/bokehjs"
 
@@ -187,10 +188,18 @@ window.main = function() {
                                   ))
     store.subscribe(() => { console.log(store.getState()) })
 
+    // Image
+    let color_mapper = new Bokeh.LinearColorMapper({
+        "low": 200,
+        "high": 300,
+        "palette": ["#440154", "#208F8C", "#FDE724"],
+        "nan_color": "rgba(0,0,0,0)"
+    })
+
     // Use React to manage components
     ReactDOM.render(
         <Provider store={store}>
-            <App />
+            <App figure={ figure } color_mapper={ color_mapper } />
         </Provider>,
         document.getElementById("root"))
 
@@ -310,14 +319,6 @@ window.main = function() {
     })
     Bokeh.Plotting.show(palette_number_select, "#palette-number-select")
 
-    // Image
-    let color_mapper = new Bokeh.LinearColorMapper({
-        "low": 200,
-        "high": 300,
-        "palette": ["#440154", "#208F8C", "#FDE724"],
-        "nan_color": "rgba(0,0,0,0)"
-    })
-
     store.subscribe(() => {
         let state = store.getState()
         if (typeof state.palette != "undefined") {
@@ -329,51 +330,23 @@ window.main = function() {
         }
     })
 
-    // // DataTileRenderer
-    let tile_renderer = new tiling.DataTileRenderer(figure, color_mapper)
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.dataset === "undefined") {
-            return
-        }
-        if (typeof state.time_index === "undefined") {
-            return
-        }
-        if (typeof state.times === "undefined") {
-            return
-        }
-        // Experimental tile server
-        let time = state.times[state.time_index]
-        let url = `./datasets/${state.dataset}/times/${time}/tiles/{Z}/{X}/{Y}`
-        tile_renderer.setURL(url)
-
-        // HoverTool
-        if (typeof state.hover_tool === "undefined") {
-            return
-        } else {
-            tile_renderer.tool.active = state.hover_tool
-        }
-    })
-
-    // Curry render
-    const _render = tiling.render(tile_renderer)
-
     // Listen to x_range.start changes
     let onPanZoom = makeOnPanZoom(figure.x_range)
     let fn = () => {
-        const level = tiling.findZoomLevel(
-            figure.x_range,
-            figure.y_range,
-            tiling.WEB_MERCATOR_EXTENT
-        )
-        const tiles = tiling.getTiles(
-            figure.x_range,
-            figure.y_range,
-            tiling.WEB_MERCATOR_EXTENT,
-            level
-        ).map(({x, y, z}) => [x, y, z])
-        console.log(tiles)
-        console.log(_render(tiles))
+
+        // Set figure axis limits in application state
+        const props = {
+            x_range: {
+                start: figure.x_range.start,
+                end: figure.x_range.end
+            },
+            y_range: {
+                start: figure.y_range.start,
+                end: figure.y_range.end
+            }
+        }
+        const action = setFigure(props)
+        store.dispatch(action)
     }
     onPanZoom(debounce(fn, 400))
 

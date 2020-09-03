@@ -8,7 +8,7 @@ import lib.tiling
 from functools import lru_cache
 
 
-TILE_SIZE = 256 # 64  # 128
+TILE_SIZE = 128 # 256 # 64  # 128
 
 
 def get_data_tile(config, dataset_name, timestamp_ms, z, x, y):
