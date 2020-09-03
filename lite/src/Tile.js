@@ -1,7 +1,8 @@
 import React from "react"
 import { connect } from "react-redux"
 import {
-    ColumnDataSource
+    ColumnDataSource,
+    HoverTool
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as tiling from "./tiling.js"
 
@@ -29,7 +30,17 @@ class Tile extends React.Component {
             source: source,
             color_mapper: props.color_mapper
         })
-        this.state = { source, renderer }
+
+        // HoverTool
+        const tooltip = "Value: @image @units"
+        const hover_tool = new HoverTool({
+            renderers: [renderer],
+            tooltips: tooltip,
+            active: false
+        })
+        props.figure.add_tools(hover_tool)
+
+        this.state = { source, renderer, hover_tool }
     }
     render() {
         console.log("props", this.props)
@@ -55,6 +66,9 @@ class Tile extends React.Component {
         const urls = tiles.map(([x, y, z]) => tiling.getURL(this.props.url, x, y, z))
         tiling.renderTiles(this.state.source)(urls)
 
+        // HoverTool
+        this.state.hover_tool.active = this.props.hover_tool
+
         // No DOM elements related to component
         return null
     }
@@ -62,13 +76,19 @@ class Tile extends React.Component {
 
 
 const mapStateToProps = state => {
-    const { dataset, times, time_index, figure: ranges } = state
+    const {
+        dataset,
+        times,
+        time_index,
+        figure: ranges,
+        hover_tool = false
+    } = state
     if (typeof dataset === "undefined") return {}
     if (typeof times === "undefined") return {}
     if (typeof time_index === "undefined") return {}
     const time = times[time_index]
     const url = `./datasets/${dataset}/times/${time}/tiles/{Z}/{X}/{Y}`
-    return { ranges, url }
+    return { ranges, url, hover_tool }
 }
 
 

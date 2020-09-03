@@ -330,35 +330,6 @@ window.main = function() {
         }
     })
 
-    // // DataTileRenderer
-    let tile_renderer = new tiling.DataTileRenderer(figure, color_mapper)
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.dataset === "undefined") {
-            return
-        }
-        if (typeof state.time_index === "undefined") {
-            return
-        }
-        if (typeof state.times === "undefined") {
-            return
-        }
-        // Experimental tile server
-        let time = state.times[state.time_index]
-        let url = `./datasets/${state.dataset}/times/${time}/tiles/{Z}/{X}/{Y}`
-        tile_renderer.setURL(url)
-
-        // HoverTool
-        if (typeof state.hover_tool === "undefined") {
-            return
-        } else {
-            tile_renderer.tool.active = state.hover_tool
-        }
-    })
-
-    // Curry render
-    const _render = tiling.render(tile_renderer)
-
     // Listen to x_range.start changes
     let onPanZoom = makeOnPanZoom(figure.x_range)
     let fn = () => {
