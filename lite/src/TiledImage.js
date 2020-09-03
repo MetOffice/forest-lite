@@ -7,7 +7,7 @@ import {
 import * as tiling from "./tiling.js"
 
 
-class Tile extends React.Component {
+class TiledImage extends React.Component {
     constructor(props) {
         super(props)
         const source = new ColumnDataSource({
@@ -92,4 +92,4 @@ const mapStateToProps = state => {
 }
 
 
-export default connect(mapStateToProps)(Tile)
+export default connect(mapStateToProps)(TiledImage)
