@@ -1,7 +1,6 @@
 /**
  * Simple Web Map tile algorithm
  */
-import * as Bokeh from "@bokeh/bokehjs"
 
 // NOTE: y extents slightly different to x extents
 export const WEB_MERCATOR_EXTENT = {

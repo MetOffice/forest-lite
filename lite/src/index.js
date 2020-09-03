@@ -1,5 +1,4 @@
 import debounce from "lodash/debounce"
-import * as tiling from "./tiling.js"
 import * as contour from "./contour.js"
 import * as helpers from "@turf/helpers"
 import * as Redux from "redux"
