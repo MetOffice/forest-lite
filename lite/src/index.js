@@ -8,7 +8,6 @@ import ReactDOM from "react-dom"
 import { Provider } from "react-redux"
 import App from "./App.js"
 import { rootReducer } from "./reducers.js"
-import { Colorbar } from "./Colorbar.js"
 import { toolMiddleware } from "./middlewares.js"
 import { makeOnPanZoom } from "./on-pan-zoom.js"
 import {
@@ -580,29 +579,6 @@ window.main = function() {
     let lakes = new Lines(figure, "LightBlue")
     lakes.fetch("./atlas/lakes")
 
-    // Colorbar figure
-    const colorbar = new Colorbar(document.getElementById("colorbar-figure"))
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.limits === "undefined") {
-            return
-        }
-        if (typeof state.limits.low === "undefined") {
-            return
-        }
-        if (typeof state.limits.high === "undefined") {
-            return
-        }
-        if (typeof state.palette === "undefined") {
-            return
-        }
-        colorbar.render({
-            low: state.limits.low,
-            high: state.limits.high,
-            palette: state.palette,
-            visible: state.colorbar
-        })
-    })
 }
 
 
