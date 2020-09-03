@@ -379,11 +379,6 @@ window.main = function() {
     }
     onPanZoom(debounce(fn, 400))
 
-    store.subscribe(() => {
-        const state = store.getState()
-        if (typeof state.figure === "undefined") return
-    })
-
     // Isolines
     let contourRenderer = new contour.ContourRenderer(figure)
     store.subscribe(() => {
