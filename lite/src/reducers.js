@@ -3,6 +3,7 @@
  */
 import {
     SET_FLAG,
+    SET_FIGURE,
     SET_DATASET,
     SET_DATASETS,
     SET_URL,
@@ -25,6 +26,8 @@ export const rootReducer = (state = "", action) => {
     switch (action.type) {
         case SET_FLAG:
             return Object.assign({}, state, action.payload)
+        case SET_FIGURE:
+            return Object.assign({}, state, {figure: action.payload})
         case SET_DATASET:
             return Object.assign({}, state, {dataset: action.payload})
         case SET_DATASETS:
