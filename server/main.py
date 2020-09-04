@@ -5,6 +5,7 @@ import numpy as np
 import uvicorn
 import fastapi
 from fastapi import Depends, Response, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
@@ -20,9 +21,27 @@ import config
 
 
 app = fastapi.FastAPI()
+
+
+# CORS
+origins = [
+    "*"  # TODO: Restrict origin to client only
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+
+# /static assets
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+
+# Templates
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
 

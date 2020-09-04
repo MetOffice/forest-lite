@@ -152,6 +152,10 @@ let getPalettes = function(palettes, name, number) {
 }
 
 
+// API base URL
+const baseURL = "http://localhost:8888"
+
+
 window.main = function() {
 
     // Geographical map
@@ -197,7 +201,8 @@ window.main = function() {
     // Use React to manage components
     ReactDOM.render(
         <Provider store={store}>
-            <App figure={ figure } color_mapper={ color_mapper } />
+            <App figure={ figure } color_mapper={ color_mapper }
+                 baseURL={ baseURL } />
         </Provider>,
         document.getElementById("root"))
 
@@ -211,7 +216,7 @@ window.main = function() {
     })
 
     // Async get palette names
-    fetch("./palettes")
+    fetch(`${baseURL}/palettes`)
         .then((response) => response.json())
         .then((data) => {
             let action = set_palettes(data)
@@ -278,7 +283,7 @@ window.main = function() {
     })
 
     // Fetch datasets from server
-    fetch("./datasets")
+    fetch(`${baseURL}/datasets`)
         .then(response => response.json())
         .then(data => data.datasets)
         .then(datasets => store.dispatch(set_datasets(datasets)))
@@ -355,7 +360,7 @@ window.main = function() {
             // (TODO: separate concerns)
             let timestamp_ms = state.times[state.time_index]
             let id = state.dataset
-            let url = `./datasets/${id}/times/${timestamp_ms}/points`
+            let url = `${baseURL}/datasets/${id}/times/${timestamp_ms}/points`
             fetch(url)
                 .then(response => response.json())
                 .then((data) => {
@@ -429,7 +434,7 @@ window.main = function() {
 
     //       // Fetch image if not already loaded
     //       let time = state.times[state.time_index]
-    //       let url = `./datasets/${state.dataset}/times/${time}`
+    //       let url = `${baseURL}/datasets/${state.dataset}/times/${time}`
     //       if (state.image_url === url) {
     //           return
     //       }
@@ -495,7 +500,7 @@ window.main = function() {
 
     // Initial times
     store.dispatch(set_time_index(0))
-    fetch('./datasets/EIDA50/times?limit=10')
+    fetch(`${baseURL}/datasets/EIDA50/times?limit=10`)
         .then((response) => response.json())
         .then((data) => {
             let action = set_times(data)
@@ -564,19 +569,19 @@ window.main = function() {
 
     // Coastlines
     let coastlines = new Lines(figure, "black")
-    coastlines.fetch("./atlas/coastlines")
+    coastlines.fetch(`${baseURL}/atlas/coastlines`)
 
     // Country borders
     let borders = new Lines(figure, "black")
-    borders.fetch("./atlas/borders")
+    borders.fetch(`${baseURL}/atlas/borders`)
 
     // Disputed borders
     let disputed = new Lines(figure, "red")
-    disputed.fetch("./atlas/disputed")
+    disputed.fetch(`${baseURL}/atlas/disputed`)
 
     // Lakes
     let lakes = new Lines(figure, "LightBlue")
-    lakes.fetch("./atlas/lakes")
+    lakes.fetch(`${baseURL}/atlas/lakes`)
 
 }
 

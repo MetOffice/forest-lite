@@ -11,7 +11,9 @@ class App extends React.Component {
         return (
             <div>
                 <Toolbar />
-                <TiledImage figure={ this.props.figure }
+                <TiledImage
+                     baseURL={ this.props.baseURL }
+                     figure={ this.props.figure }
                      color_mapper={ this.props.color_mapper } />
                 <ColorPalette
                      color_mapper={ this.props.color_mapper } />
