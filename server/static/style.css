@@ -23,6 +23,9 @@ html, body {
 .left {
     left: 0;
 }
+.right {
+    right: 0;
+}
 .margin-20 {
     margin: 20px;
 }
@@ -46,12 +49,16 @@ html, body {
     padding: 10px;
     padding-bottom: 0;
 }
-.menu {
+.pos-abs {
     position: absolute;
+}
+.pad-bot-6 {
+    padding-bottom: 6px;
+}
+.menu {
     background-color: white;
     border: 1px solid #CCC;
     border-radius: 4px;
-    padding-bottom: 6px;
 }
 .lite-btn {
     background-color: white;
@@ -69,7 +76,7 @@ html, body {
     background-color: white;
     border: 1px solid #CCC;
     border-radius: 4px;
-    margin: 0 6px;
+    margin: 2px;
     cursor: pointer;
 }
 .tool-icon:hover {
