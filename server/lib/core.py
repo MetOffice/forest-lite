@@ -72,12 +72,6 @@ def xy_data(dataset, variable):
         }
 
 
-def get_times(dataset_name, path):
-    with xarray.open_dataset(path, engine="h5netcdf") as nc:
-        times = nc.time.values
-    return times
-
-
 def image_data(name, path, timestamp_ms, tile_size=TILE_SIZE):
     n = tile_size
     time = np.datetime64(timestamp_ms, 'ms')
