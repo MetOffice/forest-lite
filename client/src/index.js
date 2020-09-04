@@ -485,19 +485,6 @@ window.main = function() {
     // Set static limits
     store.dispatch(set_limits({low: 200, high: 300}))
 
-    let title = new Title(document.getElementById("title-text"))
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.time_index === "undefined") {
-            return
-        }
-        if (typeof state.times === "undefined") {
-            return
-        }
-        let time = new Date(state.times[state.time_index])
-        title.render(time.toUTCString())
-    })
-
     // Initial times
     store.dispatch(set_time_index(0))
     fetch(`${baseURL}/datasets/EIDA50/times?limit=10`)
@@ -610,15 +597,6 @@ Lines.prototype.fetch = function(url) {
         .then((data) => {
             this.source.data = data
         })
-}
-
-
-// Title component
-function Title(el) {
-    this.el = el
-}
-Title.prototype.render = function(message) {
-    this.el.innerHTML = message
 }
 
 

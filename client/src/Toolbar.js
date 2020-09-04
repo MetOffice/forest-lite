@@ -6,8 +6,12 @@ import { toggleFlag } from "./actions"
 
 class Toolbar extends React.Component {
     render() {
+        const style = {
+            margin: "20px",
+            padding: "4px"
+        }
         return (
-            <div>
+            <div className="menu abs-top right" style={ style }>
                 <Toggle icon="far fa-comment-alt"
                         active={ this.props.hover_tool }
                         onClick={ () => { this.handleClick("hover_tool") } } />

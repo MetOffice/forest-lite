@@ -1,4 +1,5 @@
 import React from "react"
+import Title from "./Title.js"
 import Toolbar from "./Toolbar.js"
 import TiledImage from "./TiledImage.js"
 import ColorPalette from "./ColorPalette.js"
@@ -10,6 +11,7 @@ class App extends React.Component {
         const el = document.getElementById("colorbar-figure")
         return (
             <div>
+                <Title />
                 <Toolbar />
                 <TiledImage
                      baseURL={ this.props.baseURL }
