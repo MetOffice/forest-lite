@@ -25,7 +25,7 @@ app = fastapi.FastAPI()
 
 # CORS
 origins = [
-    "*"
+    "*"  # TODO: Restrict origin to client only
 ]
 app.add_middleware(
     CORSMiddleware,
