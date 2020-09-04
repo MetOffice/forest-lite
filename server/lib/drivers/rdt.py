@@ -20,6 +20,13 @@ class Driver:
         times = [parse_time(path) for path in paths]
         return sorted(times)[-limit:]
 
+    def get_geojson(self):
+        paths = glob.glob(os.path.join(DIRECTORY, GLOB_PATTERN))
+        path = sorted(paths)[-1]
+        with open(path) as stream:
+            content = stream.read()
+        return content
+
 
 def parse_time(path):
     regex = re.compile(r"[0-9]{12}")
@@ -30,9 +37,3 @@ def parse_time(path):
 
 def get_path(time):
     return os.path.join(DIRECTORY, PATTERN.format(time))
-
-
-def load(path):
-    with open(path) as stream:
-        content = stream.read()
-    return content

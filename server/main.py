@@ -143,6 +143,19 @@ async def data_tiles(dataset_id: int, timestamp_ms: int,
     return response
 
 
+@app.get("/datasets/{dataset_id}/geojson")
+async def geojson(dataset_id: int,
+                  settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
+    dataset = config.datasets[dataset_id]
+    driver = lib.drivers.from_spec(dataset.driver)
+    content = driver.get_geojson()
+    response = Response(content=content,
+                        media_type="application/json")
+    #  response.headers["Cache-Control"] = "max-age=31536000"
+    return response
+
+
 @app.get("/datasets/{dataset_id}/times/{timestamp_ms}/points")
 async def points(dataset_id: int, timestamp_ms: int,
                  settings: config.Settings = Depends(get_settings)):
