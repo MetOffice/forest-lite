@@ -1,4 +1,4 @@
-const tiling = require('./src/tiling.js')
+const tiling = require('../src/tiling.js')
 
 
 test('interp1d interpolates midpoint of line segment', () => {

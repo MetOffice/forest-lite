@@ -1,10 +1,10 @@
-const { rootReducer } = require("./src/reducers.js")
+const { rootReducer } = require("../src/reducers.js")
 const {
     setHoverTool,
     setColorbar,
     setContours,
     setFigure
-} = require("./src/actions.js")
+} = require("../src/actions.js")
 
 
 const dummy = () => ({ type: "DUMMY" })

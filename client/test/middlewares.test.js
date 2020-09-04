@@ -1,10 +1,10 @@
-const { toolMiddleware } = require("./src/middlewares.js")
+const { toolMiddleware } = require("../src/middlewares.js")
 const {
     toggleColorbar,
     toggleContours,
     setColorbar,
     setContours
-} = require("./src/actions.js")
+} = require("../src/actions.js")
 
 
 test("toggle middleware", () => {
