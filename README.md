@@ -16,7 +16,7 @@ and [Turf.js](https://turfjs.org/) have been chosen for their composability and 
 To start the FastAPI server run a command similar to the following
 
 ```sh
-CONFIG_FILE=config.yaml python ${REPO_DIR}/lite/main.py --port 8080
+CONFIG_FILE=config.yaml python ${REPO_DIR}/server/main.py --port 8080
 ```
 
 Then navigate to `localhost:8080` to view the application.

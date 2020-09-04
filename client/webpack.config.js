@@ -7,7 +7,7 @@ module.exports = {
     },
     output: {
         filename: '[name].min.js',
-        path: path.resolve(__dirname, "static")
+        path: path.resolve(__dirname, "../server/static")
     },
     module: {
         rules: [{
