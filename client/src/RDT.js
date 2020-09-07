@@ -35,8 +35,29 @@ class RDT extends React.Component {
                         coordinates: [[[0, 0]]]
                     },
                     properties: {
+                        CType: 0,
+                        CRainRate: 0,
+                        ConvTypeMethod: 0,
+                        ConvType: 0,
+                        ConvTypeQuality: 0,
+                        SeverityIntensity: 0,
+                        MvtSpeed: 0,
+                        MvtDirection: 0,
+                        NumIdCell: 0,
+                        CTPressure: 0,
+                        CTPhase: '',
+                        CTReff: '',
+                        ExpansionRate: '-',
+                        BTmin: 0,
+                        BTmoy: 0,
+                        CTCot: '-',
+                        CTCwp: '-',
+                        NbPosLightning: 0,
+                        SeverityType: '',
+                        Surface: '',
+                        Duration: 0,
+                        CoolingRate: 0,
                         PhaseLife: "0",
-                        NbPosLightning: 0
                     }
                 }
             ]
@@ -56,7 +77,21 @@ class RDT extends React.Component {
             renderers: [renderer],
             active: true,
             tooltips: [
+                ['NumIdCell', '@NumIdCell'],
+                ['Duration (Since Birth)', '@Duration{00:00:00}'],
                 ["Phase life", "@PhaseLife"],
+                ['Cloud Type', '@CType'], // Categorical
+                ['Convective Rainfall Rate', '@CRainRate{0.0}' + ' mm/hr'],
+                ['Cloud System', '@ConvType'], // Categorical
+                ['Severity Type', '@SeverityType'], // Categorical
+                ['Severity Intensity', '@SeverityIntensity'], // Categorical
+                ['Cloud Top Phase', '@CTPhase'], // Categorical
+                ['Min. Cloud Top Pressure', '@CTPressure' + ' hPa'],
+                ['Expansion Rate (Past)', '@ExpansionRate{+0.0}' + ' m-2/sec'],
+                ['Rate of Temp. Change', '@CoolingRate{+0.0}' + ' K/15mins'],
+                ['Min. Brightness Temp', '@BTmin{0.0}' + ' K'],
+                ['Average Brightness Temp', '@BTmoy{0.0}' + ' K'],
+                ['Max. Cloud Optical Thickness', '@CTCot'],
                 ["No. of cloud-ground positive lightning strokes", "@NbPosLightning"]
             ]
         })
