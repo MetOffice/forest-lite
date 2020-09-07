@@ -2,6 +2,7 @@
  * Reducers combine state and actions to produce new state
  */
 import {
+    SET_ACTIVE,
     SET_FLAG,
     SET_FIGURE,
     SET_DATASET,
@@ -20,10 +21,24 @@ import {
     FETCH_IMAGE,
     FETCH_IMAGE_SUCCESS
 } from "./action-types.js"
+import * as R from "ramda"
+
+
+const activeReducer = (state, action) => {
+    const { id, flag } = action.payload
+    const fn = R.ifElse(
+        R.propEq("id", id),
+        R.assoc("active", flag),
+        R.identity
+    )
+    return R.evolve({ datasets: R.map(fn) })(state)
+}
 
 
 export const rootReducer = (state = "", action) => {
     switch (action.type) {
+        case SET_ACTIVE:
+            return activeReducer(state, action)
         case SET_FLAG:
             return Object.assign({}, state, action.payload)
         case SET_FIGURE:

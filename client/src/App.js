@@ -1,11 +1,25 @@
 import React from "react"
 import Title from "./Title.js"
 import Toolbar from "./Toolbar.js"
-import TiledImage from "./TiledImage.js"
 import ColorPalette from "./ColorPalette.js"
 import Colorbar from "./Colorbar.js"
-import RDT from "./RDT.js"
+import LayerMenu from "./LayerMenu.js"
+import Layers from "./Layers.js"
 
+
+class Panel extends React.Component {
+    render() {
+        const style = {
+            margin: "20px",
+            padding: "4px"
+        }
+        return (
+            <div className="menu abs-top right" style={ style } >
+                <Toolbar />
+                <LayerMenu />
+            </div>)
+    }
+}
 
 class App extends React.Component {
     render() {
@@ -13,16 +27,13 @@ class App extends React.Component {
         return (
             <div>
                 <Title />
-                <Toolbar />
-                <TiledImage
-                     baseURL={ this.props.baseURL }
-                     figure={ this.props.figure }
-                     color_mapper={ this.props.color_mapper } />
-                <RDT
-                     baseURL={ this.props.baseURL }
-                     figure={ this.props.figure } />
+                <Panel />
+                <Layers
+                    baseURL={ this.props.baseURL }
+                    figure={ this.props.figure }
+                    color_mapper={ this.props.color_mapper } />
                 <ColorPalette
-                     color_mapper={ this.props.color_mapper } />
+                    color_mapper={ this.props.color_mapper } />
                 <Colorbar el={ el } />
             </div>
         )
