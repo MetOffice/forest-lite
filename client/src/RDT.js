@@ -16,10 +16,14 @@ class RDT extends React.Component {
     constructor(props) {
         super(props)
         const { figure } = props
-        // factors: ["Triggering", "Triggering from split", "Growing", "Mature", "Decaying"]
         const color_mapper = new CategoricalColorMapper({
             palette: ["#fee8c8", "#fdbb84", "#e34a33", "#43a2ca", "#a8ddb5"],
-            factors: ["0", "1", "2", "3", "4"]
+            factors: [
+                "Triggering",
+                "Triggering from split",
+                "Growing",
+                "Mature",
+                "Decaying"]
         })
         const empty = {
             type: "FeatureCollection",
@@ -52,6 +56,7 @@ class RDT extends React.Component {
             renderers: [renderer],
             active: true,
             tooltips: [
+                ["Phase life", "@PhaseLife"],
                 ["No. of cloud-ground positive lightning strokes", "@NbPosLightning"]
             ]
         })

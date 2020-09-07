@@ -1,4 +1,16 @@
-import { evolve, map, toString } from "ramda"
+import { evolve, map } from "ramda"
+
+
+/**
+ * Map index to phase life description
+ */
+export const transformPhaseLife = index => [
+    "Triggering",
+    "Triggering from split",
+    "Growing",
+    "Mature",
+    "Decaying"
+][index]
 
 
 /**
@@ -7,7 +19,7 @@ import { evolve, map, toString } from "ramda"
 export const editPhaseLife = evolve({
     features: map(evolve({
         properties: {
-            PhaseLife: toString
+            PhaseLife: transformPhaseLife
         }
     }))
 })
