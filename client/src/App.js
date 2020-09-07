@@ -4,6 +4,7 @@ import Toolbar from "./Toolbar.js"
 import TiledImage from "./TiledImage.js"
 import ColorPalette from "./ColorPalette.js"
 import Colorbar from "./Colorbar.js"
+import RDT from "./RDT.js"
 
 
 class App extends React.Component {
@@ -17,6 +18,9 @@ class App extends React.Component {
                      baseURL={ this.props.baseURL }
                      figure={ this.props.figure }
                      color_mapper={ this.props.color_mapper } />
+                <RDT
+                     baseURL={ this.props.baseURL }
+                     figure={ this.props.figure } />
                 <ColorPalette
                      color_mapper={ this.props.color_mapper } />
                 <Colorbar el={ el } />

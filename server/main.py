@@ -17,6 +17,7 @@ import lib.core
 import lib.config
 import lib.palette
 import lib.atlas
+import lib.drivers
 import config
 
 
@@ -102,17 +103,23 @@ async def palettes():
 async def dataset_times(dataset_name, limit: int = 10,
                         settings: config.Settings = Depends(get_settings)):
     config = load_config(settings.config_file)
+    datasets = list(find_datasets(config, dataset_name))
+    if len(datasets) == 0:
+        raise Exception(f"{dataset_name} not found")
+    spec = datasets[0].driver
+    driver = lib.drivers.from_spec(spec)
+    obj = driver.get_times(limit)
+    content = serialize_json(obj)
+    response = Response(content=content,
+                        media_type="application/json")
+    #  response.headers["Cache-Control"] = "max-age=31536000"
+    return response
+
+
+def find_datasets(config, label):
     for dataset in config.datasets:
-        if dataset.label == dataset_name:
-            pattern = dataset.driver.settings["pattern"]
-            paths = sorted(glob.glob(pattern))
-            if len(paths) > 0:
-                obj = lib.core.get_times(dataset_name, paths[-1])[-limit:]
-                content = serialize_json(obj)
-                response = Response(content=content,
-                                    media_type="application/json")
-                #  response.headers["Cache-Control"] = "max-age=31536000"
-                return response
+        if dataset.label == label:
+            yield dataset
 
 
 @app.get("/datasets/{dataset_id}/times/{timestamp_ms}/tiles/{Z}/{X}/{Y}")
@@ -130,6 +137,20 @@ async def data_tiles(dataset_id: int, timestamp_ms: int,
         "data": data
     }
     content = serialize_json(obj)
+    response = Response(content=content,
+                        media_type="application/json")
+    #  response.headers["Cache-Control"] = "max-age=31536000"
+    return response
+
+
+@app.get("/datasets/{dataset_id}/times/{timestamp_ms}/geojson")
+async def geojson(dataset_id: int,
+                  timestamp_ms: int,
+                  settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
+    dataset = config.datasets[dataset_id]
+    driver = lib.drivers.from_spec(dataset.driver)
+    content = driver.get_geojson(timestamp_ms)
     response = Response(content=content,
                         media_type="application/json")
     #  response.headers["Cache-Control"] = "max-age=31536000"
