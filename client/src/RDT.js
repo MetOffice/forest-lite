@@ -102,13 +102,10 @@ class RDT extends React.Component {
     render() {
         const { source } = this.state
         const { baseURL, endpoint } = this.props
+        if (typeof this.props.endpoint === "undefined") return null
         fetch(`${baseURL}/${endpoint}`)
             .then(response => response.json())
             .then(editPhaseLife)
-            .then((d) => {
-                console.log(d)
-                return d
-            })
             .then(projection.toMercator)
             .then(data => {
                 source.geojson = JSON.stringify(data)
@@ -119,7 +116,13 @@ class RDT extends React.Component {
 }
 
 
-const mapStateToProps = state => ({ endpoint: "datasets/1/geojson" })
+const mapStateToProps = state => {
+    const { times, time_index } = state
+    if (typeof times === "undefined") return {}
+    if (typeof time_index === "undefined") return {}
+    const time = times[time_index]
+    return { endpoint: `datasets/1/times/${time}/geojson` }
+}
 
 
 export default connect(mapStateToProps)(RDT)

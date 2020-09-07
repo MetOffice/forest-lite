@@ -3,6 +3,7 @@ import re
 import os
 import glob
 import datetime as dt
+import numpy as np
 
 
 DIRECTORY = "/scratch/frpf/HIGHWAY/RDT/json"
@@ -20,9 +21,9 @@ class Driver:
         times = [parse_time(path) for path in paths]
         return sorted(times)[-limit:]
 
-    def get_geojson(self):
-        paths = glob.glob(os.path.join(DIRECTORY, GLOB_PATTERN))
-        path = sorted(paths)[-1]
+    def get_geojson(self, timestamp_ms):
+        time = np.datetime64(timestamp_ms, 'ms').astype('O')
+        path = get_path(time)
         with open(path) as stream:
             content = stream.read()
         return content
@@ -36,4 +37,4 @@ def parse_time(path):
 
 
 def get_path(time):
-    return os.path.join(DIRECTORY, PATTERN.format(time))
+    return os.path.join(DIRECTORY, FORMAT_PATTERN.format(time))
