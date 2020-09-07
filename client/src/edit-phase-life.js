@@ -1,9 +1,13 @@
+import { evolve, map, toString } from "ramda"
 
-// TODO: Convert to pure function
-export const editPhaseLife = geojson => {
-    geojson.features = geojson.features.map((o) => {
-        o.properties.PhaseLife = o.properties.PhaseLife.toString()
-        return o
-    })
-    return geojson
-}
+
+/**
+ * Convert geojson.features[i].properties.PhaseLife to string
+ */
+export const editPhaseLife = evolve({
+    features: map(evolve({
+        properties: {
+            PhaseLife: toString
+        }
+    }))
+})
