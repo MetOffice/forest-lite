@@ -43,31 +43,32 @@ class TiledImage extends React.Component {
         this.state = { source, renderer, hover_tool }
     }
     render() {
-        console.log("props", this.props)
-        console.log("state", this.state)
-
         if (typeof this.props.ranges === "undefined") return null
         if (typeof this.props.endpoint === "undefined") return null
 
-        const { x_range, y_range } = this.props.ranges
+        this.state.renderer.visible = this.props.active
 
-        // React to axis change indirectly
-        const level = tiling.findZoomLevel(
-            x_range,
-            y_range,
-            tiling.WEB_MERCATOR_EXTENT
-        )
-        const tiles = tiling.getTiles(
-            x_range,
-            y_range,
-            tiling.WEB_MERCATOR_EXTENT,
-            level
-        ).map(({x, y, z}) => [x, y, z])
-        const { baseURL, endpoint } = this.props
-        const templateURL = `${ baseURL }/${ endpoint }`
-        const urls = tiles.map(([x, y, z]) => tiling.getURL(templateURL, x, y, z))
-        console.log(urls)
-        tiling.renderTiles(this.state.source)(urls)
+        if (this.props.active) {
+
+            const { x_range, y_range } = this.props.ranges
+
+            // React to axis change indirectly
+            const level = tiling.findZoomLevel(
+                x_range,
+                y_range,
+                tiling.WEB_MERCATOR_EXTENT
+            )
+            const tiles = tiling.getTiles(
+                x_range,
+                y_range,
+                tiling.WEB_MERCATOR_EXTENT,
+                level
+            ).map(({x, y, z}) => [x, y, z])
+            const { baseURL, endpoint } = this.props
+            const templateURL = `${ baseURL }/${ endpoint }`
+            const urls = tiles.map(([x, y, z]) => tiling.getURL(templateURL, x, y, z))
+            tiling.renderTiles(this.state.source)(urls)
+        }
 
         // HoverTool
         this.state.hover_tool.active = this.props.hover_tool
@@ -81,6 +82,7 @@ class TiledImage extends React.Component {
 const mapStateToProps = state => {
     const {
         dataset,
+        datasets = [],
         times,
         time_index,
         figure: ranges,
@@ -91,7 +93,13 @@ const mapStateToProps = state => {
     if (typeof time_index === "undefined") return {}
     const time = times[time_index]
     const endpoint = `datasets/${dataset}/times/${time}/tiles/{Z}/{X}/{Y}`
-    return { ranges, endpoint, hover_tool }
+
+    let active = false
+    if (datasets.length > 0) {
+        active = datasets[0].active
+    }
+
+    return { ranges, endpoint, hover_tool, active }
 }
 
 

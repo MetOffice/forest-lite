@@ -3,7 +3,8 @@ const {
     setHoverTool,
     setColorbar,
     setContours,
-    setFigure
+    setFigure,
+    setActive
 } = require("../src/actions.js")
 
 
@@ -36,6 +37,20 @@ test("setFigure", () => {
             x_range: { start: 0, end: 2 },
             y_range: { start: 1, end: 3 },
         }
+    }
+    expect(actual).toEqual(expected)
+})
+
+
+test("setActive", () => {
+    const action = setActive({ id: 1, flag: true })
+    const state = { datasets: [{id: 0}, {id: 1}] }
+    const actual = rootReducer(state, action)
+    const expected = {
+        datasets: [
+            {id: 0},
+            {id: 1, active: true}
+        ]
     }
     expect(actual).toEqual(expected)
 })
