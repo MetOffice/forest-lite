@@ -1,4 +1,5 @@
 import React from "react"
+import TileSelect from "./TileSelect.js"
 import { connect } from "react-redux"
 import { setActive, setFlag } from "./actions.js"
 
@@ -26,6 +27,11 @@ class LayerMenu extends React.Component {
         listItems.push(
             <Item key="coastlines" label="Coastlines"
                   onChange={ onChange } />
+        )
+
+        // WMTS select widget
+        listItems.push(
+            <TileSelect />
         )
 
         return <fieldset>{ listItems }</fieldset>

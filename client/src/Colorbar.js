@@ -7,7 +7,6 @@ class Colorbar extends React.Component {
     constructor(props) {
         super(props)
         const { el } = props
-        console.log(el)
         const padding = 10
         const margin = 20
         const colorbarHeight = 20
