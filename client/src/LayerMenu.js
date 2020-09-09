@@ -2,7 +2,20 @@ import React from "react"
 import TileSelect from "./TileSelect.js"
 import { connect } from "react-redux"
 import { setActive, setFlag } from "./actions.js"
+import "./LayerMenu.css"
 
+
+class Label extends React.Component {
+    render() {
+        const style = {
+            fontWeight: "bold",
+            fontFamily: "Helvetica, Arial, sans-serif",
+            marginTop: "20px",
+            marginLeft: "6px",
+        }
+        return <div style={ style }>{ this.props.children }</div>
+    }
+}
 
 class LayerMenu extends React.Component {
     render() {
@@ -24,17 +37,18 @@ class LayerMenu extends React.Component {
             })
             this.props.dispatch(action)
         }
-        listItems.push(
-            <Item key="coastlines" label="Coastlines"
-                  onChange={ onChange } />
-        )
 
-        // WMTS select widget
-        listItems.push(
+        return (<>
+            <Label>Backgrounds</Label>
             <TileSelect />
-        )
-
-        return <fieldset>{ listItems }</fieldset>
+            <Label>Datasets</Label>
+            <fieldset>{ listItems }</fieldset>
+            <Label>Coastlines, borders, lakes</Label>
+            <fieldset>
+                <Item key="coastlines" label="Coastlines"
+                      onChange={ onChange } />
+            </fieldset>
+        </>)
     }
 
     handleChange(item) {
