@@ -241,47 +241,6 @@ window.main = function() {
     })
     Bokeh.Plotting.show(selectTile, "#tile-url-select")
 
-    // // Select widget
-    // let select = new Bokeh.Widgets.Select({
-    //     options: [],
-    // })
-    // select.connect(select.properties.value.change, () => {
-    //     let state = store.getState()
-    //     if (typeof state.datasets === "undefined") {
-    //         return
-    //     }
-
-    //     // Find dataset id
-    //     const table = state.datasets.reduce((obj, entry) => {
-    //         obj[entry.label] = entry.id
-    //         return obj
-    //     }, {})
-    //     const id = table[select.value]
-
-    //     // Set dataset id
-    //     let action = set_dataset(id)
-    //     store.dispatch(action)
-    // })
-    // Bokeh.Plotting.show(select, "#select")
-    // store.subscribe(() => {
-    //     let state = store.getState()
-    //     if (typeof state.datasets === "undefined") {
-    //         return
-    //     }
-    //     if (typeof state.dataset === "undefined") {
-    //         return
-    //     }
-    //     const options = state.datasets.map(d => d.label)
-    //     const value = state.datasets.reduce(
-    //         (obj, entry) => {
-    //             obj[entry.id] = entry.label
-    //             return obj
-    //         }, {})[state.dataset]
-
-    //     select.options = options
-    //     select.value = value
-    // })
-
     // Fetch datasets from server
     fetch(`${baseURL}/datasets`)
         .then(response => response.json())
