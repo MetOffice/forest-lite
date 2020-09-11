@@ -1,18 +1,19 @@
 import React from "react"
+import MapFigure from "./MapFigure.js"
 import Title from "./Title.js"
 import Toolbar from "./Toolbar.js"
 import ColorPalette from "./ColorPalette.js"
 import Colorbar from "./Colorbar.js"
 import LayerMenu from "./LayerMenu.js"
 import Layers from "./Layers.js"
-import Lines from "./Lines.js"
 
 
 class Panel extends React.Component {
     render() {
         const style = {
             margin: "20px",
-            padding: "4px"
+            padding: "4px",
+            zIndex: 5
         }
         return (
             <div className="menu abs-top right" style={ style } >
@@ -35,14 +36,7 @@ class App extends React.Component {
                 <ColorPalette
                     color_mapper={ color_mapper } />
                 <Colorbar el={ el } />
-                <Lines url={ baseURL + '/atlas/coastlines' }
-                    figure={ figure } />
-                <Lines url={ baseURL + '/atlas/borders' }
-                    figure={ figure } />
-                <Lines url={ baseURL + '/atlas/disputed' }
-                    figure={ figure } line_color="red" />
-                <Lines url={ baseURL + '/atlas/lakes' }
-                    figure={ figure } line_color="LightBlue" />
+                <MapFigure baseURL={ baseURL } />
             </div>
         )
     }
