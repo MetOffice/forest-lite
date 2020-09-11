@@ -182,19 +182,10 @@ window.main = function() {
                                   ))
     store.subscribe(() => { console.log(store.getState()) })
 
-    // Image
-    let color_mapper = new Bokeh.LinearColorMapper({
-        "low": 200,
-        "high": 300,
-        "palette": ["#440154", "#208F8C", "#FDE724"],
-        "nan_color": "rgba(0,0,0,0)"
-    })
-
     // Use React to manage components
     ReactDOM.render(
         <Provider store={store}>
-            <App figure={ figure } color_mapper={ color_mapper }
-                 baseURL={ baseURL } />
+            <App baseURL={ baseURL } />
         </Provider>,
         document.getElementById("root"))
 

@@ -1,5 +1,7 @@
 import React from "react"
 import * as Bokeh from "@bokeh/bokehjs"
+import ColorPalette from "./ColorPalette.js"
+import Layers from "./Layers.js"
 import Lines from "./Lines.js"
 import WMTS from "./WMTS.js"
 
@@ -22,18 +24,30 @@ class MapFigure extends React.Component {
         figure.min_border = 0
         figure.select_one(Bokeh.WheelZoomTool).active = true
 
-        this.state = { figure }
+        // TODO: Move inside Layer component
+        let color_mapper = new Bokeh.LinearColorMapper({
+            "low": 200,
+            "high": 300,
+            "palette": ["#440154", "#208F8C", "#FDE724"],
+            "nan_color": "rgba(0,0,0,0)"
+        })
+
+        this.state = { figure, color_mapper }
     }
     componentDidMount() {
         const { figure } = this.state
         Bokeh.Plotting.show(figure, this.el)
     }
     render() {
-        const { figure } = this.state
+        const { figure, color_mapper } = this.state
         const { baseURL } = this.props
         return (
             <div ref={ el => this.el = el }>
                 <WMTS figure={ figure }/>
+                <Layers baseURL={ baseURL } figure={ figure }
+                    color_mapper={ color_mapper } />
+                <ColorPalette
+                    color_mapper={ color_mapper } />
                 <Lines url={ baseURL + '/atlas/coastlines' }
                     figure={ figure } />
                 <Lines url={ baseURL + '/atlas/borders' }
