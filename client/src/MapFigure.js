@@ -3,6 +3,7 @@ import * as Bokeh from "@bokeh/bokehjs"
 import ColorPalette from "./ColorPalette.js"
 import Layers from "./Layers.js"
 import Lines from "./Lines.js"
+import OnPanZoom from "./OnPanZoom.js"
 import WMTS from "./WMTS.js"
 
 
@@ -56,6 +57,7 @@ class MapFigure extends React.Component {
                     figure={ figure } line_color="red" />
                 <Lines url={ baseURL + '/atlas/lakes' }
                     figure={ figure } line_color="LightBlue" />
+                <OnPanZoom figure={ figure } />
             </div>
         )
     }

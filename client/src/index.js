@@ -1,4 +1,3 @@
-import debounce from "lodash/debounce"
 import * as contour from "./contour.js"
 import * as helpers from "@turf/helpers"
 import * as Redux from "redux"
@@ -8,7 +7,6 @@ import { Provider } from "react-redux"
 import App from "./App.js"
 import { rootReducer } from "./reducers.js"
 import { toolMiddleware } from "./middlewares.js"
-import { makeOnPanZoom } from "./on-pan-zoom.js"
 import {
     SET_DATASETS,
     SET_PALETTE_NAME,
@@ -34,8 +32,7 @@ import {
     next_time_index,
     previous_time_index,
     fetch_image,
-    fetch_image_success,
-    setFigure
+    fetch_image_success
 } from "./actions.js"
 import * as Bokeh from "@bokeh/bokehjs"
 
@@ -254,26 +251,6 @@ window.main = function() {
         store.dispatch(action)
     })
     Bokeh.Plotting.show(palette_number_select, "#palette-number-select")
-
-    // Listen to x_range.start changes
-    let onPanZoom = makeOnPanZoom(figure.x_range)
-    let fn = () => {
-
-        // Set figure axis limits in application state
-        const props = {
-            x_range: {
-                start: figure.x_range.start,
-                end: figure.x_range.end
-            },
-            y_range: {
-                start: figure.y_range.start,
-                end: figure.y_range.end
-            }
-        }
-        const action = setFigure(props)
-        store.dispatch(action)
-    }
-    onPanZoom(debounce(fn, 400))
 
     // Isolines
     let contourRenderer = new contour.ContourRenderer(figure)
