@@ -1,6 +1,3 @@
-import debounce from "lodash/debounce"
-import * as contour from "./contour.js"
-import * as helpers from "@turf/helpers"
 import * as Redux from "redux"
 import React from "react"
 import ReactDOM from "react-dom"
@@ -8,7 +5,6 @@ import { Provider } from "react-redux"
 import App from "./App.js"
 import { rootReducer } from "./reducers.js"
 import { toolMiddleware } from "./middlewares.js"
-import { makeOnPanZoom } from "./on-pan-zoom.js"
 import {
     SET_DATASETS,
     SET_PALETTE_NAME,
@@ -34,8 +30,7 @@ import {
     next_time_index,
     previous_time_index,
     fetch_image,
-    fetch_image_success,
-    setFigure
+    fetch_image_success
 } from "./actions.js"
 import * as Bokeh from "@bokeh/bokehjs"
 
@@ -149,29 +144,6 @@ const baseURL = "http://localhost:8888"
 
 
 window.main = function() {
-
-    // Geographical map
-    let xdr = new Bokeh.Range1d({ start: 0, end: 1e6 })
-    let ydr = new Bokeh.Range1d({ start: 0, end: 1e6 })
-    let figure = Bokeh.Plotting.figure({
-        x_range: xdr,
-        y_range: ydr,
-        sizing_mode: "stretch_both",
-    })
-    figure.xaxis[0].visible = false
-    figure.yaxis[0].visible = false
-    figure.toolbar_location = null
-    figure.min_border = 0
-    figure.select_one(Bokeh.WheelZoomTool).active = true
-
-    // Web map tiling background
-    let tile_source = new Bokeh.WMTSTileSource({
-        url: "https://cartocdn_d.global.ssl.fastly.net/base-antique/{Z}/{X}/{Y}.png"
-    })
-    let renderer = new Bokeh.TileRenderer({tile_source: tile_source})
-    figure.renderers = figure.renderers.concat(renderer)
-    Bokeh.Plotting.show(figure, "#map-figure")
-
     let store = Redux.createStore(rootReducer,
                                   Redux.applyMiddleware(
                                       logActionMiddleware,
@@ -182,30 +154,12 @@ window.main = function() {
                                   ))
     store.subscribe(() => { console.log(store.getState()) })
 
-    // Image
-    let color_mapper = new Bokeh.LinearColorMapper({
-        "low": 200,
-        "high": 300,
-        "palette": ["#440154", "#208F8C", "#FDE724"],
-        "nan_color": "rgba(0,0,0,0)"
-    })
-
     // Use React to manage components
     ReactDOM.render(
         <Provider store={store}>
-            <App figure={ figure } color_mapper={ color_mapper }
-                 baseURL={ baseURL } />
+            <App baseURL={ baseURL } />
         </Provider>,
         document.getElementById("root"))
-
-    // WMTS Map layer
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.url === "undefined") {
-            return
-        }
-        tile_source.url = state.url
-    })
 
     // Async get palette names
     fetch(`${baseURL}/palettes`)
@@ -263,74 +217,6 @@ window.main = function() {
         store.dispatch(action)
     })
     Bokeh.Plotting.show(palette_number_select, "#palette-number-select")
-
-    // Listen to x_range.start changes
-    let onPanZoom = makeOnPanZoom(figure.x_range)
-    let fn = () => {
-
-        // Set figure axis limits in application state
-        const props = {
-            x_range: {
-                start: figure.x_range.start,
-                end: figure.x_range.end
-            },
-            y_range: {
-                start: figure.y_range.start,
-                end: figure.y_range.end
-            }
-        }
-        const action = setFigure(props)
-        store.dispatch(action)
-    }
-    onPanZoom(debounce(fn, 400))
-
-    // Isolines
-    let contourRenderer = new contour.ContourRenderer(figure)
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.time_index === "undefined") {
-            return
-        }
-        if (typeof state.times === "undefined") {
-            return
-        }
-        if (typeof state.dataset === "undefined") {
-            return
-        }
-        if (state.contours) {
-            // Fetch data, draw and reveal contours
-            // (TODO: separate concerns)
-            let timestamp_ms = state.times[state.time_index]
-            let id = state.dataset
-            let url = `${baseURL}/datasets/${id}/times/${timestamp_ms}/points`
-            fetch(url)
-                .then(response => response.json())
-                .then((data) => {
-                    let lats = data.coords.latitude.data
-                    let lons = data.coords.longitude.data
-                    let values = data.data
-                    let points = []
-                    for (let i=0; i<lats.length; i++) {
-                        for (let j=0; j<lons.length; j++) {
-                            let point = helpers.point(
-                                [lons[j], lats[i]],
-                                {value: values[i][j]})
-                            points.push(point)
-                        }
-                    }
-                    return helpers.featureCollection(points)
-                })
-                .then((feature) => {
-                    let breaks = [280, 290, 300]
-                    contourRenderer.renderFeature(feature, breaks)
-                    contourRenderer.renderer.visible = true
-                })
-        } else {
-            // Take no action and hide contours
-            contourRenderer.renderer.visible = false
-        }
-    })
-
     //   // RESTful image
     //   let image_source = new Bokeh.ColumnDataSource({
     //       data: {
