@@ -1,5 +1,6 @@
 import React from "react"
 import * as Bokeh from "@bokeh/bokehjs"
+import Contours from "./Contours.js"
 import ColorPalette from "./ColorPalette.js"
 import Layers from "./Layers.js"
 import Lines from "./Lines.js"
@@ -49,6 +50,7 @@ class MapFigure extends React.Component {
                     color_mapper={ color_mapper } />
                 <ColorPalette
                     color_mapper={ color_mapper } />
+                <Contours baseURL={ baseURL } figure={ figure } />
                 <Lines url={ baseURL + '/atlas/coastlines' }
                     figure={ figure } />
                 <Lines url={ baseURL + '/atlas/borders' }
