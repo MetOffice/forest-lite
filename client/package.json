@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "watch": "jest --watch",
-    "build": "webpack"
+    "build": "webpack",
+    "start": "webpack-dev-server"
   },
   "author": "andrewgryan",
   "license": "BSD-3-Clause",
@@ -19,12 +20,14 @@
     "babel-loader": "^8.1.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "css-loader": "^4.2.1",
+    "html-webpack-plugin": "^4.4.1",
     "jest": "^26.4.0",
     "jest-canvas-mock": "^2.2.0",
     "react-test-renderer": "^16.13.1",
     "style-loader": "^1.2.1",
     "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12"
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
     "@bokeh/bokehjs": "^2.1.1",

@@ -7,7 +7,6 @@ import fastapi
 from fastapi import Depends, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
 import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
@@ -38,13 +37,8 @@ app.add_middleware(
 
 
 # /static assets
-static_dir = os.path.join(os.path.dirname(__file__), "static")
+static_dir = os.path.join(os.path.dirname(__file__), "../client/static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-
-# Templates
-templates_dir = os.path.join(os.path.dirname(__file__), "templates")
-templates = Jinja2Templates(directory=templates_dir)
 
 
 @lru_cache
@@ -60,10 +54,9 @@ def load_config(path):
 
 
 @app.get("/")
-async def root(request: Request):
-    context = {"request": request,
-               "title": "FOREST lite"}
-    return templates.TemplateResponse("index.html", context)
+async def root():
+    client_dir = os.path.join(os.path.dirname(__file__), "../client")
+    return FileResponse(os.path.join(client_dir, "src", "index.html"))
 
 
 @app.get("/datasets")
