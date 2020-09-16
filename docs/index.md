@@ -8,13 +8,12 @@ FOREST Lite source code is available at [GitHub](https://github.com/MetOffice/fo
 
 ## Production environment
 
-To keep things simple but perhaps trickier than necessary the
-production environment deploys both the API and client from the same
-Docker container.
+To keep things simple the production environment deploys
+the API and client from the same server running on the same Docker container.
 
-```bash
-BASE_URL=http://website.com/ \
-CONFIG_FILE=.../config.yaml \
+```sh
+export BASE_URL=http://website.com  # No trailing /
+export CONFIG_FILE=/some/config.yaml
 python server/main.py --port ${CONTAINER_PORT}
 ```
 
