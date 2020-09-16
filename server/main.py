@@ -7,6 +7,7 @@ import fastapi
 from fastapi import Depends, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
 import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
@@ -41,6 +42,11 @@ static_dir = os.path.join(os.path.dirname(__file__), "../client/static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
+# Templates
+templates_dir = os.path.join(os.path.dirname(__file__), "../client/src")
+templates = Jinja2Templates(directory=templates_dir)
+
+
 @lru_cache
 def get_settings():
     return config.Settings()
@@ -54,9 +60,11 @@ def load_config(path):
 
 
 @app.get("/")
-async def root():
-    client_dir = os.path.join(os.path.dirname(__file__), "../client")
-    return FileResponse(os.path.join(client_dir, "src", "index.html"))
+async def root(request: Request):
+    port = parse_args().port
+    context = {"request": request,
+               "port": port}
+    return templates.TemplateResponse("index.html", context)
 
 
 @app.get("/datasets")
@@ -185,6 +193,8 @@ def parse_args():
 def main():
     # Parse command line arguments
     args = parse_args()
+
+    print([route.name for route in app.routes])
 
     # Start server
     uvicorn.run("main:app", port=args.port)

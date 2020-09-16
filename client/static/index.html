@@ -18,7 +18,12 @@
         <div id="colorbar-figure" class="abs-bottom left margin-20 colorbar"></div>
         <script src="./static/lite.min.js" charset="utf-8"></script>
         <script charset="utf-8">
-            main()
+            let port = "{{ port }}"
+            if (port === "\{\{ port \}\}") {
+                port = 8888
+            }
+            const baseURL = `http://localhost:${port}`
+            main(baseURL)
         </script>
     <script src="lite.min.js"></script></body>
 </html>
