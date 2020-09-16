@@ -139,11 +139,8 @@ let getPalettes = function(palettes, name, number) {
 }
 
 
-// API base URL
-const baseURL = "http://localhost:8888"
 
-
-window.main = function() {
+window.main = function(baseURL) {
     let store = Redux.createStore(rootReducer,
                                   Redux.applyMiddleware(
                                       logActionMiddleware,

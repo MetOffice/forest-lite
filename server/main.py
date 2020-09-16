@@ -38,12 +38,12 @@ app.add_middleware(
 
 
 # /static assets
-static_dir = os.path.join(os.path.dirname(__file__), "static")
+static_dir = os.path.join(os.path.dirname(__file__), "../client/static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 # Templates
-templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+templates_dir = os.path.join(os.path.dirname(__file__), "../client/src")
 templates = Jinja2Templates(directory=templates_dir)
 
 
@@ -61,8 +61,15 @@ def load_config(path):
 
 @app.get("/")
 async def root(request: Request):
+    host, port = request.scope.get("server")
+    env_base_url = os.getenv("BASE_URL")
+    if env_base_url:
+        baseURL = env_base_url
+    else:
+        baseURL = str(request.url)[:-1]  # Remove trailing /
+    print(request.headers)
     context = {"request": request,
-               "title": "FOREST lite"}
+               "baseURL": baseURL}
     return templates.TemplateResponse("index.html", context)
 
 
