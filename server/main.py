@@ -61,9 +61,15 @@ def load_config(path):
 
 @app.get("/")
 async def root(request: Request):
-    port = parse_args().port
+    host, port = request.scope.get("server")
+    env_base_url = os.getenv("BASE_URL")
+    if env_base_url:
+        baseURL = env_base_url
+    else:
+        baseURL = str(request.url)[:-1]  # Remove trailing /
+    print(request.headers)
     context = {"request": request,
-               "port": port}
+               "baseURL": baseURL}
     return templates.TemplateResponse("index.html", context)
 
 
@@ -193,8 +199,6 @@ def parse_args():
 def main():
     # Parse command line arguments
     args = parse_args()
-
-    print([route.name for route in app.routes])
 
     # Start server
     uvicorn.run("main:app", port=args.port)

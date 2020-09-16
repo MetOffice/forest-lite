@@ -139,8 +139,6 @@ let getPalettes = function(palettes, name, number) {
 }
 
 
-// API base URL
-
 
 window.main = function(baseURL) {
     let store = Redux.createStore(rootReducer,
