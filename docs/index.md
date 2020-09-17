@@ -11,7 +11,7 @@ FOREST Lite source code is available at [GitHub](https://github.com/MetOffice/fo
 To keep things simple the production environment deploys
 the API and client from the same server running on the same Docker container.
 
-```sh
+```bash
 export BASE_URL=http://website.com  # No trailing /
 export CONFIG_FILE=/some/config.yaml
 python server/main.py --port ${CONTAINER_PORT}
@@ -31,7 +31,7 @@ re-compiling features in both `webpack-dev-server` and `uvicorn`.
 
 To run FastAPI to reload on source change run the following command
 
-```
+```bash
 export CONFIG_FILE=path/to/config.yaml
 cd server/
 uvicorn main:app --reload --port 8888
@@ -43,7 +43,7 @@ uvicorn main:app --reload --port 8888
 
 To start the client using `webpack-dev-server` run the following
 
-```
+```bash
 cd client
 npm start
 ```
