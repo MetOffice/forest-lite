@@ -8,3 +8,6 @@ theme:
     accent: blue
   favicon: img/favicon.png
   logo: img/logo_transparent_notext_white.png
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
