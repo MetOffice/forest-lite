@@ -1,6 +1,6 @@
 # FOREST Lite
 
-A lightweight FOREST (Forecast Observation Research Exploration and Survey Tool)
+A lightweight FOREST - **F**orecast **O**bservation **R**esearch **E**xploration and **S**urvey **T**ool
 
 ## Source code
 
@@ -34,13 +34,18 @@ To run FastAPI to reload on source change run the following command
 ```
 export CONFIG_FILE=path/to/config.yaml
 cd server/
-uvicorn main:app --reload
+uvicorn main:app --reload --port 8888
 ```
+
+**TODO:** Make the default `port` customisable in the dev environment
 
 ### Client server
 
 To start the client using `webpack-dev-server` run the following
 
 ```
-npm run start
+cd client
+npm start
 ```
+
+This will compile and serve the client application at `localhost:8080`
