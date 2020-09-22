@@ -78,7 +78,9 @@ async def datasets(response: Response,
                    settings: config.Settings = Depends(get_settings)):
     config = load_config(settings.config_file)
     response.headers["Cache-Control"] = "max-age=31536000"
-    return {"datasets": [{"label": dataset.label, "id": i}
+    return {"datasets": [{"label": dataset.label,
+                          "driver": dataset.driver.name,
+                          "id": i}
                          for i, dataset in enumerate(config.datasets)]}
 
 
