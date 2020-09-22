@@ -69,7 +69,6 @@ class Item extends React.Component {
             <div>
                 <label>
                     <input type="checkbox"
-                        key={ this.props.key }
                         onChange={ this.props.onChange } />
                     { this.props.label }
                 </label>

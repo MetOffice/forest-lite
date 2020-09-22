@@ -28,7 +28,7 @@ class TiledImage extends React.Component {
             dh: { field: "dh" },
             image: { field: "image" },
             source: source,
-            color_mapper: props.color_mapper
+            color_mapper: props.color_mapper,
         })
 
         // HoverTool
