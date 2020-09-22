@@ -43,7 +43,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 # Templates
-templates_dir = os.path.join(os.path.dirname(__file__), "../client/src")
+templates_dir = static_dir
 templates = Jinja2Templates(directory=templates_dir)
 
 
@@ -78,7 +78,9 @@ async def datasets(response: Response,
                    settings: config.Settings = Depends(get_settings)):
     config = load_config(settings.config_file)
     response.headers["Cache-Control"] = "max-age=31536000"
-    return {"datasets": [{"label": dataset.label, "id": i}
+    return {"datasets": [{"label": dataset.label,
+                          "driver": dataset.driver.name,
+                          "id": i}
                          for i, dataset in enumerate(config.datasets)]}
 
 

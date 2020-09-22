@@ -21,8 +21,9 @@ class Lines extends React.Component {
             xs: { field: "xs" },
             ys: { field: "ys" },
             line_color: line_color,
-            source: source
+            source: source,
         })
+        renderer.level = "overlay" // NOTE: only prop assignment works
         this.state = { source, renderer }
     }
 
