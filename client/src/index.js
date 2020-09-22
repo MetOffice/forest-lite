@@ -5,11 +5,9 @@ import { Provider } from "react-redux"
 import App from "./App.js"
 import { rootReducer } from "./reducers.js"
 import { toolMiddleware } from "./middlewares.js"
+import { colorPaletteMiddleware } from "./colorpalette-middleware.js"
 import {
     SET_DATASETS,
-    SET_PALETTE_NAME,
-    SET_PALETTE_NUMBER,
-    SET_PALETTES,
     NEXT_TIME_INDEX,
     PREVIOUS_TIME_INDEX
 } from "./action-types.js"
@@ -17,12 +15,6 @@ import {
     set_url,
     set_dataset,
     set_datasets,
-    set_palette,
-    set_palettes,
-    set_palette_name,
-    set_palette_names,
-    set_palette_number,
-    set_palette_numbers,
     set_playing,
     set_limits,
     set_time_index,
@@ -31,7 +23,6 @@ import {
     fetch_image,
     fetch_image_success
 } from "./actions.js"
-import * as Bokeh from "@bokeh/bokehjs"
 
 
 // ReduxJS
@@ -70,50 +61,6 @@ let animationMiddleware = store => next => action => {
     }
 }
 
-let colorPaletteMiddleware = store => next => action => {
-    if (action.type == SET_PALETTE_NAME) {
-        // Async get palette numbers
-        let name = action.payload
-        let state = store.getState()
-        if (typeof state.palettes !== "undefined") {
-            let numbers = state.palettes
-                .filter((p) => p.name == name)
-                .map((p) => parseInt(p.number))
-                .concat()
-                .sort((a, b) => a - b)
-            let action = set_palette_numbers(numbers)
-            store.dispatch(action)
-        }
-    }
-    else if (action.type == SET_PALETTE_NUMBER) {
-        // Async get palette numbers
-        let state = store.getState()
-        let name = state.palette_name
-        let number = action.payload
-        if (typeof state.palettes !== "undefined") {
-            let palettes = getPalettes(state.palettes, name, number)
-            if (palettes.length > 0) {
-                let action = set_palette(palettes[0].palette)
-                store.dispatch(action)
-            }
-        }
-    }
-    else if (action.type == SET_PALETTES) {
-        // Set initial palette to Blues 256
-        next(action)
-        next(set_palette_name("Blues"))
-        next(set_palette_number(256))
-        let palettes = getPalettes(action.payload, "Blues", 256)
-        if (palettes.length > 0) {
-            let action = set_palette(palettes[0].palette)
-            next(action)
-        }
-        return
-    }
-
-    return next(action)
-}
-
 let datasetsMiddleware = store => next => action => {
     next(action)
     if (action.type == SET_DATASETS) {
@@ -130,13 +77,6 @@ let mod = function(a, n) {
     // Builtin % operator allows negatives, e.g. -2 % 5 -> -2
     return ((a % n) + n) % n
 }
-
-let getPalettes = function(palettes, name, number) {
-    return palettes
-        .filter((p) => p.name === name)
-        .filter((p) => parseInt(p.number) === parseInt(number))
-}
-
 
 
 window.main = function(baseURL) {
@@ -157,62 +97,12 @@ window.main = function(baseURL) {
         </Provider>,
         document.getElementById("root"))
 
-    // Async get palette names
-    fetch(`${baseURL}/palettes`)
-        .then((response) => response.json())
-        .then((data) => {
-            let action = set_palettes(data)
-            store.dispatch(action)
-            return data
-        })
-        .then((data) => {
-            let names = data.map((p) => p.name)
-            return Array.from(new Set(names)).concat().sort()
-        })
-        .then((names) => {
-            let action = set_palette_names(names)
-            store.dispatch(action)
-        })
-
     // Fetch datasets from server
     fetch(`${baseURL}/datasets`)
         .then(response => response.json())
         .then(data => data.datasets)
         .then(datasets => store.dispatch(set_datasets(datasets)))
 
-    // Select palette name widget
-    let palette_select = new Bokeh.Widgets.Select({
-        options: []
-    })
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.palette_names !== "undefined") {
-            palette_select.options = state.palette_names
-        }
-        // palette_select.value = state.palette_name // BokehJS BUG #10211
-    })
-    palette_select.connect(palette_select.properties.value.change, () => {
-        let action = set_palette_name(palette_select.value)
-        store.dispatch(action)
-    })
-    Bokeh.Plotting.show(palette_select, "#palette-select")
-
-    // Select palette number widget
-    let palette_number_select = new Bokeh.Widgets.Select({
-        options: []
-    })
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.palette_numbers !== "undefined") {
-            let options = state.palette_numbers.map((x) => x.toString())
-            palette_number_select.options = options
-        }
-    })
-    palette_number_select.connect(palette_number_select.properties.value.change, () => {
-        let action = set_palette_number(palette_number_select.value)
-        store.dispatch(action)
-    })
-    Bokeh.Plotting.show(palette_number_select, "#palette-number-select")
     //   // RESTful image
     //   let image_source = new Bokeh.ColumnDataSource({
     //       data: {

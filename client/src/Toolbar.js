@@ -14,9 +14,6 @@ class Toolbar extends React.Component {
                 <Toggle icon="fas fa-palette"
                         active={ this.props.colorbar }
                         onClick={ () => { this.handleClick("colorbar") } } />
-                <Toggle icon="far fa-circle"
-                        active={ this.props.contours }
-                        onClick={ () => { this.handleClick("contours") } } />
                 <Toggle icon="fas fa-layer-group"
                         active={ this.props.layers }
                         onClick={ () => { this.handleClick("layers") } } />
