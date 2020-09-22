@@ -157,23 +157,6 @@ window.main = function(baseURL) {
         </Provider>,
         document.getElementById("root"))
 
-    // Async get palette names
-    fetch(`${baseURL}/palettes`)
-        .then((response) => response.json())
-        .then((data) => {
-            let action = set_palettes(data)
-            store.dispatch(action)
-            return data
-        })
-        .then((data) => {
-            let names = data.map((p) => p.name)
-            return Array.from(new Set(names)).concat().sort()
-        })
-        .then((names) => {
-            let action = set_palette_names(names)
-            store.dispatch(action)
-        })
-
     // Fetch datasets from server
     fetch(`${baseURL}/datasets`)
         .then(response => response.json())

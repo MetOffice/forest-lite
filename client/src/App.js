@@ -3,6 +3,7 @@ import MapFigure from "./MapFigure.js"
 import Title from "./Title.js"
 import Toolbar from "./Toolbar.js"
 import Colorbar from "./Colorbar.js"
+import ColorPaletteMenu from "./ColorPaletteMenu.js"
 import LayerMenu from "./LayerMenu.js"
 
 
@@ -30,6 +31,7 @@ class App extends React.Component {
                 <Title />
                 <Panel />
                 <Colorbar el={ el } />
+                <ColorPaletteMenu baseURL={ baseURL } />
                 <MapFigure baseURL={ baseURL } />
             </div>
         )
