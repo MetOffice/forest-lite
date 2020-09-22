@@ -15,8 +15,6 @@ import {
     set_url,
     set_dataset,
     set_datasets,
-    set_palette_name,
-    set_palette_number,
     set_playing,
     set_limits,
     set_time_index,
@@ -25,7 +23,6 @@ import {
     fetch_image,
     fetch_image_success
 } from "./actions.js"
-import * as Bokeh from "@bokeh/bokehjs"
 
 
 // ReduxJS
@@ -106,39 +103,6 @@ window.main = function(baseURL) {
         .then(data => data.datasets)
         .then(datasets => store.dispatch(set_datasets(datasets)))
 
-    // Select palette name widget
-    let palette_select = new Bokeh.Widgets.Select({
-        options: []
-    })
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.palette_names !== "undefined") {
-            palette_select.options = state.palette_names
-        }
-        // palette_select.value = state.palette_name // BokehJS BUG #10211
-    })
-    palette_select.connect(palette_select.properties.value.change, () => {
-        let action = set_palette_name(palette_select.value)
-        store.dispatch(action)
-    })
-    Bokeh.Plotting.show(palette_select, "#palette-select")
-
-    // Select palette number widget
-    let palette_number_select = new Bokeh.Widgets.Select({
-        options: []
-    })
-    store.subscribe(() => {
-        let state = store.getState()
-        if (typeof state.palette_numbers !== "undefined") {
-            let options = state.palette_numbers.map((x) => x.toString())
-            palette_number_select.options = options
-        }
-    })
-    palette_number_select.connect(palette_number_select.properties.value.change, () => {
-        let action = set_palette_number(palette_number_select.value)
-        store.dispatch(action)
-    })
-    Bokeh.Plotting.show(palette_number_select, "#palette-number-select")
     //   // RESTful image
     //   let image_source = new Bokeh.ColumnDataSource({
     //       data: {
