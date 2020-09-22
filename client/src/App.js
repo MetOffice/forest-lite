@@ -3,12 +3,12 @@ import MapFigure from "./MapFigure.js"
 import Title from "./Title.js"
 import Toolbar from "./Toolbar.js"
 import Colorbar from "./Colorbar.js"
-import ColorPaletteMenu from "./ColorPaletteMenu.js"
 import LayerMenu from "./LayerMenu.js"
 
 
 class Panel extends React.Component {
     render() {
+        const { baseURL } = this.props
         const style = {
             margin: "20px",
             padding: "4px",
@@ -17,7 +17,7 @@ class Panel extends React.Component {
         return (
             <div className="menu abs-top right" style={ style } >
                 <Toolbar />
-                <LayerMenu />
+                <LayerMenu baseURL={ baseURL } />
             </div>)
     }
 }
@@ -29,9 +29,8 @@ class App extends React.Component {
         return (
             <div>
                 <Title />
-                <Panel />
+                <Panel baseURL={ baseURL } />
                 <Colorbar el={ el } />
-                <ColorPaletteMenu baseURL={ baseURL } />
                 <MapFigure baseURL={ baseURL } />
             </div>
         )

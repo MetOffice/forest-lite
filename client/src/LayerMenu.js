@@ -3,6 +3,7 @@ import TileSelect from "./TileSelect.js"
 import { connect } from "react-redux"
 import { setActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
+import ColorPaletteMenu from "./ColorPaletteMenu.js"
 
 
 class Label extends React.Component {
@@ -38,6 +39,8 @@ class LayerMenu extends React.Component {
             this.props.dispatch(action)
         }
 
+        const { baseURL } = this.props
+
         return (<>
             <Label>Backgrounds</Label>
             <TileSelect />
@@ -48,6 +51,8 @@ class LayerMenu extends React.Component {
                 <Item key="coastlines" label="Coastlines"
                       onChange={ onChange } />
             </fieldset>
+            <Label>Color palette</Label>
+            <ColorPaletteMenu baseURL={ baseURL } />
         </>)
     }
 
