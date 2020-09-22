@@ -25,7 +25,6 @@ import {
     set_palette_numbers,
     set_playing,
     set_limits,
-    set_times,
     set_time_index,
     next_time_index,
     previous_time_index,
@@ -309,15 +308,6 @@ window.main = function(baseURL) {
 
     // Set static limits
     store.dispatch(set_limits({low: 200, high: 300}))
-
-    // Initial times
-    store.dispatch(set_time_index(0))
-    fetch(`${baseURL}/datasets/EIDA50/times?limit=10`)
-        .then((response) => response.json())
-        .then((data) => {
-            let action = set_times(data)
-            store.dispatch(action)
-        })
 
     let frame = () => {
         let state = store.getState()

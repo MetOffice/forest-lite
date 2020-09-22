@@ -16,13 +16,16 @@
             <div id="animate-controls"></div>
         </div>
         <div id="colorbar-figure" class="abs-bottom left margin-20 colorbar"></div>
+        <!--
         <script src="./static/lite.min.js" charset="utf-8"></script>
+        -->
+        <script src="lite.min.js" charset="utf-8"></script>
         <script charset="utf-8">
             // production environment API base URL
             let baseURL = "{{ baseURL }}"
             if (baseURL === "\{\{ baseURL \}\}") {
                 // development environment API base URL
-                baseURL = "http://localhost:8888"
+                baseURL = "http://localhost:8000"
             }
             main(baseURL)
         </script>
