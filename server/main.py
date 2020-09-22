@@ -43,7 +43,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 # Templates
-templates_dir = os.path.join(os.path.dirname(__file__), "../client/src")
+templates_dir = static_dir
 templates = Jinja2Templates(directory=templates_dir)
 
 
