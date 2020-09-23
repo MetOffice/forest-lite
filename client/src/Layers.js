@@ -17,6 +17,7 @@ class Layers extends React.Component {
                     return <TiledImage
                                 key={ label }
                                 label={ label }
+                                datasetId={ 0 }
                                 baseURL={ baseURL }
                                 figure={ figure }
                                 color_mapper={ color_mapper } />
@@ -30,6 +31,7 @@ class Layers extends React.Component {
                 }
             }
         )
+        console.log("Layers render", datasets)
         return (<>
             { makeComponents(datasets) }
         </>)
