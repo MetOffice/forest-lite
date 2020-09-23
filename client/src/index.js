@@ -6,13 +6,13 @@ import App from "./App.js"
 import { rootReducer } from "./reducers.js"
 import { toolMiddleware } from "./middlewares.js"
 import { colorPaletteMiddleware } from "./colorpalette-middleware.js"
+import { timeMiddleware } from "./time-middleware.js"
 import {
     SET_DATASETS,
     NEXT_TIME_INDEX,
     PREVIOUS_TIME_INDEX
 } from "./action-types.js"
 import {
-    set_url,
     set_dataset,
     set_datasets,
     set_playing,
@@ -64,8 +64,11 @@ let animationMiddleware = store => next => action => {
 let datasetsMiddleware = store => next => action => {
     next(action)
     if (action.type == SET_DATASETS) {
-        let dataset_id = action.payload[0].id
-        next(set_dataset(dataset_id))
+        const { dataset } = store.getState()
+        if (typeof dataset !== "undefined") {
+            let dataset_id = action.payload[0].id
+            next(set_dataset(dataset_id))
+        }
     }
     return
 }
@@ -86,6 +89,7 @@ window.main = function(baseURL) {
                                       toolMiddleware,
                                       animationMiddleware,
                                       colorPaletteMiddleware,
+                                      timeMiddleware,
                                       datasetsMiddleware,
                                   ))
     store.subscribe(() => { console.log(store.getState()) })

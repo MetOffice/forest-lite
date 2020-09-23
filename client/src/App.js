@@ -4,6 +4,7 @@ import Title from "./Title.js"
 import Toolbar from "./Toolbar.js"
 import Colorbar from "./Colorbar.js"
 import LayerMenu from "./LayerMenu.js"
+import LocalStorage from "./LocalStorage.js"
 
 
 class Panel extends React.Component {
@@ -28,6 +29,7 @@ class App extends React.Component {
         const { baseURL } = this.props
         return (
             <div>
+                <LocalStorage />
                 <Title />
                 <Panel baseURL={ baseURL } />
                 <Colorbar el={ el } />
