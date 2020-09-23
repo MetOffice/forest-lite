@@ -55,7 +55,10 @@ class TiledImage extends React.Component {
     }
     render() {
         if (typeof this.props.ranges === "undefined") return null
-        if (typeof this.props.endpoint === "undefined") return null
+
+        // Construct endpoint
+        const { baseURL, datasetId, time } = this.props
+        const templateURL = `${baseURL}/datasets/${datasetId}/times/${time}/tiles/{Z}/{X}/{Y}`
 
         this.state.renderer.visible = this.props.active
 
@@ -75,8 +78,6 @@ class TiledImage extends React.Component {
                 tiling.WEB_MERCATOR_EXTENT,
                 level
             ).map(({x, y, z}) => [x, y, z])
-            const { baseURL, endpoint } = this.props
-            const templateURL = `${ baseURL }/${ endpoint }`
             const urls = tiles.map(([x, y, z]) => tiling.getURL(templateURL, x, y, z))
             tiling.renderTiles(this.state.source)(urls)
         }
@@ -92,25 +93,22 @@ class TiledImage extends React.Component {
 
 const mapStateToProps = state => {
     const {
-        dataset,
         datasets = [],
         times,
         time_index,
         figure: ranges,
         hover_tool = false
     } = state
-    if (typeof dataset === "undefined") return {}
     if (typeof times === "undefined") return {}
     if (typeof time_index === "undefined") return {}
     const time = times[time_index]
-    const endpoint = `datasets/${dataset}/times/${time}/tiles/{Z}/{X}/{Y}`
 
     let active = false
     if (datasets.length > 0) {
         active = datasets[0].active
     }
 
-    return { ranges, endpoint, hover_tool, active }
+    return { ranges, time, hover_tool, active }
 }
 
 
