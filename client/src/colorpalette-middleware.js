@@ -60,18 +60,18 @@ export const colorPaletteMiddleware = store => next => action => {
             }
         }
     }
-    else if (action.type == SET_PALETTES) {
-        // Set initial palette to Blues 256
-        next(action)
-        next(set_palette_name("Blues"))
-        next(set_palette_number(256))
-        let palettes = getPalettes(action.payload, "Blues", 256)
-        if (palettes.length > 0) {
-            let action = set_palette(palettes[0].palette)
-            next(action)
-        }
-        return
-    }
+    // else if (action.type == SET_PALETTES) {
+    //     // Set initial palette to Blues 256
+    //     next(action)
+    //     next(set_palette_name("Blues"))
+    //     next(set_palette_number(256))
+    //     let palettes = getPalettes(action.payload, "Blues", 256)
+    //     if (palettes.length > 0) {
+    //         let action = set_palette(palettes[0].palette)
+    //         next(action)
+    //     }
+    //     return
+    // }
 
     return next(action)
 }
