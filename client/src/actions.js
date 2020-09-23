@@ -1,5 +1,6 @@
 import {
     SET_ACTIVE,
+    SET_STATE,
     SET_URL,
     SET_DATASET,
     SET_DATASETS,
@@ -43,6 +44,7 @@ export const fetch_image = url => { return { type: FETCH_IMAGE, payload: url } }
 export const fetch_image_success = () => { return { type: FETCH_IMAGE_SUCCESS } }
 
 export const setFigure = props => ({ type: SET_FIGURE, payload: props })
+export const setState = props => ({ type: SET_STATE, payload: props })
 
 export const setColorbar = flag => setFlag({colorbar: flag})
 export const setContours = flag => setFlag({contours: flag})

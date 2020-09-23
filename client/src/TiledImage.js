@@ -5,7 +5,7 @@ import {
     HoverTool
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as tiling from "./tiling.js"
-import { set_times, set_time_index } from "./actions.js"
+import { set_times } from "./actions.js"
 
 
 class TiledImage extends React.Component {
@@ -46,7 +46,6 @@ class TiledImage extends React.Component {
     componentDidMount() {
         // Initial times
         const { dispatch, baseURL, label } = this.props
-        dispatch(set_time_index(0))
         fetch(`${baseURL}/datasets/${label}/times?limit=3`)
             .then((response) => response.json())
             .then((data) => {

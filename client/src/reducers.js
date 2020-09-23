@@ -16,6 +16,7 @@ import {
     SET_PALETTE_NUMBERS,
     SET_PLAYING,
     SET_LIMITS,
+    SET_STATE,
     SET_TIMES,
     SET_TIME_INDEX,
     FETCH_IMAGE,
@@ -36,41 +37,44 @@ const activeReducer = (state, action) => {
 
 
 export const rootReducer = (state = "", action) => {
-    switch (action.type) {
+    const { type, payload } = action
+    switch (type) {
         case SET_ACTIVE:
             return activeReducer(state, action)
         case SET_FLAG:
-            return Object.assign({}, state, action.payload)
+            return Object.assign({}, state, payload)
         case SET_FIGURE:
-            return Object.assign({}, state, {figure: action.payload})
+            return Object.assign({}, state, {figure: payload})
         case SET_DATASET:
-            return Object.assign({}, state, {dataset: action.payload})
+            return Object.assign({}, state, {dataset: payload})
         case SET_DATASETS:
-            return Object.assign({}, state, {datasets: action.payload})
+            return Object.assign({}, state, {datasets: payload})
         case SET_URL:
-            return Object.assign({}, state, {url: action.payload})
+            return Object.assign({}, state, {url: payload})
         case SET_PALETTE:
-            return Object.assign({}, state, {palette: action.payload})
+            return Object.assign({}, state, {palette: payload})
         case SET_PALETTES:
-            return Object.assign({}, state, {palettes: action.payload})
+            return Object.assign({}, state, {palettes: payload})
         case SET_PALETTE_NAME:
-            return Object.assign({}, state, {palette_name: action.payload})
+            return Object.assign({}, state, {palette_name: payload})
         case SET_PALETTE_NAMES:
-            return Object.assign({}, state, {palette_names: action.payload})
+            return Object.assign({}, state, {palette_names: payload})
         case SET_PALETTE_NUMBER:
-            return Object.assign({}, state, {palette_number: action.payload})
+            return Object.assign({}, state, {palette_number: payload})
         case SET_PALETTE_NUMBERS:
-            return Object.assign({}, state, {palette_numbers: action.payload})
+            return Object.assign({}, state, {palette_numbers: payload})
         case SET_PLAYING:
-            return Object.assign({}, state, {playing: action.payload})
+            return Object.assign({}, state, {playing: payload})
         case SET_LIMITS:
-            return Object.assign({}, state, {limits: action.payload})
+            return Object.assign({}, state, {limits: payload})
+        case SET_STATE:
+            return R.clone(payload)
         case SET_TIMES:
-            return Object.assign({}, state, {times: action.payload})
+            return Object.assign({}, state, {times: payload})
         case SET_TIME_INDEX:
-            return Object.assign({}, state, {time_index: action.payload})
+            return Object.assign({}, state, {time_index: payload})
         case FETCH_IMAGE:
-            return Object.assign({}, state, {is_fetching: true, image_url: action.payload})
+            return Object.assign({}, state, {is_fetching: true, image_url: payload})
         case FETCH_IMAGE_SUCCESS:
             return Object.assign({}, state, {is_fetching: false})
         default:
