@@ -46,7 +46,7 @@ class TiledImage extends React.Component {
     componentDidMount() {
         // Initial times
         const { dispatch, baseURL, label } = this.props
-        fetch(`${baseURL}/datasets/${label}/times?limit=3`)
+        fetch(`${baseURL}/datasets/${label}/times?limit=7`)
             .then((response) => response.json())
             .then((data) => {
                 let action = set_times(data)
