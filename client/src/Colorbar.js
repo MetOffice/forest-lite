@@ -66,7 +66,6 @@ class Colorbar extends React.Component {
 
         if (palette.length === 0) {
             return <div style={ style }
-                        className="colorbar-container"
                         ref={ el => this.el = el } />
         }
 
@@ -76,7 +75,6 @@ class Colorbar extends React.Component {
         color_mapper.palette = palette
 
         return <div style={ style }
-                    className="colorbar-container"
                     ref={ el => this.el = el } />
     }
 }

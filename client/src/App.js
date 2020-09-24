@@ -12,12 +12,11 @@ class Panel extends React.Component {
     render() {
         const { baseURL } = this.props
         const style = {
-            margin: "20px",
             padding: "4px",
             zIndex: 5
         }
         return (
-            <div className="menu abs-top right" style={ style } >
+            <div style={ style } >
                 <Toolbar />
                 <LayerMenu baseURL={ baseURL } />
             </div>)
@@ -32,7 +31,7 @@ class App extends React.Component {
                 <LocalStorage />
                 <Title />
                 <Panel baseURL={ baseURL } />
-                <div>
+                <div className="colorbar-container">
                     <Colorbar />
                     <AnimationControls />
                 </div>
