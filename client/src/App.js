@@ -1,4 +1,5 @@
 import React from "react"
+import AnimationControls from "./AnimationControls.js"
 import MapFigure from "./MapFigure.js"
 import Title from "./Title.js"
 import Toolbar from "./Toolbar.js"
@@ -31,7 +32,10 @@ class App extends React.Component {
                 <LocalStorage />
                 <Title />
                 <Panel baseURL={ baseURL } />
-                <Colorbar />
+                <div>
+                    <Colorbar />
+                    <AnimationControls />
+                </div>
                 <MapFigure baseURL={ baseURL } />
             </div>
         )
