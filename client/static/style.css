@@ -33,15 +33,6 @@ html, body {
     left: 50%;
     transform: translate(-50%);
 }
-.title {
-    background-color: white;
-    border: 1px solid #CCC;
-    border-radius: 4px;
-    margin: 20px;
-    padding: 10px 20px;
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 1.2rem;
-}
 .colorbar {
     background-color: white;
     border: 1px solid #CCC;
@@ -82,22 +73,4 @@ html, body {
 .tool-icon:hover {
     background-color: white;
     border: 1px solid #777;
-}
-
-.btn-row {
-    display: flex;
-    justify-content: space-between;
-    width: 300px;
-    margin: 6px;
-}
-.play-btn {
-    flex: 1 1 0;
-}
-.previous-btn {
-    flex: 1 1 0;
-    margin-left: 0;
-}
-.next-btn {
-    flex: 1 1 0;
-    margin-right: 0;
 }

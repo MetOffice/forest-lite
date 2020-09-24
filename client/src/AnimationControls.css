@@ -1,0 +1,15 @@
+.btn-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: 6px;
+}
+.play-btn {
+    flex: 1 1 0;
+}
+.previous-btn {
+    flex: 1 1 0;
+}
+.next-btn {
+    flex: 1 1 0;
+}

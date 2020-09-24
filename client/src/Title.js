@@ -1,5 +1,6 @@
 import React from "react"
 import { connect } from "react-redux"
+import "./Title.css"
 
 
 class Title extends React.Component {

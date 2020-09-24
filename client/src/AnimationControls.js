@@ -5,6 +5,7 @@ import {
     next_time_index,
     previous_time_index,
 } from "./actions.js"
+import "./AnimationControls.css"
 
 
 // Play button
