@@ -27,9 +27,11 @@ class App extends React.Component {
             <div>
                 <LocalStorage />
                 <Panel>
-                    <StateToggle
-                        icon="fas fa-layer-group"
-                        attr="layers" />
+                    <div style={{ float: "right" }} >
+                        <StateToggle
+                            icon="fas fa-layer-group"
+                            attr="layers" />
+                    </div>
                     <Title />
                     <LayerMenu baseURL={ baseURL } />
                 </Panel>
