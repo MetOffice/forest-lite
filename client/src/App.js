@@ -25,14 +25,13 @@ class Panel extends React.Component {
 
 class App extends React.Component {
     render() {
-        const el = document.getElementById("colorbar-figure")
         const { baseURL } = this.props
         return (
             <div>
                 <LocalStorage />
                 <Title />
                 <Panel baseURL={ baseURL } />
-                <Colorbar el={ el } />
+                <Colorbar />
                 <MapFigure baseURL={ baseURL } />
             </div>
         )

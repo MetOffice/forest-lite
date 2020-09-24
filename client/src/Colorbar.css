@@ -1,0 +1,10 @@
+.colorbar-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border-top: 1px solid #ccc;
+    padding: 10px;
+    margin: 0;
+}
