@@ -4,3 +4,4 @@ xarray
 forest
 h5netcdf
 datashader
+cartopy_offlinedata
