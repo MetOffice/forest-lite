@@ -5,21 +5,17 @@ import { Provider } from "react-redux"
 import App from "./App.js"
 import { rootReducer } from "./reducers.js"
 import { toolMiddleware } from "./middlewares.js"
+import { animationMiddleware } from "./animation-middleware.js"
 import { colorPaletteMiddleware } from "./colorpalette-middleware.js"
 import { timeMiddleware } from "./time-middleware.js"
 import {
     SET_DATASETS,
-    NEXT_TIME_INDEX,
-    PREVIOUS_TIME_INDEX
 } from "./action-types.js"
 import {
     set_dataset,
     set_datasets,
-    set_playing,
     set_limits,
-    set_time_index,
     next_time_index,
-    previous_time_index,
     fetch_image,
     fetch_image_success
 } from "./actions.js"
@@ -33,34 +29,6 @@ let logActionMiddleware = store => next => action => {
     next(action)
 }
 
-let animationMiddleware = store => next => action => {
-    if (action.type === NEXT_TIME_INDEX) {
-        let state = store.getState()
-        if (typeof state.time_index === "undefined") {
-            return
-        }
-        if (typeof state.times === "undefined") {
-            return
-        }
-        let index = mod(state.time_index + 1, state.times.length)
-        let action = set_time_index(index)
-        next(action)
-    } else if (action.type === PREVIOUS_TIME_INDEX) {
-        let state = store.getState()
-        if (typeof state.time_index === "undefined") {
-            return
-        }
-        if (typeof state.times === "undefined") {
-            return
-        }
-        let index = mod(state.time_index - 1, state.times.length)
-        let action = set_time_index(index)
-        next(action)
-    } else {
-        next(action)
-    }
-}
-
 let datasetsMiddleware = store => next => action => {
     next(action)
     if (action.type == SET_DATASETS) {
@@ -71,14 +39,6 @@ let datasetsMiddleware = store => next => action => {
         }
     }
     return
-}
-
-
-// Helpers
-let mod = function(a, n) {
-    // Always return positive number, e.g. mod(-2, 5) -> 3
-    // Builtin % operator allows negatives, e.g. -2 % 5 -> -2
-    return ((a % n) + n) % n
 }
 
 
