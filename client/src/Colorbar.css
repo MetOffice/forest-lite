@@ -8,3 +8,14 @@
     padding: 10px;
     margin: 0;
 }
+
+@media screen and (min-width: 960px) {
+    .colorbar-container {
+        left: 50%;
+        width: 50%;
+        transform: translate(-50%);
+        margin: 20px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+}
