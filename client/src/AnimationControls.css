@@ -2,7 +2,6 @@
     display: flex;
     justify-content: space-between;
     width: 100%;
-    margin: 6px;
 }
 .play-btn {
     flex: 1 1 0;
@@ -12,4 +11,17 @@
 }
 .next-btn {
     flex: 1 1 0;
+}
+
+@media screen and (min-width: 960px) {
+    .animation-container {
+        position: absolute;
+        top: 0;
+        width: 25%;
+        background-color: white;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        margin: 20px;
+        padding: 5px;
+    }
 }

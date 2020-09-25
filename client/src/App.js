@@ -15,8 +15,10 @@ class App extends React.Component {
                 <LocalStorage />
                 <Title />
                 <LayerMenu baseURL={ baseURL } />
-                <div className="colorbar-container">
-                    <Colorbar />
+                <div className="footer-container">
+                    <div className="colorbar-container">
+                        <Colorbar />
+                    </div>
                     <AnimationControls />
                 </div>
                 <MapFigure baseURL={ baseURL } />

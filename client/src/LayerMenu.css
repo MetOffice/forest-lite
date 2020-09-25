@@ -32,6 +32,7 @@ fieldset {
         position: absolute;
         top: 0;
         right: 0;
+        width: 25%;
         max-width: 400px;
         border: 1px solid #ccc;
         border-radius: 4px;
