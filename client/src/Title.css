@@ -1,6 +1,21 @@
 .title {
+    background-color: white;
     padding: 10px 20px;
     font-family: Helvetica, Arial, sans-serif;
     font-size: 1.0rem;
     text-align: center;
+}
+
+
+@media screen and (min-width: 960px) {
+    .title {
+        font-size: 1.2rem;
+        position: relative;
+        margin: 20px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 20%;
+        left: 50%;
+        transform: translate(-50%);
+    }
 }
