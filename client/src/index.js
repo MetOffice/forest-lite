@@ -214,48 +214,6 @@ window.main = function(baseURL) {
         }
     }
 
-    let row = document.getElementById("animate-controls")
-    row.classList.add("btn-row")
-
-    // Previous button
-    let previousButton = new Previous({
-        onClick: () => {
-            let action = previous_time_index()
-            store.dispatch(action)
-        }
-    })
-    row.appendChild(previousButton.el)
-
-    // Add Play button component
-    let playButton = new Play({
-        onClick: function() {
-            let state = store.getState()
-            // Toggle play mode
-            let flag
-            if (state.playing) {
-                flag = false
-            } else {
-                flag = true
-            }
-            let action = set_playing(flag)
-            store.dispatch(action)
-        }
-    })
-    store.subscribe(() => {
-        let state = store.getState()
-        playButton.render(state.playing)
-    })
-    row.appendChild(playButton.el)
-
-    // Next button
-    let nextButton = new Next({
-        onClick: () => {
-            let action = next_time_index()
-            store.dispatch(action)
-        }
-    })
-    row.appendChild(nextButton.el)
-
     // Animation mechanism
     let interval = 100
     // setInterval(frame, interval)
@@ -263,55 +221,4 @@ window.main = function(baseURL) {
     frame()
     setInterval(frame, interval)
 
-}
-
-
-// Play button
-function Play(props) {
-    // Could replace with JSX in a React component
-    this.button = document.createElement("button")
-    this.button.classList.add("lite-btn", "play-btn")
-    this.i = document.createElement("i")
-    this.i.classList.add("fas", "fa-play")
-    this.button.appendChild(this.i)
-    this.button.onclick = props.onClick
-    this.el = this.button
-}
-Play.prototype.render = function(playing) {
-    let message
-    if (playing) {
-        // Display pause symbol
-        this.i.classList.remove("fas", "fa-play")
-        this.i.classList.add("fas", "fa-pause")
-    } else {
-        // Display play symbol
-        this.i.classList.remove("fas", "fa-pause")
-        this.i.classList.add("fas", "fa-play")
-    }
-}
-
-
-// Previous button
-function Previous(props) {
-    let button, i
-    button = document.createElement("button")
-    button.classList.add("lite-btn", "previous-btn")
-    button.onclick = props.onClick
-    i = document.createElement("i")
-    i.classList.add("fas", "fa-angle-left")
-    button.appendChild(i)
-    this.el = button
-}
-
-
-// Next button
-function Next(props) {
-    let button, i
-    button = document.createElement("button")
-    button.classList.add("lite-btn", "next-btn")
-    button.onclick = props.onClick
-    i = document.createElement("i")
-    i.classList.add("fas", "fa-angle-right")
-    button.appendChild(i)
-    this.el = button
 }

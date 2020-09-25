@@ -1,6 +1,7 @@
 import React from "react"
 import { connect } from "react-redux"
 import * as Bokeh from "@bokeh/bokehjs"
+import "./Colorbar.css"
 
 
 class Colorbar extends React.Component {
@@ -8,18 +9,15 @@ class Colorbar extends React.Component {
         super(props)
         const { el } = props
         const padding = 10
-        const margin = 20
         const colorbarHeight = 20
-        const plotHeight = colorbarHeight + 30
-        const plotWidth = 300
         const figure = Bokeh.Plotting.figure({
-            height: plotHeight,
-            width: plotWidth,
+            height: 0,
             min_border: 0,
             background_fill_alpha: 0,
             border_fill_alpha: 0,
             outline_line_color: null,
-            toolbar_location: null
+            toolbar_location: null,
+            sizing_mode: "stretch_both"
         })
         figure.xaxis[0].visible = false
         figure.yaxis[0].visible = false
@@ -31,7 +29,6 @@ class Colorbar extends React.Component {
         })
         const colorbar = new Bokeh.ColorBar({
             height: colorbarHeight,
-            width: plotWidth - (margin + padding),
             color_mapper: color_mapper,
             location: [0, 0],
             padding: padding,
@@ -39,31 +36,42 @@ class Colorbar extends React.Component {
             major_tick_line_color: "black",
             bar_line_color: "black",
             background_fill_alpha: 0,
-            title: ""
+            title: "",
+            sizing_mode: "stretch_both"
         })
-        figure.add_layout(colorbar, "center")
-        Bokeh.Plotting.show(figure, el)
-        this.state = { color_mapper }
+        figure.add_layout(colorbar, "below")
+        this.state = { color_mapper, figure }
+    }
+    componentDidMount() {
+        const { figure } = this.state
+        Bokeh.Plotting.show(figure, this.el)
     }
     render() {
         const { color_mapper } = this.state
-        const { el, visible, limits: {low, high}, palette } = this.props
+        const { visible, limits: {low, high}, palette } = this.props
 
         // Hide/show container element
+        let style
         if (visible) {
-            el.style.display = "block"
+            style = { display: "block" }
         } else {
-            el.style.display = "none"
+            style = { display: "none" }
         }
 
-        if (palette.length === 0) return null
+        if (palette.length === 0) {
+            return <div style={ style }
+                        className="colorbar-container"
+                        ref={ el => this.el = el } />
+        }
 
         // Edit palette parameters
         color_mapper.low = low
         color_mapper.high = high
         color_mapper.palette = palette
 
-        return null
+        return <div style={ style }
+                    className="colorbar-container"
+                    ref={ el => this.el = el } />
     }
 }
 

@@ -4,24 +4,31 @@ import { connect } from "react-redux"
 import { setActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
 import ColorPaletteMenu from "./ColorPaletteMenu.js"
+import StateToggle from "./StateToggle.js"
 
 
 class Label extends React.Component {
     render() {
-        const style = {
-            fontWeight: "bold",
-            fontFamily: "Helvetica, Arial, sans-serif",
-            marginTop: "20px",
-            marginLeft: "6px",
-        }
-        return <div style={ style }>{ this.props.children }</div>
+        return <div className="label">{ this.props.children }</div>
     }
 }
 
+
+class _Hidden extends React.Component {
+    render() {
+        const { visible, children } = this.props
+        if (!visible) return null
+        return <div>{ children }</div>
+    }
+}
+const Hidden = connect(state => {
+    const { layers: visible = false } = state
+    return { visible }
+})(_Hidden)
+
+
 class LayerMenu extends React.Component {
     render() {
-        if (!this.props.visible) return null
-
         // Datasets toggles
         const items = this.props.items
         const listItems = items.map(item => {
@@ -41,19 +48,32 @@ class LayerMenu extends React.Component {
 
         const { baseURL } = this.props
 
-        return (<>
-            <Label>Backgrounds</Label>
-            <TileSelect />
-            <Label>Datasets</Label>
-            <fieldset>{ listItems }</fieldset>
-            <Label>Coastlines, borders, lakes</Label>
-            <fieldset>
-                <Item key="coastlines" label="Coastlines"
-                      onChange={ onChange } />
-            </fieldset>
-            <Label>Color palette</Label>
-            <ColorPaletteMenu baseURL={ baseURL } />
-        </>)
+        return (<div className="layer-menu-container">
+            <div className="tool-icon-container">
+                <StateToggle
+                    icon="fas fa-layer-group"
+                    attr="layers" />
+                <StateToggle
+                    icon="far fa-comment-alt"
+                    attr="hover_tool" />
+                <StateToggle
+                    icon="fas fa-palette"
+                    attr="colorbar" />
+            </div>
+            <Hidden>
+                <Label>Backgrounds</Label>
+                <TileSelect />
+                <Label>Datasets</Label>
+                <fieldset>{ listItems }</fieldset>
+                <Label>Coastlines, borders, lakes</Label>
+                <fieldset>
+                    <Item key="coastlines" label="Coastlines"
+                          onChange={ onChange } />
+                </fieldset>
+                <Label>Color palette</Label>
+                <ColorPaletteMenu baseURL={ baseURL } />
+            </Hidden>
+        </div>)
     }
 
     handleChange(item) {
@@ -84,11 +104,8 @@ class Item extends React.Component {
 
 
 const mapStateToProps = state => {
-    const {
-        layers: visible = false,
-        datasets: items = []
-    } = state
-    return { visible, items }
+    const { datasets: items = [] } = state
+    return { items }
 }
 
 

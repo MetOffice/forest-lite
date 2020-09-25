@@ -13,7 +13,10 @@ import * as Bokeh from "@bokeh/bokehjs"
 class Select extends React.Component {
     constructor(props) {
         super(props)
-        let select = new Bokeh.Widgets.Select({ options: [] })
+        let select = new Bokeh.Widgets.Select({
+            options: [],
+            sizing_mode: "stretch_width"
+        })
         this.state = { select }
     }
     componentDidMount() {

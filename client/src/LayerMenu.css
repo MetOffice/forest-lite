@@ -5,3 +5,38 @@ fieldset {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
+.label {
+    font-weight: bold;
+    font-family: Helvetica, Arial, sans-serif;
+    margin-top: 20px;
+    margin-left: 6px;
+}
+
+
+.layer-menu-container {
+    background-color: white;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.tool-icon-container {
+    display: flex;
+}
+.tool-icon {
+    flex: 1;
+}
+
+@media screen and (min-width: 960px) {
+    .layer-menu-container {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 25%;
+        max-width: 400px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin: 20px;
+        padding: 5px;
+    }
+}
