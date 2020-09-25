@@ -9,14 +9,9 @@ class Colorbar extends React.Component {
         super(props)
         const { el } = props
         const padding = 10
-        const margin = 20
         const colorbarHeight = 20
-        const plotHeight = colorbarHeight + 30
-        const plotWidth = 300
         const figure = Bokeh.Plotting.figure({
-            // height: plotHeight,
             height: 0,
-            // width: plotWidth,
             min_border: 0,
             background_fill_alpha: 0,
             border_fill_alpha: 0,
@@ -34,7 +29,6 @@ class Colorbar extends React.Component {
         })
         const colorbar = new Bokeh.ColorBar({
             height: colorbarHeight,
-            // width: plotWidth - (margin + padding),
             color_mapper: color_mapper,
             location: [0, 0],
             padding: padding,

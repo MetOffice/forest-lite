@@ -14,14 +14,6 @@
         position: static;
         padding: 0;
         border: none;
-        /*
-        left: 50%;
-        width: 50%;
-        transform: translate(-50%);
-        margin: 20px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        */
     }
     .colorbar-container {
         position: absolute;
