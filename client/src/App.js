@@ -16,9 +16,7 @@ class App extends React.Component {
                 <Title />
                 <LayerMenu baseURL={ baseURL } />
                 <div className="footer-container">
-                    <div className="colorbar-container">
-                        <Colorbar />
-                    </div>
+                    <Colorbar />
                     <AnimationControls />
                 </div>
                 <MapFigure baseURL={ baseURL } />
