@@ -54,4 +54,7 @@ export const setFlag = payload => ({ type: SET_FLAG, payload: payload })
 export const toggleColorbar = () => toggleFlag("colorbar")
 export const toggleContours = () => toggleFlag("contours")
 export const toggleHoverTool = () => toggleFlag("hover_tool")
-export const toggleFlag = (prop) => ({ type: TOGGLE_FLAG, payload: prop })
+export const toggleFlag = (prop, initial=false) => ({
+    type: TOGGLE_FLAG,
+    payload: {prop, initial}
+})

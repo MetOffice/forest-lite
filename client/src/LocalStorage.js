@@ -17,6 +17,7 @@ class LocalStorage extends React.Component {
     render() {
         const { state } = this.props
         if (typeof state === "undefined") return null
+        if (state === "") return null
         localStorage.setItem("key", JSON.stringify(state))
         return null
     }

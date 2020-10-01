@@ -8,15 +8,15 @@ import { setFlag } from "./actions.js"
 export const toolMiddleware = store => next => action => {
     if (action.type === TOGGLE_FLAG) {
         let flag
-        let prop = action.payload
+        let { prop, initial = false } = action.payload
         let state = store.getState()
         if (typeof state[prop] === "undefined") {
-            flag = true
+            flag = initial
         } else {
-            flag = !state[prop]
+            flag = state[prop]
         }
         let payload = {}
-        payload[prop] = flag
+        payload[prop] = !flag
         next(setFlag(payload))
     } else {
         next(action)
