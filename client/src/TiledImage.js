@@ -97,7 +97,7 @@ const mapStateToProps = state => {
         times,
         time_index,
         figure: ranges,
-        hover_tool = false
+        hover_tool = true
     } = state
     if (typeof times === "undefined") return {}
     if (typeof time_index === "undefined") return {}

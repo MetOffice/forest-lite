@@ -5,6 +5,7 @@ import { setActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
 import ColorPaletteMenu from "./ColorPaletteMenu.js"
 import StateToggle from "./StateToggle.js"
+import HoverToolToggle from "./HoverToolToggle.js"
 
 
 class Label extends React.Component {
@@ -53,9 +54,7 @@ class LayerMenu extends React.Component {
                 <StateToggle
                     icon="fas fa-layer-group"
                     attr="layers" />
-                <StateToggle
-                    icon="far fa-comment-alt"
-                    attr="hover_tool" />
+                <HoverToolToggle />
                 <StateToggle
                     icon="fas fa-palette"
                     attr="colorbar" />
