@@ -6,6 +6,7 @@ import "./LayerMenu.css"
 import ColorPaletteMenu from "./ColorPaletteMenu.js"
 import StateToggle from "./StateToggle.js"
 import HoverToolToggle from "./HoverToolToggle.js"
+import ColorbarToggle from "./ColorbarToggle.js"
 
 
 class Label extends React.Component {
@@ -55,9 +56,7 @@ class LayerMenu extends React.Component {
                     icon="fas fa-layer-group"
                     attr="layers" />
                 <HoverToolToggle />
-                <StateToggle
-                    icon="fas fa-palette"
-                    attr="colorbar" />
+                <ColorbarToggle />
             </div>
             <Hidden>
                 <Label>Backgrounds</Label>

@@ -77,7 +77,7 @@ class Colorbar extends React.Component {
 
 export const mapStateToProps = state => {
     const {
-        colorbar: visible = false,
+        colorbar: visible = true,
         palette = [],
         limits = {low: 0, high: 1}
     } = state
