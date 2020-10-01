@@ -35,17 +35,8 @@ class LayerMenu extends React.Component {
         const listItems = items.map(item => {
             const onChange = this.handleChange(item)
             return <Item key={ item.id }
-                         label={ item.label }
-                         onChange={ onChange } />
+                         onChange={ onChange }>{ item.label }</Item>
         })
-
-        // Coastlines toggle
-        const onChange = ev => {
-            const action = setFlag({
-                coastlines: ev.target.checked
-            })
-            this.props.dispatch(action)
-        }
 
         const { baseURL } = this.props
 
@@ -62,8 +53,7 @@ class LayerMenu extends React.Component {
                 <fieldset>{ listItems }</fieldset>
                 <Label>Coastlines, borders, lakes</Label>
                 <fieldset>
-                    <Item key="coastlines" label="Coastlines"
-                          onChange={ onChange } />
+                    <CoastlinesToggle />
                 </fieldset>
                 <Label>Color palette</Label>
                 <ColorPaletteMenu baseURL={ baseURL } />
@@ -82,15 +72,36 @@ class LayerMenu extends React.Component {
     }
 }
 
+class _CoastlinesToggle extends React.Component {
+    render() {
+        // Coastlines toggle
+        const { active, dispatch } = this.props
+        const onChange = ev => {
+            const action = setFlag({
+                coastlines: ev.target.checked
+            })
+            this.props.dispatch(action)
+        }
+        return (<Item key="coastlines"
+                      checked={ active }
+                      onChange={ onChange }>Coastlines</Item>)
+    }
+}
+const CoastlinesToggle = connect(state => {
+    const { coastlines: active = true } = state
+    return { active }
+})(_CoastlinesToggle)
 
 class Item extends React.Component {
     render() {
         return (
             <div>
                 <label>
-                    <input type="checkbox"
+                    <input
+                        type="checkbox"
+                        checked={ this.props.checked }
                         onChange={ this.props.onChange } />
-                    { this.props.label }
+                    { this.props.children }
                 </label>
             </div>
         )
