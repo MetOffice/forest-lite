@@ -1,5 +1,4 @@
 import React from "react"
-import TileSelect from "./TileSelect.js"
 import { connect } from "react-redux"
 import { setActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
@@ -59,8 +58,6 @@ class LayerMenu extends React.Component {
                 <ColorbarToggle />
             </div>
             <Hidden>
-                <Label>Backgrounds</Label>
-                <TileSelect />
                 <Label>Datasets</Label>
                 <fieldset>{ listItems }</fieldset>
                 <Label>Coastlines, borders, lakes</Label>
