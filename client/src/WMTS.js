@@ -4,7 +4,7 @@ import { connect } from "react-redux"
 import * as R from "ramda"
 
 
-const DEFAULT_URL = "https://cartocdn_d.global.ssl.fastly.net/base-antique/{Z}/{X}/{Y}.png"
+const DEFAULT_URL = "https://d.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{Z}/{X}/{Y}.png"
 
 
 // Web map tiling background
