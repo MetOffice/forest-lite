@@ -18,7 +18,8 @@ class TileSelect extends React.Component {
         let { dispatch } = props
         let select = new Bokeh.Widgets.Select({
             options: Object.keys(providers),
-            sizing_mode: "stretch_width"
+            sizing_mode: "stretch_width",
+            value: "Voyager"
         })
         select.connect(select.properties.value.change, () => {
             dispatch(set_url(providers[select.value]))

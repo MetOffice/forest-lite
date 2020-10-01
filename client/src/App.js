@@ -12,7 +12,6 @@ class App extends React.Component {
         const { baseURL } = this.props
         return (
             <div>
-                <LocalStorage />
                 <Title />
                 <LayerMenu baseURL={ baseURL } />
                 <div className="footer-container">
