@@ -51,7 +51,7 @@ class Lines extends React.Component {
 
 
 const mapStateToProps = state => {
-    const { coastlines: active = false } = state
+    const { coastlines: active = true } = state
     return { active }
 }
 
