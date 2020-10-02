@@ -5,6 +5,7 @@ import Title from "./Title.js"
 import Colorbar from "./Colorbar.js"
 import LayerMenu from "./LayerMenu.js"
 import LocalStorage from "./LocalStorage.js"
+import ViewPort from "./ViewPort.js"
 
 
 class App extends React.Component {
@@ -20,6 +21,7 @@ class App extends React.Component {
                     <AnimationControls />
                 </div>
                 <MapFigure baseURL={ baseURL } />
+                <ViewPort baseURL={ baseURL } />
             </div>
         )
     }

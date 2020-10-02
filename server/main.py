@@ -194,8 +194,8 @@ async def atlas_feature(feature: str):
 @app.get("/viewport")
 async def viewport():
     return {
-        "lons": [-180, 180],
-        "lats": [-85, 85]
+        "lons": [30, 50],
+        "lats": [-25, 25]
     }
 
 
