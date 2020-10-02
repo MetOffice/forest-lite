@@ -12,7 +12,6 @@ class Contours extends React.Component {
         this.state = { contourRenderer }
     }
     render() {
-        console.log("DEBUG", this.state, this.props)
         const { contourRenderer } = this.state
         const { baseURL, endpoint, visible } = this.props
         contourRenderer.renderer.visible = visible

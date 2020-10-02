@@ -12,7 +12,6 @@ class XYRange extends React.Component {
         const aspect_ratio = (x_range.end - x_range.start) / (y_range.end - y_range.start)
 
         if (!almostEqual(figure_ratio, aspect_ratio)) {
-            console.log("aspect ratios differ")
             // x_range constant
             const dx = x_range.end - x_range.start
             const dy = y_range.end - y_range.start

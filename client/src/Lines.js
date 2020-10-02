@@ -34,7 +34,6 @@ class Lines extends React.Component {
     render() {
         const active = this.props.active
         const { renderer } = this.state
-        console.log(active)
         renderer.visible = active
         return null
     }
