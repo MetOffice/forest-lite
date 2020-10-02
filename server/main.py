@@ -191,6 +191,14 @@ async def atlas_feature(feature: str):
     return response
 
 
+@app.get("/viewport")
+async def viewport():
+    return {
+        "lons": [-180, 180],
+        "lats": [-85, 85]
+    }
+
+
 def parse_args():
     """Command line interface"""
     parser = argparse.ArgumentParser()
