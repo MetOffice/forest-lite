@@ -31,7 +31,6 @@ class Layers extends React.Component {
                 }
             }
         )
-        console.log("Layers render", datasets)
         return (<>
             { makeComponents(datasets) }
         </>)

@@ -191,6 +191,12 @@ async def atlas_feature(feature: str):
     return response
 
 
+@app.get("/viewport")
+async def viewport(settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
+    return config.viewport
+
+
 def parse_args():
     """Command line interface"""
     parser = argparse.ArgumentParser()

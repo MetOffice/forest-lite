@@ -32,7 +32,7 @@ def test_datasets_endpoint(tmpdir):
     response = client.get("/datasets")
     assert response.json() == {
         "datasets": [
-            {"label": "Foo", "id": 0},
-            {"label": "Bar", "id": 1},
+            {"label": "Foo", "id": 0, "driver": ""},
+            {"label": "Bar", "id": 1, "driver": ""},
         ]
     }

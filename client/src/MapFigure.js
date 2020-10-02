@@ -6,6 +6,7 @@ import Layers from "./Layers.js"
 import Lines from "./Lines.js"
 import OnPanZoom from "./OnPanZoom.js"
 import WMTS from "./WMTS.js"
+import XYRange from "./XYRange.js"
 
 
 class MapFigure extends React.Component {
@@ -62,6 +63,7 @@ class MapFigure extends React.Component {
                 <Lines url={ baseURL + '/atlas/lakes' }
                     figure={ figure } line_color="LightBlue" />
                 <OnPanZoom figure={ figure } />
+                <XYRange figure={ figure } />
             </div>
         )
     }
