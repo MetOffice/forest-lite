@@ -1,0 +1,61 @@
+.zoom-button {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 40px;
+    margin: 20px;
+    padding: 5px;
+    background-color: white;
+}
+
+.zoom-button button {
+    border-radius: 4px;
+    background-color: white;
+    border: 0;
+    margin: 0;
+    padding: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.zoom-button button:hover {
+    background-color: #333;
+    color: white;
+}
+
+.tooltip {
+    position: relative;
+}
+
+.tooltip-text {
+    display: none;
+    position: absolute;
+    top: 5px;
+    left: 105%;
+}
+
+.tooltip .tooltip-text {
+    background-color: #333;
+    margin-left: 10px;
+    padding: 5px;
+    font-size: 0.6em;
+    border-radius: 4px;
+    width: 60px;
+}
+
+.tooltip:hover .tooltip-text {
+    display: block;
+}
+
+/* Tooltip arrow */
+.tooltip .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent #333 transparent transparent;
+}

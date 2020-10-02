@@ -8,6 +8,7 @@ import { toolMiddleware } from "./middlewares.js"
 import { animationMiddleware } from "./animation-middleware.js"
 import { colorPaletteMiddleware } from "./colorpalette-middleware.js"
 import { timeMiddleware } from "./time-middleware.js"
+import { zoomMiddleware } from "./zoom-middleware.js"
 import {
     SET_DATASETS,
 } from "./action-types.js"
@@ -51,6 +52,8 @@ window.main = function(baseURL) {
                                       colorPaletteMiddleware,
                                       timeMiddleware,
                                       datasetsMiddleware,
+                                      zoomMiddleware,
+                                      logActionMiddleware,
                                   ))
     // store.subscribe(() => { console.log(store.getState()) })
 
