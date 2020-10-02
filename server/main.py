@@ -192,11 +192,9 @@ async def atlas_feature(feature: str):
 
 
 @app.get("/viewport")
-async def viewport():
-    return {
-        "lons": [30, 50],
-        "lats": [-25, 25]
-    }
+async def viewport(settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
+    return config.viewport
 
 
 def parse_args():

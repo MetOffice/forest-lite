@@ -1,5 +1,13 @@
 """Configuration parsing"""
 from dataclasses import dataclass, field
+from pydantic import BaseModel
+from typing import List
+
+
+class Viewport(BaseModel):
+    """Map extents"""
+    longitude: List[float] = [-180, 180]
+    latitude: List[float] = [-85, 85]
 
 
 @dataclass
@@ -20,6 +28,7 @@ class Dataset:
 
 @dataclass
 class Config:
+    viewport: Viewport = field(default_factory=Viewport)
     datasets: list = field(default_factory=list)
 
     @classmethod
@@ -27,6 +36,10 @@ class Config:
         return cls(**settings)
 
     def __post_init__(self):
+
+        if isinstance(self.viewport, dict):
+            self.viewport = Viewport(**self.viewport)
+
         datasets = []
         for dataset in self.datasets:
             if isinstance(dataset, dict):

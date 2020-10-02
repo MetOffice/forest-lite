@@ -12,7 +12,8 @@ class ViewPort extends React.Component {
         fetch(endpoint)
             .then(response => response.json())
             .then(json => {
-                const { lons, lats } = json
+                console.log(json)
+                const { longitude: lons, latitude: lats } = json
 
                 // Map lons/lats to x, y
                 const p0 = turf.toMercator(turf.point([
