@@ -1,17 +1,31 @@
 import React from "react"
+import { connect } from "react-redux"
+import { zoomIn, zoomOut } from "./actions.js"
 import "./ZoomButton.css"
 
 
 class ZoomButton extends React.Component {
     render() {
+        const { dispatch } = this.props
+        const onClicks = {
+            ZoomIn: () => { dispatch(zoomIn()) },
+            ZoomOut: () => { dispatch(zoomOut()) }
+        }
         return (
             <div className="zoom-button">
-                <button class="tooltip">+<span class="tooltip-text">Zoom in</span></button>
-                <button class="tooltip">-<span class="tooltip-text">Zoom out</span></button>
+                <button
+                    onClick={ onClicks.ZoomIn }
+                    className="tooltip">+<span className="tooltip-text">Zoom in</span></button>
+                <button
+                    onClick={ onClicks.ZoomOut }
+                    className="tooltip">-<span className="tooltip-text">Zoom out</span></button>
             </div>
         )
     }
 }
 
 
-export default ZoomButton
+const mapStateToProps = state => ({})
+
+
+export default connect(mapStateToProps)(ZoomButton)

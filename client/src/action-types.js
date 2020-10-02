@@ -21,3 +21,5 @@ export const FETCH_IMAGE = 'FETCH_IMAGE'
 export const FETCH_IMAGE_SUCCESS = 'FETCH_IMAGE_SUCCESS'
 export const SET_FLAG = "SET_FLAG"
 export const TOGGLE_FLAG = "TOGGLE_FLAG"
+export const ZOOM_IN = "ZOOM_IN"
+export const ZOOM_OUT = "ZOOM_OUT"

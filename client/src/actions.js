@@ -21,6 +21,8 @@ import {
     FETCH_IMAGE_SUCCESS,
     SET_FLAG,
     TOGGLE_FLAG,
+    ZOOM_IN,
+    ZOOM_OUT
 } from "./action-types"
 
 // Action creators
@@ -58,3 +60,7 @@ export const toggleFlag = (prop, initial=false) => ({
     type: TOGGLE_FLAG,
     payload: {prop, initial}
 })
+
+// Zoom control actions
+export const zoomIn = () => ({ type: ZOOM_IN })
+export const zoomOut = () => ({ type: ZOOM_OUT })
