@@ -6,6 +6,7 @@ import Colorbar from "./Colorbar.js"
 import LayerMenu from "./LayerMenu.js"
 import LocalStorage from "./LocalStorage.js"
 import ViewPort from "./ViewPort.js"
+import ZoomButton from "./ZoomButton.js"
 
 
 class App extends React.Component {
@@ -22,6 +23,7 @@ class App extends React.Component {
                 </div>
                 <MapFigure baseURL={ baseURL } />
                 <ViewPort baseURL={ baseURL } />
+                <ZoomButton />
             </div>
         )
     }
