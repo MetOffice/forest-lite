@@ -1,7 +1,8 @@
 import React from "react"
 import { connect } from "react-redux"
 import { setFigure } from "./actions.js"
-const turf = require('@turf/turf')
+import { toMercator } from "@turf/projection"
+import { point } from "@turf/helpers"
 
 
 // User specified viewport settings
@@ -15,10 +16,10 @@ class ViewPort extends React.Component {
                 const { longitude: lons, latitude: lats } = json
 
                 // Map lons/lats to x, y
-                const p0 = turf.toMercator(turf.point([
+                const p0 = toMercator(point([
                     lons[0], lats[0]
                 ]))
-                const p1 = turf.toMercator(turf.point([
+                const p1 = toMercator(point([
                     lons[1], lats[1]
                 ]))
                 const [x0, y0] = p0.geometry.coordinates
