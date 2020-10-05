@@ -5,7 +5,7 @@ import {
     HoverTool
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as tiling from "./tiling.js"
-import { set_times } from "./actions.js"
+import { set_times, setDatasetDescription } from "./actions.js"
 
 
 class TiledImage extends React.Component {
@@ -36,7 +36,10 @@ class TiledImage extends React.Component {
         const tooltip = "Value: @image @units"
         const hover_tool = new HoverTool({
             renderers: [renderer],
-            tooltips: tooltip,
+            tooltips: [
+                ["Value", "@image @units"],
+                ["Title", "TOA brightness temperature"]
+            ],
             active: false
         })
         props.figure.add_tools(hover_tool)
@@ -45,12 +48,20 @@ class TiledImage extends React.Component {
     }
     componentDidMount() {
         // Initial times
-        const { dispatch, baseURL, label } = this.props
+        const { dispatch, baseURL, label, datasetId } = this.props
         fetch(`${baseURL}/datasets/${label}/times?limit=7`)
             .then((response) => response.json())
             .then((data) => {
                 let action = set_times(data)
                 dispatch(action)
+            })
+
+        // Dataset description (TODO: Move to better place)
+        let endpoint = `${baseURL}/datasets/${datasetId}`
+        fetch(endpoint)
+            .then(response => response.json())
+            .then(data => {
+                dispatch(setDatasetDescription(datasetId, data))
             })
     }
     render() {

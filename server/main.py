@@ -152,6 +152,15 @@ async def data_tiles(dataset_id: int, timestamp_ms: int,
     return response
 
 
+@app.get("/datasets/{dataset_id}")
+async def description(dataset_id: int,
+                      settings: config.Settings = Depends(get_settings)):
+    config = load_config(settings.config_file)
+    dataset = config.datasets[dataset_id]
+    driver = lib.drivers.from_spec(dataset.driver)
+    return driver.description()
+
+
 @app.get("/datasets/{dataset_id}/times/{timestamp_ms}/geojson")
 async def geojson(dataset_id: int,
                   timestamp_ms: int,

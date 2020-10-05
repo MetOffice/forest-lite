@@ -61,6 +61,11 @@ export const toggleFlag = (prop, initial=false) => ({
     payload: {prop, initial}
 })
 
+// Dataset meta-data
+export const setDatasetDescription = (datasetId, data) => {
+    return { type: "SET_DATASET_DESCRIPTION", payload: { datasetId, data } }
+}
+
 // Zoom control actions
 export const zoomIn = () => ({ type: ZOOM_IN })
 export const zoomOut = () => ({ type: ZOOM_OUT })
