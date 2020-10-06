@@ -1,9 +1,15 @@
 import React from "react"
-import InfoBox from "./InfoBox.js"
-import InfoCircle from "./InfoCircle.js"
+import "./Info.css"
 
 
-const Info = () => <InfoCircle><InfoBox /></InfoCircle>
+const Info = ({ children }) => {
+    return (
+        <div className="info-circle">
+            <i className="fas fa-info-circle"></i>
+            <div className="info-box">{ children }</div>
+        </div>
+    )
+}
 
 
 export default Info

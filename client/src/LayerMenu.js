@@ -39,7 +39,7 @@ class LayerMenu extends React.Component {
                 <Item key={ item.id }
                          onChange={ onChange }>
                     { item.label }
-                    <Info />
+                    <Info>Hover text</Info>
                 </Item>
             )
         })
