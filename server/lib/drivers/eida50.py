@@ -19,3 +19,14 @@ class Driver:
         with xarray.open_dataset(path, engine="h5netcdf") as nc:
             times = nc.time.values
         return times
+
+    def description(self):
+        pattern = self.settings["pattern"]
+        paths = sorted(glob.glob(pattern))
+        if len(paths) > 0:
+            path = paths[-1]
+            with xarray.open_dataset(path, engine="h5netcdf") as nc:
+                data = nc.to_dict(data=False)
+            return data
+        else:
+            return {}

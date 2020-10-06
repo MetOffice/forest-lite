@@ -8,6 +8,8 @@ const almostEqual = function(x0, x1) {
 class XYRange extends React.Component {
     render() {
         const { figure, x_range, y_range } = this.props
+        if (typeof x_range === "undefined") return null
+        if (typeof y_range === "undefined") return null
         const figure_ratio = figure.inner_width / figure.inner_height
         const aspect_ratio = (x_range.end - x_range.start) / (y_range.end - y_range.start)
 
@@ -40,10 +42,14 @@ class XYRange extends React.Component {
 }
 
 
-const mapStateToProps = state => ({
-    x_range: state.figure.x_range,
-    y_range: state.figure.y_range,
-})
+const mapStateToProps = state => {
+    const { figure } = state
+    if (typeof figure === "undefined") return {}
+    return {
+        x_range: figure.x_range,
+        y_range: figure.y_range,
+    }
+}
 
 
 export default connect(mapStateToProps)(XYRange)

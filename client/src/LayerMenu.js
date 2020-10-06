@@ -4,8 +4,10 @@ import { setActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
 import ColorPaletteMenu from "./ColorPaletteMenu.js"
 import StateToggle from "./StateToggle.js"
+import Info from "./Info.js"
 import HoverToolToggle from "./HoverToolToggle.js"
 import ColorbarToggle from "./ColorbarToggle.js"
+import * as R from "ramda"
 
 
 class Label extends React.Component {
@@ -28,14 +30,35 @@ const Hidden = connect(state => {
 })(_Hidden)
 
 
+const attrsToDivs = R.pipe(
+    R.toPairs,
+    R.filter(pair => pair[0] !== "history"),
+    R.map(R.join(": ")),
+    R.map(text => <div key={ text }>{ text }</div>)
+)
+
+
 class LayerMenu extends React.Component {
     render() {
         // Datasets toggles
         const items = this.props.items
         const listItems = items.map(item => {
             const onChange = this.handleChange(item)
-            return <Item key={ item.id }
-                         onChange={ onChange }>{ item.label }</Item>
+
+            let description
+            if (typeof item.description === "undefined") {
+                description = ""
+            } else {
+                description = attrsToDivs(item.description.attrs)
+            }
+
+            return (
+                <Item key={ item.id }
+                         onChange={ onChange }>
+                    { item.label }
+                    <Info>{ description }</Info>
+                </Item>
+            )
         })
 
         const { baseURL } = this.props
@@ -92,20 +115,20 @@ const CoastlinesToggle = connect(state => {
     return { active }
 })(_CoastlinesToggle)
 
-class Item extends React.Component {
-    render() {
-        return (
-            <div>
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={ this.props.checked }
-                        onChange={ this.props.onChange } />
-                    { this.props.children }
-                </label>
-            </div>
-        )
-    }
+
+const Item = (props) => {
+    const { checked, onChange, children } = props
+    return (
+        <div>
+            <label>
+                <input
+                    type="checkbox"
+                    checked={ checked }
+                    onChange={ onChange } />
+                { children }
+            </label>
+        </div>
+    )
 }
 
 

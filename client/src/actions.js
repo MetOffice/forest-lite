@@ -4,6 +4,7 @@ import {
     SET_URL,
     SET_DATASET,
     SET_DATASETS,
+    SET_DATASET_DESCRIPTION,
     SET_FIGURE,
     SET_PALETTE,
     SET_PALETTES,
@@ -60,6 +61,11 @@ export const toggleFlag = (prop, initial=false) => ({
     type: TOGGLE_FLAG,
     payload: {prop, initial}
 })
+
+// Dataset meta-data
+export const setDatasetDescription = (datasetId, data) => {
+    return { type: SET_DATASET_DESCRIPTION, payload: { datasetId, data } }
+}
 
 // Zoom control actions
 export const zoomIn = () => ({ type: ZOOM_IN })
