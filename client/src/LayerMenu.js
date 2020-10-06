@@ -4,6 +4,7 @@ import { setActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
 import ColorPaletteMenu from "./ColorPaletteMenu.js"
 import StateToggle from "./StateToggle.js"
+import Info from "./Info.js"
 import HoverToolToggle from "./HoverToolToggle.js"
 import ColorbarToggle from "./ColorbarToggle.js"
 
@@ -34,8 +35,13 @@ class LayerMenu extends React.Component {
         const items = this.props.items
         const listItems = items.map(item => {
             const onChange = this.handleChange(item)
-            return <Item key={ item.id }
-                         onChange={ onChange }>{ item.label }</Item>
+            return (
+                <Item key={ item.id }
+                         onChange={ onChange }>
+                    { item.label }
+                    <Info />
+                </Item>
+            )
         })
 
         const { baseURL } = this.props
