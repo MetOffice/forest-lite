@@ -1,16 +1,63 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { connect } from "react-redux"
 import {
     ColumnDataSource,
     HoverTool
 } from "@bokeh/bokehjs/build/js/lib/models"
+import * as R from "ramda"
 import * as tiling from "./tiling.js"
 import { set_times, setDatasetDescription } from "./actions.js"
+
+
+const _HoverToolComponent = props => {
+    const { figure, renderer, active, description } = props
+    const [ tool, setTool ] = useState(null)
+
+    // Add a HoverTool once after component renders
+    useEffect(() => {
+        const hover_tool = new HoverTool({
+            renderers: [renderer],
+            tooltips: [],
+            active: false
+        })
+        figure.add_tools(hover_tool)
+        setTool(hover_tool)
+    }, [])
+
+    // Update tooltip if tool or description change
+    useEffect(() => {
+        let tooltips = [
+            ["Value", "@image @units"],
+        ]
+        if (typeof description != "undefined") {
+            const pairs = R.toPairs(description.data_vars.data.attrs)
+            tooltips = R.concat(tooltips, pairs)
+        }
+        if (tool !== null) {
+            tool.tooltips = tooltips
+        }
+    }, [tool, description])
+
+    // Render HoverTool active state
+    if (tool !== null) {
+        tool.active = active
+    }
+    return null
+}
+const HoverToolComponent = connect(state => {
+    const { datasets=[] } = state
+    let description = null
+    if (datasets.length > 0) {
+        description = datasets[0].description
+    }
+    return { description }
+})(_HoverToolComponent)
 
 
 class TiledImage extends React.Component {
     constructor(props) {
         super(props)
+        const { figure } = props
         const source = new ColumnDataSource({
             data: {
                 x: [],
@@ -22,7 +69,7 @@ class TiledImage extends React.Component {
                 units: []
             }
         })
-        const renderer = props.figure.image({
+        const renderer = figure.image({
             x: { field: "x" },
             y: { field: "y" },
             dw: { field: "dw" },
@@ -31,20 +78,7 @@ class TiledImage extends React.Component {
             source: source,
             color_mapper: props.color_mapper,
         })
-
-        // HoverTool
-        const tooltip = "Value: @image @units"
-        const hover_tool = new HoverTool({
-            renderers: [renderer],
-            tooltips: [
-                ["Value", "@image @units"],
-                ["Title", "TOA brightness temperature"]
-            ],
-            active: false
-        })
-        props.figure.add_tools(hover_tool)
-
-        this.state = { source, renderer, hover_tool }
+        this.state = { figure, source, renderer }
     }
     componentDidMount() {
         // Initial times
@@ -94,10 +128,10 @@ class TiledImage extends React.Component {
         }
 
         // HoverTool
-        this.state.hover_tool.active = this.props.hover_tool
-
-        // No DOM elements related to component
-        return null
+        return <HoverToolComponent
+                    figure={ this.state.figure }
+                    renderer={ this.state.renderer }
+                    active={ this.props.hover_tool } />
     }
 }
 
