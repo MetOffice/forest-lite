@@ -30,8 +30,10 @@ const _HoverToolComponent = props => {
             ["Value", "@image @units"],
         ]
         if (typeof description != "undefined") {
-            const pairs = R.toPairs(description.data_vars.data.attrs)
-            tooltips = R.concat(tooltips, pairs)
+            if (typeof description.data_vars.data != "undefined") {
+                const pairs = R.toPairs(description.data_vars.data.attrs)
+                tooltips = R.concat(tooltips, pairs)
+            }
         }
         if (tool !== null) {
             tool.tooltips = tooltips
@@ -103,7 +105,7 @@ class TiledImage extends React.Component {
 
         // Construct endpoint
         const { baseURL, datasetId, time } = this.props
-        const templateURL = `${baseURL}/datasets/${datasetId}/times/${time}/tiles/{Z}/{X}/{Y}`
+        const templateURL = `${baseURL}/datasets/${datasetId}/data/times/${time}/tiles/{Z}/{X}/{Y}`
 
         this.state.renderer.visible = this.props.active
 
@@ -136,7 +138,8 @@ class TiledImage extends React.Component {
 }
 
 
-const mapStateToProps = state => {
+const mapStateToProps = (state, ownProps) => {
+    const { datasetId } = ownProps
     const {
         datasets = [],
         times,
@@ -150,7 +153,7 @@ const mapStateToProps = state => {
 
     let active = false
     if (datasets.length > 0) {
-        active = datasets[0].active
+        active = datasets[datasetId].active
     }
 
     return { ranges, time, hover_tool, active }

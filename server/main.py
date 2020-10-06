@@ -131,14 +131,20 @@ def find_datasets(config, label):
             yield dataset
 
 
-@app.get("/datasets/{dataset_id}/times/{timestamp_ms}/tiles/{Z}/{X}/{Y}")
-async def data_tiles(dataset_id: int, timestamp_ms: int,
+@app.get("/datasets/{dataset_id}/{data_var}/times/{timestamp_ms}/tiles/{Z}/{X}/{Y}")
+async def data_tiles(dataset_id: int,
+                     data_var: str,
+                     timestamp_ms: int,
                      Z: int, X: int, Y: int,
                      settings: config.Settings = Depends(get_settings)):
     """GET data tile from dataset at particular time"""
     config = load_config(settings.config_file)
     dataset_name = config.datasets[dataset_id].label
-    data = lib.core.get_data_tile(config, dataset_name, timestamp_ms, Z, X, Y)
+    data = lib.core.get_data_tile(config,
+                                  dataset_name,
+                                  data_var,
+                                  timestamp_ms,
+                                  Z, X, Y)
     obj = {
         "dataset_id": dataset_id,
         "timestamp_ms": timestamp_ms,
