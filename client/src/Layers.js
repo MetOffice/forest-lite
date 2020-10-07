@@ -10,14 +10,14 @@ class Layers extends React.Component {
         const { datasets } = this.props
         if (typeof datasets === "undefined") return null
         const { baseURL, figure, color_mapper } = this.props
-        const makeComponents = R.map(
-            dataset => {
+        const makeComponents = R.addIndex(R.map)(
+            (dataset, datasetId) => {
                 const { label, driver } = dataset
                 if (driver === "eida50") {
                     return <TiledImage
                                 key={ label }
                                 label={ label }
-                                datasetId={ 0 }
+                                datasetId={ datasetId }
                                 baseURL={ baseURL }
                                 figure={ figure }
                                 color_mapper={ color_mapper } />

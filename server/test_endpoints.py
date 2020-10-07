@@ -87,7 +87,7 @@ def test_tile_endpoint(tmpdir):
     # System under test
     settings = config.Settings(config_file=config_path)
     main.app.dependency_overrides[main.get_settings] = lambda: settings
-    response = client.get("/datasets/0/times/0/tiles/0/0/0")
+    response = client.get("/datasets/0/data/times/0/tiles/0/0/0")
     actual = response.json()
 
     # Assert response
