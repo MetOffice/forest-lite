@@ -6,16 +6,32 @@ body {
 #root {
     display: grid;
     height: 100vh;
-    grid-template:
-      ". . . . . . ." 0
-      ". . . title . sidebar ." auto
-      ". . . . . sidebar ." auto
-      ". . . . . . ." 1fr
-      ". zoombtn . . . . ." auto
-      ". zoombtn . controls . colorbar ." 50px
-      ". . . . . . ." 0
-      / 0 auto 3fr 3fr 3fr 3fr 0;
-    grid-gap: 0.5em;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto 1fr auto auto auto;
+    grid-template-areas:
+      "title title"
+      "sidebar sidebar"
+      ". ."
+      "zoombtn ."
+      "colorbar colorbar"
+      "controls controls"
+}
+
+@media screen and (min-width: 960px) {
+    #root {
+        display: grid;
+        height: 100vh;
+        grid-template:
+          ". . . . . . ." 0
+          ". . . title . sidebar ." auto
+          ". . . . . sidebar ." auto
+          ". . . . . . ." 1fr
+          ". zoombtn . . . . ." auto
+          ". zoombtn . controls . colorbar ." 50px
+          ". . . . . . ." 0
+          / 0 auto 3fr 3fr 3fr 3fr 0;
+        grid-gap: 0.5em;
+    }
 }
 
 .App-map {
@@ -47,7 +63,17 @@ body {
 
 .App-sidebar {
     grid-area: sidebar;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+}
+
+/* Sidebar */
+.App-sidebar {
+    border-bottom: 1px solid #ccc;
     background-color: white;
+}
+@media screen and (min-width: 960px) {
+    .App-sidebar {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: white;
+    }
 }

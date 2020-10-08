@@ -1,7 +1,10 @@
+.colorbar-container {
+    padding: 5px;
+    background-color: white;
+    border-top: 1px solid #ccc;
+}
 @media screen and (min-width: 960px) {
     .colorbar-container {
-        background-color: white;
-        padding: 5px;
         border: 1px solid #ccc;
         border-radius: 4px;
         height: 40px;
