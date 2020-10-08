@@ -43,10 +43,9 @@ class MapFigure extends React.Component {
     }
     render() {
         const { figure, color_mapper } = this.state
-        const { baseURL } = this.props
-        const style = { zIndex: -1 }
+        const { baseURL, className } = this.props
         return (
-            <div className="full-window" style={ style }
+            <div className={ className }
                  ref={ el => this.el = el }>
                 <WMTS figure={ figure }/>
                 <Layers baseURL={ baseURL } figure={ figure }

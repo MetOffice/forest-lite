@@ -1,0 +1,48 @@
+body {
+    height: 100vh;
+    overflow: hidden;
+}
+
+#root {
+    display: grid;
+    height: 100vh;
+    grid-template-columns: 4fr 1fr;
+    grid-template-rows: 100px 1fr auto;
+    justify-content: center;
+    align-items: center;
+}
+
+.App-map {
+    height: 100%;
+    grid-row: 1 / -1;
+    grid-column: 1 / -1;
+    z-index: 1;
+}
+
+.App-colorbar {
+    height: 100%;
+    grid-row: 3 / 4;
+    grid-column: 1 / -1;
+    z-index: 2;
+}
+
+.App-controls {
+    height: 100%;
+    grid-row: 1 / 1;
+    grid-column: 1 / 1;
+    z-index: 2;
+}
+
+.App-title {
+    grid-row: 1 / 1;
+    grid-column: 1 / -1;
+    z-index: 2;
+}
+
+.App-sidebar {
+    grid-row: 1 / -1;
+    grid-column: 2 / 3;
+    z-index: 2;
+    overflow-y: scroll;
+    border-left: 1px solid #ccc;
+}

@@ -15,8 +15,6 @@
 
 @media screen and (min-width: 960px) {
     .animation-container {
-        position: absolute;
-        top: 0;
         width: 25%;
         background-color: white;
         border-radius: 4px;

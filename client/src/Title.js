@@ -3,11 +3,11 @@ import { connect } from "react-redux"
 import "./Title.css"
 
 
-class Title extends React.Component {
-    render() {
-        return <div className="title">{ this.props.content }</div>
-    }
+const Title = ({ content, className="" }) => {
+    const classNames = ["title", className]
+    return <div className={ classNames.join(" ") }>{ content }</div>
 }
+
 
 const mapStateToProps = state => {
     const { times, time_index } = state
