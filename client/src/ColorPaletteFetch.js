@@ -2,8 +2,6 @@ import React, { useEffect } from "react"
 import { useDispatch } from "react-redux"
 import {
     set_palettes,
-    set_palette_number,
-    set_palette_name,
     set_palette_names,
 } from "./actions.js"
 
