@@ -1,0 +1,79 @@
+body {
+    height: 100vh;
+    overflow: hidden;
+}
+
+#root {
+    display: grid;
+    height: 100vh;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto 1fr auto auto auto;
+    grid-template-areas:
+      "title title"
+      "sidebar sidebar"
+      ". ."
+      "zoombtn ."
+      "colorbar colorbar"
+      "controls controls"
+}
+
+@media screen and (min-width: 960px) {
+    #root {
+        display: grid;
+        height: 100vh;
+        grid-template:
+          ". . . . . . ." 0
+          ". . . title . sidebar ." auto
+          ". . . . . sidebar ." auto
+          ". . . . . . ." 1fr
+          ". zoombtn . . . . ." auto
+          ". zoombtn . controls . colorbar ." 50px
+          ". . . . . . ." 0
+          / 0 auto 3fr 3fr 3fr 3fr 0;
+        grid-gap: 0.5em;
+    }
+}
+
+.App-map {
+    height: 100%;
+    grid-row: 1 / -1;
+    grid-column: 1 / -1;
+    z-index: 1;
+}
+
+.App-colorbar, .App-controls, .App-zoom, .App-title, .App-sidebar {
+    z-index: 2;
+}
+
+.App-colorbar {
+    grid-area: colorbar;
+}
+
+.App-controls {
+    grid-area: controls;
+}
+
+.App-zoom {
+    grid-area: zoombtn;
+}
+
+.App-title {
+    grid-area: title;
+}
+
+.App-sidebar {
+    grid-area: sidebar;
+}
+
+/* Sidebar */
+.App-sidebar {
+    border-bottom: 1px solid #ccc;
+    background-color: white;
+}
+@media screen and (min-width: 960px) {
+    .App-sidebar {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: white;
+    }
+}

@@ -1,9 +1,7 @@
 import React from "react"
 import {
-    set_palettes,
     set_palette_number,
-    set_palette_name,
-    set_palette_names,
+    set_palette_name
 } from "./actions.js"
 import { connect } from "react-redux"
 import * as Bokeh from "@bokeh/bokehjs"
@@ -53,26 +51,6 @@ const NumberSelect = connect(
 
 
 class ColorPaletteMenu extends React.Component {
-    componentDidMount() {
-        const { dispatch, baseURL } = this.props
-
-        // Async get palette names
-        fetch(`${baseURL}/palettes`)
-            .then((response) => response.json())
-            .then((data) => {
-                let action = set_palettes(data)
-                dispatch(action)
-                return data
-            })
-            .then((data) => {
-                let names = data.map((p) => p.name)
-                return Array.from(new Set(names)).concat().sort()
-            })
-            .then((names) => {
-                let action = set_palette_names(names)
-                dispatch(action)
-            })
-    }
     render() {
         const { dispatch } = this.props
         const onClicks = {
