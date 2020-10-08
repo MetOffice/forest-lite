@@ -1,21 +1,19 @@
 import React from "react"
-import { connect } from "react-redux"
+import { useSelector } from "react-redux"
 import "./Title.css"
 
 
-const Title = ({ content, className="" }) => {
-    const classNames = ["title", className]
-    return <div className={ classNames.join(" ") }>{ content }</div>
+const Title = ({ content }) => {
+    content = useSelector(state => {
+        const { times, time_index } = state
+        if (typeof time_index === "undefined") return null
+        if (typeof times === "undefined") return null
+        const time = new Date(times[time_index])
+        return time.toUTCString()
+    })
+    if (content === null) return null
+    return <div className="title">{ content }</div>
 }
 
 
-const mapStateToProps = state => {
-    const { times, time_index } = state
-    if (typeof time_index === "undefined") return { content: "" }
-    if (typeof times === "undefined") return { content: "" }
-    const time = new Date(times[time_index])
-    return { content: time.toUTCString() }
-}
-
-
-export default connect(mapStateToProps)(Title)
+export default Title
