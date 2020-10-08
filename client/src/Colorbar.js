@@ -9,7 +9,7 @@ class Colorbar extends React.Component {
         super(props)
         const { el } = props
         const padding = 10
-        const colorbarHeight = 20
+        const colorbarHeight = 15
         const figure = Bokeh.Plotting.figure({
             height: 0,
             min_border: 0,

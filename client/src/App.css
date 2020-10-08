@@ -6,10 +6,16 @@ body {
 #root {
     display: grid;
     height: 100vh;
-    grid-template-columns: 4fr 1fr;
-    grid-template-rows: 100px 1fr auto;
-    justify-content: center;
-    align-items: center;
+    grid-template-columns: 0 auto 3fr 3fr 3fr 3fr 0;
+    grid-template-rows: 0 auto 1fr auto 50px 0;
+    grid-template-areas:
+      ". . . . . . ."
+      ". . . title . sidebar ."
+      ". . . . . . ."
+      ". zoombtn . . . . ."
+      ". zoombtn . controls . colorbar ."
+      ". . . . . . .";
+    grid-gap: 0.5em;
 }
 
 .App-map {
@@ -20,29 +26,29 @@ body {
 }
 
 .App-colorbar {
-    height: 100%;
-    grid-row: 3 / 4;
-    grid-column: 1 / -1;
+    grid-area: colorbar;
     z-index: 2;
 }
 
 .App-controls {
-    height: 100%;
-    grid-row: 1 / 1;
-    grid-column: 1 / 1;
+    grid-area: controls;
+    z-index: 2;
+}
+
+.App-zoom {
+    grid-area: zoombtn;
     z-index: 2;
 }
 
 .App-title {
-    grid-row: 1 / 1;
-    grid-column: 1 / -1;
+    grid-area: title;
     z-index: 2;
 }
 
 .App-sidebar {
-    grid-row: 1 / -1;
-    grid-column: 2 / 3;
+    grid-area: sidebar;
     z-index: 2;
-    overflow-y: scroll;
-    border-left: 1px solid #ccc;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
 }

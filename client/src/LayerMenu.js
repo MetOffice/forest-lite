@@ -64,23 +64,12 @@ class LayerMenu extends React.Component {
         const { baseURL } = this.props
 
         return (<div className="layer-menu-container">
-            <div className="tool-icon-container">
-                <StateToggle
-                    icon="fas fa-layer-group"
-                    attr="layers" />
-                <HoverToolToggle />
-                <ColorbarToggle />
-            </div>
-            <Hidden>
                 <Label>Datasets</Label>
                 <fieldset>{ listItems }</fieldset>
                 <Label>Coastlines, borders, lakes</Label>
                 <fieldset>
                     <CoastlinesToggle />
                 </fieldset>
-                <Label>Color palette</Label>
-                <ColorPaletteMenu baseURL={ baseURL } />
-            </Hidden>
         </div>)
     }
 
