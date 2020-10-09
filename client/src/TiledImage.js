@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { connect } from "react-redux"
+import { connect, useDispatch, useSelector } from "react-redux"
 import {
     ColumnDataSource,
     LinearColorMapper,
@@ -62,10 +62,13 @@ const HoverToolComponent = connect((state, ownProps) => {
 })(_HoverToolComponent)
 
 
-class TiledImage extends React.Component {
-    constructor(props) {
-        super(props)
-        const { figure, datasetId } = props
+const TiledImage = ({ figure, datasetId, label, baseURL }) => {
+    const dispatch = useDispatch()
+    const [color_mapper, setColormapper] = useState(null)
+    const [source, setSource] = useState(null)
+    const [renderer, setRenderer] = useState(null)
+
+    useEffect(() => {
         // TODO: Get initial settings from /datasets/{id}/palette
         let low, high, palette
         if (datasetId === 1) {
@@ -83,6 +86,8 @@ class TiledImage extends React.Component {
             "palette": palette,
             "nan_color": "rgba(0,0,0,0)"
         })
+        setColormapper(color_mapper)
+
         const source = new ColumnDataSource({
             data: {
                 x: [],
@@ -94,6 +99,8 @@ class TiledImage extends React.Component {
                 units: []
             }
         })
+        setSource(source)
+
         const renderer = figure.image({
             x: { field: "x" },
             y: { field: "y" },
@@ -103,11 +110,24 @@ class TiledImage extends React.Component {
             source: source,
             color_mapper: color_mapper,
         })
-        this.state = { figure, source, renderer }
-    }
-    componentDidMount() {
+        setRenderer(renderer)
+    }, [])
+
+    useEffect(() => {
+        // Set ColorMapper from server
+        fetch(`${baseURL}/datasets/${datasetId}/palette`)
+            .then(response => response.json())
+            .then(({ colors, low, high }) => {
+                if (color_mapper != null) {
+                    color_mapper.palette = colors
+                    color_mapper.low = low
+                    color_mapper.high = high
+                }
+            })
+    }, [color_mapper])
+
+    useEffect(() => {
         // Initial times
-        const { dispatch, baseURL, label, datasetId } = this.props
         fetch(`${baseURL}/datasets/${label}/times?limit=7`)
             .then((response) => response.json())
             .then((data) => {
@@ -122,66 +142,66 @@ class TiledImage extends React.Component {
             .then(data => {
                 dispatch(setDatasetDescription(datasetId, data))
             })
-    }
-    render() {
-        if (typeof this.props.ranges === "undefined") return null
+    }, [])
 
-        // Construct endpoint
-        const { baseURL, datasetId, time } = this.props
-        const templateURL = `${baseURL}/datasets/${datasetId}/data/times/${time}/tiles/{Z}/{X}/{Y}`
-
-        this.state.renderer.visible = this.props.active
-
-        if (this.props.active) {
-
-            const { x_range, y_range } = this.props.ranges
-
-            // React to axis change indirectly
-            const level = tiling.findZoomLevel(
-                x_range,
-                y_range,
-                tiling.WEB_MERCATOR_EXTENT
-            )
-            const tiles = tiling.getTiles(
-                x_range,
-                y_range,
-                tiling.WEB_MERCATOR_EXTENT,
-                level
-            ).map(({x, y, z}) => [x, y, z])
-            const urls = tiles.map(([x, y, z]) => tiling.getURL(templateURL, x, y, z))
-            tiling.renderTiles(this.state.source)(urls)
+    // Render component
+    const ranges = useSelector(state => state.figure || null)
+    const time = useSelector(state => {
+        const { times, time_index } = state
+        if (typeof times === "undefined") return null
+        if (typeof time_index === "undefined") return null
+        return times[time_index]
+    })
+    const active = useSelector(state => {
+        const { datasets = [] } = state
+        let active = false
+        if (datasets.length > 0) {
+            active = datasets[datasetId].active
         }
+        return active
+    })
+    const hover_tool = useSelector(state => state.hover_tool || true)
 
-        // HoverTool
-        return <HoverToolComponent
-                    datasetId={ datasetId }
-                    figure={ this.state.figure }
-                    renderer={ this.state.renderer }
-                    active={ this.props.hover_tool } />
+    // Validate state
+    if (ranges == null) {
+        return null
     }
+    if (time == null) {
+        return null
+    }
+
+    // Construct endpoint
+    const templateURL = `${baseURL}/datasets/${datasetId}/data/times/${time}/tiles/{Z}/{X}/{Y}`
+
+    renderer.visible = active
+
+    if (active) {
+
+        const { x_range, y_range } = ranges
+
+        // React to axis change indirectly
+        const level = tiling.findZoomLevel(
+            x_range,
+            y_range,
+            tiling.WEB_MERCATOR_EXTENT
+        )
+        const tiles = tiling.getTiles(
+            x_range,
+            y_range,
+            tiling.WEB_MERCATOR_EXTENT,
+            level
+        ).map(({x, y, z}) => [x, y, z])
+        const urls = tiles.map(([x, y, z]) => tiling.getURL(templateURL, x, y, z))
+        tiling.renderTiles(source)(urls)
+    }
+
+    // HoverTool
+    return <HoverToolComponent
+                datasetId={ datasetId }
+                figure={ figure }
+                renderer={ renderer }
+                active={ hover_tool } />
 }
 
 
-const mapStateToProps = (state, ownProps) => {
-    const { datasetId } = ownProps
-    const {
-        datasets = [],
-        times,
-        time_index,
-        figure: ranges,
-        hover_tool = true
-    } = state
-    if (typeof times === "undefined") return {}
-    if (typeof time_index === "undefined") return {}
-    const time = times[time_index]
-
-    let active = false
-    if (datasets.length > 0) {
-        active = datasets[datasetId].active
-    }
-
-    return { ranges, time, hover_tool, active }
-}
-
-
-export default connect(mapStateToProps)(TiledImage)
+export default TiledImage
