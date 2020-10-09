@@ -71,10 +71,10 @@ async def data_tiles(dataset_id: int,
     """GET data tile from dataset at particular time"""
     config_obj = config.load_config(settings.config_file)
     dataset = config_obj.datasets[dataset_id]
-    data = lib.core.get_data_tile(dataset,
-                                  data_var,
-                                  timestamp_ms,
-                                  Z, X, Y)
+    driver = lib.drivers.from_spec(dataset.driver)
+    data = driver.data_tile(data_var,
+                            timestamp_ms,
+                            Z, X, Y)
     obj = {
         "dataset_id": dataset_id,
         "timestamp_ms": timestamp_ms,

@@ -1,11 +1,16 @@
 import glob
 import xarray
+import lib.core
 
 
 class Driver:
     def __init__(self, name, settings):
         self.name = name
         self.settings = settings
+
+    def data_tile(self, data_var, timestamp_ms, z, x, y):
+        pattern = self.settings["pattern"]
+        return lib.core.get_data_tile(pattern, data_var, timestamp_ms, z, x, y)
 
     def get_times(self, limit):
         pattern = self.settings["pattern"]
