@@ -75,12 +75,19 @@ class Colorbar extends React.Component {
     }
 }
 
-export const mapStateToProps = state => {
+export const mapStateToProps = (state, ownProps) => {
+    const { datasetId } = ownProps
+    const { datasets = [] } = state
     const {
-        colorbar: visible = true,
+        colorbar = {},
+        active: visible = false
+    } = datasets[datasetId]
+    const {
         palette = [],
-        limits = {low: 0, high: 1}
-    } = state
+        low = 0,
+        high = 1,
+    } = colorbar
+    const limits = { low, high }
     return { palette, limits, visible }
 }
 

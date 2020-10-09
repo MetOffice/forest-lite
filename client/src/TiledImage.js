@@ -7,7 +7,7 @@ import {
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as R from "ramda"
 import * as tiling from "./tiling.js"
-import { set_times, setDatasetDescription } from "./actions.js"
+import { set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 
 
 const _HoverToolComponent = props => {
@@ -108,11 +108,8 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         fetch(`${baseURL}/datasets/${datasetId}/palette`)
             .then(response => response.json())
             .then(({ colors, low, high }) => {
-                if (color_mapper != null) {
-                    color_mapper.palette = colors
-                    color_mapper.low = low
-                    color_mapper.high = high
-                }
+                const data = { palette: colors, low, high }
+                dispatch(setDatasetColorbar(datasetId, data))
             })
     }, [color_mapper])
 
@@ -152,12 +149,25 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
     })
     const hover_tool = useSelector(state => state.hover_tool || true)
 
+    const { palette = [], low = 0, high = 1 } = useSelector(state => {
+        const { datasets = [] } = state
+        const { colorbar = {} } = datasets[datasetId]
+        return colorbar
+    })
+
     // Validate state
     if (ranges == null) {
         return null
     }
     if (time == null) {
         return null
+    }
+
+    // Update LinearColorMapper
+    if (color_mapper != null) {
+        color_mapper.palette = palette
+        color_mapper.low = low
+        color_mapper.high = high
     }
 
     // Construct endpoint

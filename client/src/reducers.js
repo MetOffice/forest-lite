@@ -8,6 +8,7 @@ import {
     SET_DATASET,
     SET_DATASETS,
     SET_DATASET_DESCRIPTION,
+    SET_DATASET_COLORBAR,
     SET_URL,
     SET_PALETTE,
     SET_PALETTES,
@@ -49,7 +50,9 @@ export const rootReducer = (state = "", action) => {
         case SET_DATASET:
             return Object.assign({}, state, {dataset: payload})
         case SET_DATASET_DESCRIPTION:
-            return descriptionReducer(state, action)
+            return datasetIdReducer("description")(state, action)
+        case SET_DATASET_COLORBAR:
+            return datasetIdReducer("colorbar")(state, action)
         case SET_DATASETS:
             let { datasets } = state
             // TODO: Combine dataset settings
@@ -91,13 +94,15 @@ export const rootReducer = (state = "", action) => {
 }
 
 
-const descriptionReducer = (state, action) => {
+const datasetIdReducer = prop => (state, action) => {
     const { type, payload } = action
     const { datasets=[] } = state
     const { datasetId, data } = payload
     const updatedDatasets = datasets.map(dataset => {
         if (dataset.id === datasetId) {
-            return Object.assign({}, dataset, { description: data })
+            let update = {}
+            update[prop] = data
+            return Object.assign({}, dataset, update)
         }
         return dataset
     })

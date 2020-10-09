@@ -22,14 +22,14 @@ body {
         display: grid;
         height: 100vh;
         grid-template:
-          ". . . . . . ." 0
-          ". . . title . sidebar ." auto
-          ". . . . . sidebar ." auto
-          ". . . . . . ." 1fr
-          ". zoombtn . . . . ." auto
-          ". zoombtn . controls . colorbar ." 50px
-          ". . . . . . ." 0
-          / 0 auto 3fr 3fr 3fr 3fr 0;
+          ". . . . . . . ." 0
+          ". colorbar colorbar . title . sidebar ." auto
+          ". . . . . . sidebar ." auto
+          ". . . . . . . ." 1fr
+          ". zoombtn . . . . . ." auto
+          ". zoombtn . . controls . . ." 50px
+          ". . . . . . . ." 0
+          / 0 auto 1fr 1fr 1fr 1fr 1fr 0;
         grid-gap: 0.5em;
     }
 }

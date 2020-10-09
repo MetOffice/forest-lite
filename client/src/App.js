@@ -2,7 +2,7 @@ import React from "react"
 import AnimationControls from "./AnimationControls.js"
 import MapFigure from "./MapFigure.js"
 import Title from "./Title.js"
-import Colorbar from "./Colorbar.js"
+import ColorbarStack from "./ColorbarStack.js"
 import ColorPaletteFetch from "./ColorPaletteFetch.js"
 import LayerMenu from "./LayerMenu.js"
 import ViewPort from "./ViewPort.js"
@@ -20,7 +20,9 @@ const App = (props) => {
             <div className="App-sidebar">
                 <LayerMenu baseURL={ baseURL } />
             </div>
-            <div className="App-colorbar"><Colorbar /></div>
+            <div className="App-colorbar">
+                <ColorbarStack />
+            </div>
             <MapFigure className="App-map" baseURL={ baseURL } />
             <ViewPort baseURL={ baseURL } />
             <div className="App-controls">
