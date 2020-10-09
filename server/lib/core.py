@@ -11,8 +11,8 @@ from functools import lru_cache
 TILE_SIZE = 128 # 256 # 64  # 128
 
 
-def get_data_tile(config, dataset_name, data_var, timestamp_ms, z, x, y):
-    path = get_path(config, dataset_name)
+def get_data_tile(pattern, data_var, timestamp_ms, z, x, y):
+    path = get_path(pattern)
     return _data_tile(path, data_var, timestamp_ms, z, x, y)
 
 
@@ -23,11 +23,27 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
     with xarray.open_dataset(path, engine="h5netcdf") as nc:
         lons = nc["longitude"].values
         lats = nc["latitude"].values
-        units = nc[data_var].units
+
+        # Search time axis
         pts = np.where(nc.time.values == time)
         if len(pts[0]) > 0:
             i = pts[0][0]
+        else:
+            # TODO: Replace with Exception
+            i = -1
+
+        # Read time slice from xarray.Dataset
+        try:
             values = nc[data_var][i].values
+            units = nc[data_var].units
+        except KeyError:
+            # TODO: Update client to use data_var menu
+            data_var = "air_temperature"
+            values = nc[data_var][i].values
+            units = nc[data_var].units
+            if units == "K":
+                values = values - 273.15
+                units = "Celsius"
 
     data = lib.tiling.data_tile(lons, lats, values, zxy,
                                 tile_size=TILE_SIZE)
@@ -46,14 +62,12 @@ def get_points(path, time):
     return data_array.to_dict()
 
 
-def get_path(config, dataset_name):
-    for dataset in config.datasets:
-        if dataset.label == dataset_name:
-            pattern = dataset.driver.settings["pattern"]
-            paths = sorted(glob.glob(pattern))
-            if len(paths) > 0:
-                return paths[-1]
-    raise Exception(f"{dataset_name} path not found")
+def get_path(pattern):
+    paths = sorted(glob.glob(pattern))
+    if len(paths) > 0:
+        return paths[-1]
+    else:
+        raise Exception(f"{pattern} path not found")
 
 
 def xy_data(dataset, variable):

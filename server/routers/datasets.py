@@ -70,12 +70,11 @@ async def data_tiles(dataset_id: int,
                      settings: config.Settings = Depends(config.get_settings)):
     """GET data tile from dataset at particular time"""
     config_obj = config.load_config(settings.config_file)
-    dataset_name = config_obj.datasets[dataset_id].label
-    data = lib.core.get_data_tile(config_obj,
-                                  dataset_name,
-                                  data_var,
-                                  timestamp_ms,
-                                  Z, X, Y)
+    dataset = config_obj.datasets[dataset_id]
+    driver = lib.drivers.from_spec(dataset.driver)
+    data = driver.data_tile(data_var,
+                            timestamp_ms,
+                            Z, X, Y)
     obj = {
         "dataset_id": dataset_id,
         "timestamp_ms": timestamp_ms,
@@ -125,3 +124,11 @@ async def points(dataset_id: int, timestamp_ms: int,
                         media_type="application/json")
     #  response.headers["Cache-Control"] = "max-age=31536000"
     return response
+
+
+@router.get("/datasets/{dataset_id}/palette")
+async def palette(dataset_id: int,
+                  settings: config.Settings = Depends(config.get_settings)):
+    config_obj = config.load_config(settings.config_file)
+    dataset = config_obj.datasets[dataset_id]
+    return dataset.palette

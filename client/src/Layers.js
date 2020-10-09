@@ -9,7 +9,7 @@ class Layers extends React.Component {
     render() {
         const { datasets } = this.props
         if (typeof datasets === "undefined") return null
-        const { baseURL, figure, color_mapper } = this.props
+        const { baseURL, figure } = this.props
         const makeComponents = R.addIndex(R.map)(
             (dataset, datasetId) => {
                 const { label, driver } = dataset
@@ -19,8 +19,7 @@ class Layers extends React.Component {
                                 label={ label }
                                 datasetId={ datasetId }
                                 baseURL={ baseURL }
-                                figure={ figure }
-                                color_mapper={ color_mapper } />
+                                figure={ figure } />
                 } else if (driver === "rdt") {
                     return <RDT
                                 key={ label }
