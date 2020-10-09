@@ -13,15 +13,15 @@ from bokeh.core.json_encoder import serialize_json
 from functools import lru_cache
 import yaml
 import lib.core
-import lib.config
 import lib.drivers
 import config
-from routers import atlas, palettes
+from routers import atlas, palettes, viewport
 
 
 app = fastapi.FastAPI()
 app.include_router(atlas.router)
 app.include_router(palettes.router)
+app.include_router(viewport.router)
 
 
 # CORS
@@ -47,18 +47,6 @@ templates_dir = static_dir
 templates = Jinja2Templates(directory=templates_dir)
 
 
-@lru_cache
-def get_settings():
-    return config.Settings()
-
-
-@lru_cache
-def load_config(path):
-    with open(path) as stream:
-        data = yaml.safe_load(stream)
-    return lib.config.Config(**data)
-
-
 @app.get("/")
 async def root(request: Request):
     host, port = request.scope.get("server")
@@ -75,20 +63,20 @@ async def root(request: Request):
 
 @app.get("/datasets")
 async def datasets(response: Response,
-                   settings: config.Settings = Depends(get_settings)):
-    config = load_config(settings.config_file)
+                   settings: config.Settings = Depends(config.get_settings)):
+    config_obj = config.load_config(settings.config_file)
     # response.headers["Cache-Control"] = "max-age=31536000"
     return {"datasets": [{"label": dataset.label,
                           "driver": dataset.driver.name,
                           "id": i}
-                         for i, dataset in enumerate(config.datasets)]}
+                         for i, dataset in enumerate(config_obj.datasets)]}
 
 
 @app.get("/datasets/{dataset_name}/times/{time}")
 async def datasets_images(dataset_name: str, time: int,
-                          settings: config.Settings = Depends(get_settings)):
-    config = load_config(settings.config_file)
-    for dataset in config.datasets:
+                          settings: config.Settings = Depends(config.get_settings)):
+    config_obj = config.load_config(settings.config_file)
+    for dataset in config_obj.datasets:
         if dataset.label == dataset_name:
             pattern = dataset.driver.settings["pattern"]
             paths = sorted(glob.glob(pattern))
@@ -105,9 +93,9 @@ async def datasets_images(dataset_name: str, time: int,
 
 @app.get("/datasets/{dataset_name}/times")
 async def dataset_times(dataset_name, limit: int = 10,
-                        settings: config.Settings = Depends(get_settings)):
-    config = load_config(settings.config_file)
-    datasets = list(find_datasets(config, dataset_name))
+                        settings: config.Settings = Depends(config.get_settings)):
+    config_obj = config.load_config(settings.config_file)
+    datasets = list(find_datasets(config_obj, dataset_name))
     if len(datasets) == 0:
         raise Exception(f"{dataset_name} not found")
     spec = datasets[0].driver
@@ -120,8 +108,8 @@ async def dataset_times(dataset_name, limit: int = 10,
     return response
 
 
-def find_datasets(config, label):
-    for dataset in config.datasets:
+def find_datasets(config_obj, label):
+    for dataset in config_obj.datasets:
         if dataset.label == label:
             yield dataset
 
@@ -131,11 +119,11 @@ async def data_tiles(dataset_id: int,
                      data_var: str,
                      timestamp_ms: int,
                      Z: int, X: int, Y: int,
-                     settings: config.Settings = Depends(get_settings)):
+                     settings: config.Settings = Depends(config.get_settings)):
     """GET data tile from dataset at particular time"""
-    config = load_config(settings.config_file)
-    dataset_name = config.datasets[dataset_id].label
-    data = lib.core.get_data_tile(config,
+    config_obj = config.load_config(settings.config_file)
+    dataset_name = config_obj.datasets[dataset_id].label
+    data = lib.core.get_data_tile(config_obj,
                                   dataset_name,
                                   data_var,
                                   timestamp_ms,
@@ -155,9 +143,9 @@ async def data_tiles(dataset_id: int,
 
 @app.get("/datasets/{dataset_id}")
 async def description(dataset_id: int,
-                      settings: config.Settings = Depends(get_settings)):
-    config = load_config(settings.config_file)
-    dataset = config.datasets[dataset_id]
+                      settings: config.Settings = Depends(config.get_settings)):
+    config_obj = config.load_config(settings.config_file)
+    dataset = config_obj.datasets[dataset_id]
     driver = lib.drivers.from_spec(dataset.driver)
     return driver.description()
 
@@ -165,9 +153,9 @@ async def description(dataset_id: int,
 @app.get("/datasets/{dataset_id}/times/{timestamp_ms}/geojson")
 async def geojson(dataset_id: int,
                   timestamp_ms: int,
-                  settings: config.Settings = Depends(get_settings)):
-    config = load_config(settings.config_file)
-    dataset = config.datasets[dataset_id]
+                  settings: config.Settings = Depends(config.get_settings)):
+    config_obj = config.load_config(settings.config_file)
+    dataset = config_obj.datasets[dataset_id]
     driver = lib.drivers.from_spec(dataset.driver)
     content = driver.get_geojson(timestamp_ms)
     response = Response(content=content,
@@ -178,23 +166,17 @@ async def geojson(dataset_id: int,
 
 @app.get("/datasets/{dataset_id}/times/{timestamp_ms}/points")
 async def points(dataset_id: int, timestamp_ms: int,
-                 settings: config.Settings = Depends(get_settings)):
-    config = load_config(settings.config_file)
+                 settings: config.Settings = Depends(config.get_settings)):
+    config_obj = config.load_config(settings.config_file)
     time = np.datetime64(timestamp_ms, 'ms')
-    dataset_name = config.datasets[dataset_id].label
-    path = lib.core.get_path(config, dataset_name)
+    dataset_name = config_obj.datasets[dataset_id].label
+    path = lib.core.get_path(config_obj, dataset_name)
     obj = lib.core.get_points(path, time)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")
     #  response.headers["Cache-Control"] = "max-age=31536000"
     return response
-
-
-@app.get("/viewport")
-async def viewport(settings: config.Settings = Depends(get_settings)):
-    config = load_config(settings.config_file)
-    return config.viewport
 
 
 def parse_args():
