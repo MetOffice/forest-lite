@@ -20,6 +20,7 @@ class Driver:
 class Dataset:
     label: str
     driver: dict = field(default_factory=dict)
+    palette: dict = field(default_factory=dict)
 
     def __post_init__(self):
         if isinstance(self.driver, dict):

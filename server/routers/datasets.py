@@ -124,3 +124,11 @@ async def points(dataset_id: int, timestamp_ms: int,
                         media_type="application/json")
     #  response.headers["Cache-Control"] = "max-age=31536000"
     return response
+
+
+@router.get("/datasets/{dataset_id}/palette")
+async def palette(dataset_id: int,
+                  settings: config.Settings = Depends(config.get_settings)):
+    config_obj = config.load_config(settings.config_file)
+    dataset = config_obj.datasets[dataset_id]
+    return dataset.palette
