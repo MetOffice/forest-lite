@@ -11,8 +11,8 @@ from functools import lru_cache
 TILE_SIZE = 128 # 256 # 64  # 128
 
 
-def get_data_tile(config, dataset_name, data_var, timestamp_ms, z, x, y):
-    path = get_path(config, dataset_name)
+def get_data_tile(dataset, data_var, timestamp_ms, z, x, y):
+    path = get_path(dataset)
     return _data_tile(path, data_var, timestamp_ms, z, x, y)
 
 
@@ -46,14 +46,13 @@ def get_points(path, time):
     return data_array.to_dict()
 
 
-def get_path(config, dataset_name):
-    for dataset in config.datasets:
-        if dataset.label == dataset_name:
-            pattern = dataset.driver.settings["pattern"]
-            paths = sorted(glob.glob(pattern))
-            if len(paths) > 0:
-                return paths[-1]
-    raise Exception(f"{dataset_name} path not found")
+def get_path(dataset):
+    pattern = dataset.driver.settings["pattern"]
+    paths = sorted(glob.glob(pattern))
+    if len(paths) > 0:
+        return paths[-1]
+    else:
+        raise Exception(f"{dataset_name} path not found")
 
 
 def xy_data(dataset, variable):

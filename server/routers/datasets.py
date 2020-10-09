@@ -70,9 +70,8 @@ async def data_tiles(dataset_id: int,
                      settings: config.Settings = Depends(config.get_settings)):
     """GET data tile from dataset at particular time"""
     config_obj = config.load_config(settings.config_file)
-    dataset_name = config_obj.datasets[dataset_id].label
-    data = lib.core.get_data_tile(config_obj,
-                                  dataset_name,
+    dataset = config_obj.datasets[dataset_id]
+    data = lib.core.get_data_tile(dataset,
                                   data_var,
                                   timestamp_ms,
                                   Z, X, Y)
