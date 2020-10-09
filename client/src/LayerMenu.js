@@ -1,5 +1,5 @@
 import React from "react"
-import { connect } from "react-redux"
+import { connect, useDispatch, useSelector } from "react-redux"
 import { setActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
 import ColorPaletteMenu from "./ColorPaletteMenu.js"
@@ -38,51 +38,49 @@ const attrsToDivs = R.pipe(
 )
 
 
-class LayerMenu extends React.Component {
-    render() {
-        // Datasets toggles
-        const items = this.props.items
-        const listItems = items.map(item => {
-            const onChange = this.handleChange(item)
-
-            let description
-            if (typeof item.description === "undefined") {
-                description = ""
-            } else {
-                description = attrsToDivs(item.description.attrs)
-            }
-
-            return (
-                <Item key={ item.id }
-                         onChange={ onChange }>
-                    { item.label }
-                    <Info>{ description }</Info>
-                </Item>
-            )
-        })
-
-        const { baseURL } = this.props
-
-        return (<div className="layer-menu-container">
-                <Label>Datasets</Label>
-                <fieldset>{ listItems }</fieldset>
-                <Label>Coastlines, borders, lakes</Label>
-                <fieldset>
-                    <CoastlinesToggle />
-                </fieldset>
-        </div>)
-    }
-
-    handleChange(item) {
+const LayerMenu = ({ baseURL }) => {
+    const dispatch = useDispatch()
+    const items = useSelector(state => state.datasets || [])
+    const handleChange = item => {
         return ((ev) => {
             const action = setActive({
                 id: item.id,
                 flag: ev.target.checked
             })
-            this.props.dispatch(action)
+            dispatch(action)
         })
     }
+
+    // Datasets toggles
+    const listItems = items.map(item => {
+        const onChange = handleChange(item)
+
+        let description
+        if (typeof item.description === "undefined") {
+            description = ""
+        } else {
+            description = attrsToDivs(item.description.attrs)
+        }
+
+        return (
+            <Item key={ item.id }
+                     onChange={ onChange }>
+                { item.label }
+                <Info>{ description }</Info>
+            </Item>
+        )
+    })
+
+    return (<div className="layer-menu-container">
+            <Label>Datasets</Label>
+            <fieldset>{ listItems }</fieldset>
+            <Label>Coastlines, borders, lakes</Label>
+            <fieldset>
+                <CoastlinesToggle />
+            </fieldset>
+    </div>)
 }
+
 
 class _CoastlinesToggle extends React.Component {
     render() {
@@ -121,10 +119,4 @@ const Item = (props) => {
 }
 
 
-const mapStateToProps = state => {
-    const { datasets: items = [] } = state
-    return { items }
-}
-
-
-export default connect(mapStateToProps)(LayerMenu)
+export default LayerMenu
