@@ -9,19 +9,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
-import bokeh.palettes
 from bokeh.core.json_encoder import serialize_json
 from functools import lru_cache
 import yaml
 import lib.core
 import lib.config
-import lib.palette
-import lib.atlas
 import lib.drivers
 import config
+from routers import atlas, palettes
 
 
 app = fastapi.FastAPI()
+app.include_router(atlas.router)
+app.include_router(palettes.router)
 
 
 # CORS
@@ -101,11 +101,6 @@ async def datasets_images(dataset_name: str, time: int,
                                     media_type="application/json")
                 #  response.headers["Cache-Control"] = "max-age=31536000"
                 return response
-
-
-@app.get("/palettes")
-async def palettes():
-    return list(lib.palette.all_palettes())
 
 
 @app.get("/datasets/{dataset_name}/times")
@@ -189,16 +184,6 @@ async def points(dataset_id: int, timestamp_ms: int,
     dataset_name = config.datasets[dataset_id].label
     path = lib.core.get_path(config, dataset_name)
     obj = lib.core.get_points(path, time)
-    content = serialize_json(obj)
-    response = Response(content=content,
-                        media_type="application/json")
-    #  response.headers["Cache-Control"] = "max-age=31536000"
-    return response
-
-
-@app.get("/atlas/{feature}")
-async def atlas_feature(feature: str):
-    obj = lib.atlas.load_feature(feature)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")
