@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { connect } from "react-redux"
 import {
     ColumnDataSource,
+    LinearColorMapper,
     HoverTool
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as R from "ramda"
@@ -64,7 +65,24 @@ const HoverToolComponent = connect((state, ownProps) => {
 class TiledImage extends React.Component {
     constructor(props) {
         super(props)
-        const { figure } = props
+        const { figure, datasetId } = props
+        // TODO: Get initial settings from /datasets/{id}/palette
+        let low, high, palette
+        if (datasetId === 1) {
+            low = 20
+            high = 35
+            palette = ["#440154", "#208F8C", "#FDE724"]
+        } else {
+            low = 200
+            high = 300
+            palette = ["#000000", "#fffffff", "#cccccc"]
+        }
+        let color_mapper = new LinearColorMapper({
+            "low": low,
+            "high": high,
+            "palette": palette,
+            "nan_color": "rgba(0,0,0,0)"
+        })
         const source = new ColumnDataSource({
             data: {
                 x: [],
@@ -83,7 +101,7 @@ class TiledImage extends React.Component {
             dh: { field: "dh" },
             image: { field: "image" },
             source: source,
-            color_mapper: props.color_mapper,
+            color_mapper: color_mapper,
         })
         this.state = { figure, source, renderer }
     }

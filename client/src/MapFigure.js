@@ -1,7 +1,6 @@
 import React from "react"
 import * as Bokeh from "@bokeh/bokehjs"
 import Contours from "./Contours.js"
-import ColorPalette from "./ColorPalette.js"
 import Layers from "./Layers.js"
 import Lines from "./Lines.js"
 import OnPanZoom from "./OnPanZoom.js"
@@ -26,32 +25,20 @@ class MapFigure extends React.Component {
         figure.toolbar_location = null
         figure.min_border = 0
         figure.select_one(Bokeh.WheelZoomTool).active = true
-
-        // TODO: Move inside Layer component
-        let color_mapper = new Bokeh.LinearColorMapper({
-            "low": 200,
-            "high": 300,
-            "palette": ["#440154", "#208F8C", "#FDE724"],
-            "nan_color": "rgba(0,0,0,0)"
-        })
-
-        this.state = { figure, color_mapper }
+        this.state = { figure }
     }
     componentDidMount() {
         const { figure } = this.state
         Bokeh.Plotting.show(figure, this.el)
     }
     render() {
-        const { figure, color_mapper } = this.state
+        const { figure } = this.state
         const { baseURL, className } = this.props
         return (
             <div className={ className }
                  ref={ el => this.el = el }>
                 <WMTS figure={ figure }/>
-                <Layers baseURL={ baseURL } figure={ figure }
-                    color_mapper={ color_mapper } />
-                <ColorPalette
-                    color_mapper={ color_mapper } />
+                <Layers baseURL={ baseURL } figure={ figure } />
                 <Contours baseURL={ baseURL } figure={ figure } />
                 <Lines url={ baseURL + '/atlas/coastlines' }
                     figure={ figure } />
