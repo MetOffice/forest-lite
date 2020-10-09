@@ -23,11 +23,24 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
     with xarray.open_dataset(path, engine="h5netcdf") as nc:
         lons = nc["longitude"].values
         lats = nc["latitude"].values
-        units = nc[data_var].units
+
+        # Search time axis
         pts = np.where(nc.time.values == time)
         if len(pts[0]) > 0:
             i = pts[0][0]
+        else:
+            # TODO: Replace with Exception
+            i = -1
+
+        # Read time slice from xarray.Dataset
+        try:
             values = nc[data_var][i].values
+            units = nc[data_var].units
+        except KeyError:
+            # TODO: Update client to use data_var menu
+            data_var = "air_temperature"
+            values = nc[data_var][i].values
+            units = nc[data_var].units
 
     data = lib.tiling.data_tile(lons, lats, values, zxy,
                                 tile_size=TILE_SIZE)
