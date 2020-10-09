@@ -63,11 +63,11 @@ const LayerMenu = ({ baseURL }) => {
         }
 
         return (
-            <Item key={ item.id }
-                     onChange={ onChange }>
+            <div key={ item.id } >
                 { item.label }
                 <Info>{ description }</Info>
-            </Item>
+                <DataVarsList datasetId={ item.id } />
+            </div>
         )
     })
 
@@ -79,6 +79,35 @@ const LayerMenu = ({ baseURL }) => {
                 <CoastlinesToggle />
             </fieldset>
     </div>)
+}
+
+
+const DataVarsList = ({ datasetId }) => {
+    const dispatch = useDispatch()
+    const data_vars = useSelector(state => {
+        const { datasets=[] } = state
+        const dataset = datasets[datasetId]
+        const description = dataset.description || {}
+        const data_vars = description.data_vars || {}
+        return Object.keys(data_vars)
+    })
+
+    const onChange = data_var => ev => {
+        const payload = { id: datasetId, data_var, flag: ev.target.checked }
+        dispatch(setActive(payload))
+    }
+
+    const listItems = R.map(data_var => {
+        return (
+            <li key={ data_var }>
+                <label>
+                    <input type="checkbox"
+                           onChange={ onChange(data_var) } />{ data_var }
+                </label>
+            </li>
+        )
+    })
+    return <ul>{ listItems(data_vars) }</ul>
 }
 
 

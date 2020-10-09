@@ -28,10 +28,11 @@ import * as R from "ramda"
 
 
 const activeReducer = (state, action) => {
-    const { id, flag } = action.payload
+    const { id, flag, data_var } = action.payload
+    const editActive = R.assocPath(["active", data_var], flag)
     const fn = R.ifElse(
         R.propEq("id", id),
-        R.assoc("active", flag),
+        editActive,
         R.identity
     )
     return R.evolve({ datasets: R.map(fn) })(state)
