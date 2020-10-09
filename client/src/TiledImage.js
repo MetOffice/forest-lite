@@ -69,21 +69,11 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
     const [renderer, setRenderer] = useState(null)
 
     useEffect(() => {
-        // TODO: Get initial settings from /datasets/{id}/palette
         let low, high, palette
-        if (datasetId === 1) {
-            low = 20
-            high = 35
-            palette = ["#440154", "#208F8C", "#FDE724"]
-        } else {
-            low = 200
-            high = 300
-            palette = ["#000000", "#fffffff", "#cccccc"]
-        }
         let color_mapper = new LinearColorMapper({
-            "low": low,
-            "high": high,
-            "palette": palette,
+            "low": 200,
+            "high": 300,
+            "palette": ["#440154", "#208F8C", "#FDE724"],
             "nan_color": "rgba(0,0,0,0)"
         })
         setColormapper(color_mapper)
@@ -114,7 +104,7 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
     }, [])
 
     useEffect(() => {
-        // Set ColorMapper from server
+        // Set ColorMapper initial settings from server
         fetch(`${baseURL}/datasets/${datasetId}/palette`)
             .then(response => response.json())
             .then(({ colors, low, high }) => {
