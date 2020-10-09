@@ -34,6 +34,10 @@ const _HoverToolComponent = props => {
                 const pairs = R.toPairs(description.data_vars.data.attrs)
                 tooltips = R.concat(tooltips, pairs)
             }
+            if (typeof description.data_vars.air_temperature != "undefined") {
+                const pairs = R.toPairs(description.data_vars.air_temperature.attrs)
+                tooltips = R.concat(tooltips, pairs)
+            }
         }
         if (tool !== null) {
             tool.tooltips = tooltips
@@ -46,11 +50,12 @@ const _HoverToolComponent = props => {
     }
     return null
 }
-const HoverToolComponent = connect(state => {
+const HoverToolComponent = connect((state, ownProps) => {
     const { datasets=[] } = state
+    const { datasetId } = ownProps
     let description = null
     if (datasets.length > 0) {
-        description = datasets[0].description
+        description = datasets[datasetId].description
     }
     return { description }
 })(_HoverToolComponent)
@@ -131,6 +136,7 @@ class TiledImage extends React.Component {
 
         // HoverTool
         return <HoverToolComponent
+                    datasetId={ datasetId }
                     figure={ this.state.figure }
                     renderer={ this.state.renderer }
                     active={ this.props.hover_tool } />

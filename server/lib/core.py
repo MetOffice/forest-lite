@@ -41,6 +41,9 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
             data_var = "air_temperature"
             values = nc[data_var][i].values
             units = nc[data_var].units
+            if units == "K":
+                values = values - 273.15
+                units = "Celsius"
 
     data = lib.tiling.data_tile(lons, lats, values, zxy,
                                 tile_size=TILE_SIZE)
