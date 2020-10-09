@@ -7,7 +7,7 @@ import {
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as R from "ramda"
 import * as tiling from "./tiling.js"
-import { set_times, setDatasetDescription } from "./actions.js"
+import { set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 
 
 const _HoverToolComponent = props => {
@@ -108,6 +108,10 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         fetch(`${baseURL}/datasets/${datasetId}/palette`)
             .then(response => response.json())
             .then(({ colors, low, high }) => {
+                const data = { palette: colors, low, high }
+                dispatch(setDatasetColorbar(datasetId, data))
+
+                // TODO: Move to render phase
                 if (color_mapper != null) {
                     color_mapper.palette = colors
                     color_mapper.low = low
