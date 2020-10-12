@@ -10,6 +10,13 @@ class Viewport(BaseModel):
     latitude: List[float] = [-85, 85]
 
 
+class Palette(BaseModel):
+    """Map extents"""
+    colors: List[str] = ["#000000", "#888888", "#ffffff"]
+    low: float = 200
+    high: float = 300
+
+
 @dataclass
 class Driver:
     name: str = ""
@@ -20,11 +27,13 @@ class Driver:
 class Dataset:
     label: str
     driver: dict = field(default_factory=dict)
-    palette: dict = field(default_factory=dict)
+    palette: dict = field(default_factory=Palette)
 
     def __post_init__(self):
         if isinstance(self.driver, dict):
             self.driver = Driver(**self.driver)
+        if isinstance(self.palette, dict):
+            self.palette = Palette(**self.palette)
 
 
 @dataclass

@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Response, Depends
-import lib.core
-import lib.drivers
+from forest_lite.lib import core, drivers
 from bokeh.core.json_encoder import serialize_json
-import config
+from forest_lite import config
 
 
 router = APIRouter()
@@ -29,7 +28,7 @@ async def datasets_images(dataset_name: str, time: int,
             pattern = dataset.driver.settings["pattern"]
             paths = sorted(glob.glob(pattern))
             if len(paths) > 0:
-                obj = lib.core.image_data(dataset_name,
+                obj = core.image_data(dataset_name,
                                           paths[-1],
                                           time)
                 content = serialize_json(obj)
@@ -47,7 +46,7 @@ async def dataset_times(dataset_name, limit: int = 10,
     if len(datasets) == 0:
         raise Exception(f"{dataset_name} not found")
     spec = datasets[0].driver
-    driver = lib.drivers.from_spec(spec)
+    driver = drivers.from_spec(spec)
     obj = driver.get_times(limit)
     content = serialize_json(obj)
     response = Response(content=content,
@@ -71,7 +70,7 @@ async def data_tiles(dataset_id: int,
     """GET data tile from dataset at particular time"""
     config_obj = config.load_config(settings.config_file)
     dataset = config_obj.datasets[dataset_id]
-    driver = lib.drivers.from_spec(dataset.driver)
+    driver = drivers.from_spec(dataset.driver)
     data = driver.data_tile(data_var,
                             timestamp_ms,
                             Z, X, Y)
@@ -93,7 +92,7 @@ async def description(dataset_id: int,
                       settings: config.Settings = Depends(config.get_settings)):
     config_obj = config.load_config(settings.config_file)
     dataset = config_obj.datasets[dataset_id]
-    driver = lib.drivers.from_spec(dataset.driver)
+    driver = drivers.from_spec(dataset.driver)
     return driver.description()
 
 
@@ -103,7 +102,7 @@ async def geojson(dataset_id: int,
                   settings: config.Settings = Depends(config.get_settings)):
     config_obj = config.load_config(settings.config_file)
     dataset = config_obj.datasets[dataset_id]
-    driver = lib.drivers.from_spec(dataset.driver)
+    driver = drivers.from_spec(dataset.driver)
     content = driver.get_geojson(timestamp_ms)
     response = Response(content=content,
                         media_type="application/json")
@@ -117,8 +116,8 @@ async def points(dataset_id: int, timestamp_ms: int,
     config_obj = config.load_config(settings.config_file)
     time = np.datetime64(timestamp_ms, 'ms')
     dataset_name = config_obj.datasets[dataset_id].label
-    path = lib.core.get_path(config_obj, dataset_name)
-    obj = lib.core.get_points(path, time)
+    path = core.get_path(config_obj, dataset_name)
+    obj = core.get_points(path, time)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")

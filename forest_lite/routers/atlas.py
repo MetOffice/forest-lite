@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Response
-import lib.atlas
+import forest_lite.lib.atlas
 from bokeh.core.json_encoder import serialize_json
 
 
@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get("/atlas/{feature}")
 async def atlas_feature(feature: str):
-    obj = lib.atlas.load_feature(feature)
+    obj = forest_lite.lib.atlas.load_feature(feature)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")

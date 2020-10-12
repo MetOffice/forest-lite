@@ -4,7 +4,7 @@ import xarray
 import numpy as np
 import datetime as dt
 import forest.geo
-import lib.tiling
+from forest_lite.lib import tiling
 from functools import lru_cache
 
 
@@ -45,7 +45,7 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
                 values = values - 273.15
                 units = "Celsius"
 
-    data = lib.tiling.data_tile(lons, lats, values, zxy,
+    data = tiling.data_tile(lons, lats, values, zxy,
                                 tile_size=TILE_SIZE)
     data.update({
         "units": [units]

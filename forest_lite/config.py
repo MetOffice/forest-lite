@@ -1,7 +1,7 @@
 from pydantic import BaseSettings
 from functools import lru_cache
 import yaml
-import lib.config
+import forest_lite.lib.config
 
 
 @lru_cache
@@ -13,7 +13,7 @@ def get_settings():
 def load_config(path):
     with open(path) as stream:
         data = yaml.safe_load(stream)
-    return lib.config.Config(**data)
+    return forest_lite.lib.config.Config(**data)
 
 
 class Settings(BaseSettings):

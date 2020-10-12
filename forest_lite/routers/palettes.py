@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-import lib.palette
+from forest_lite.lib import palette
 
 
 router = APIRouter()
@@ -7,4 +7,4 @@ router = APIRouter()
 
 @router.get("/palettes")
 async def palettes():
-    return list(lib.palette.all_palettes())
+    return list(palette.all_palettes())
