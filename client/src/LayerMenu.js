@@ -17,19 +17,6 @@ class Label extends React.Component {
 }
 
 
-class _Hidden extends React.Component {
-    render() {
-        const { visible, children } = this.props
-        if (!visible) return null
-        return <div>{ children }</div>
-    }
-}
-const Hidden = connect(state => {
-    const { layers: visible = false } = state
-    return { visible }
-})(_Hidden)
-
-
 const attrsToDivs = R.pipe(
     R.toPairs,
     R.filter(pair => pair[0] !== "history"),
