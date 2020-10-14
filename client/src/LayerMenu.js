@@ -51,14 +51,16 @@ const MenuItem = ({ children, item }) => {
     const dataVarsLens = R.lensPath(['description', 'data_vars'])
     const data_vars = R.view(dataVarsLens, item)
     const names = R.keys(data_vars)
-    const listItems = R.addIndex(R.map)(
-        (name, index) => {
+    const active = item.active || {}
+    const listItems = R.map(
+        name => {
             const onClick = () => {
                 const payload = { dataset: label, data_var: name }
                 dispatch(toggleActive(payload))
             }
             let className
-            if (index === 0) {
+            let flag = active[name] || false
+            if (flag) {
                 className = "Menu__checked"
             } else {
                 className = ""
