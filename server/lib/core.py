@@ -21,29 +21,37 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
     time = np.datetime64(timestamp_ms, 'ms')
     zxy = (z, x, y)
     with xarray.open_dataset(path, engine="h5netcdf") as nc:
-        lons = nc["longitude"].values
-        lats = nc["latitude"].values
 
-        # Search time axis
-        pts = np.where(nc.time.values == time)
-        if len(pts[0]) > 0:
-            i = pts[0][0]
-        else:
-            # TODO: Replace with Exception
-            i = -1
+        # Find lons/lats related to data_var
+        var = nc[data_var]
+        for key in var.dims:
+            if key.startswith("longitude"):
+                lons = var[key].values
+            if key.startswith("latitude"):
+                lats = var[key].values
 
-        # Read time slice from xarray.Dataset
-        try:
-            values = nc[data_var][i].values
-            units = nc[data_var].units
-        except KeyError:
-            # TODO: Update client to use data_var menu
-            data_var = "air_temperature"
-            values = nc[data_var][i].values
-            units = nc[data_var].units
-            if units == "K":
-                values = values - 273.15
-                units = "Celsius"
+        # Filter pressure coordinate
+        idx = {}
+        for dim in var.dims:
+            if dim.startswith("time"):
+                # Search time axis
+                pts = np.where(nc.time.values == time)
+                if len(pts[0]) > 0:
+                    i = pts[0][0]
+                else:
+                    # TODO: Replace with Exception
+                    i = -1
+                idx[dim] = i
+            elif dim.startswith("pressure"):
+                # Take first pressure level
+                idx[dim] = 0
+            elif dim.startswith("depth"):
+                # Take first depth level
+                idx[dim] = 0
+        values = nc[data_var][idx].values
+        units = nc[data_var].units
+
+    assert values.ndim == 2, f"dims: {var.dims}"
 
     data = lib.tiling.data_tile(lons, lats, values, zxy,
                                 tile_size=TILE_SIZE)
