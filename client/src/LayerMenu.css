@@ -24,3 +24,39 @@ fieldset {
 .tool-icon {
     flex: 1;
 }
+
+
+/*
+ * Menu component
+ */
+.Menu {
+    font-family: Helvetica, Arial, sans-serif;
+}
+.Menu-container {
+    margin-left: 6px;
+}
+.Menu-title {
+    font-weight: bold;
+    margin-top: 20px;
+    margin-left: 5px;
+}
+.Menu-body {
+}
+.Menu-item {
+    padding: 0.5em;
+    border-bottom: 1px solid #ccc;
+}
+.Menu-item ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.Menu-item li {
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+}
+.Menu-item li:hover {
+    background-color: #333;
+    color: white;
+}

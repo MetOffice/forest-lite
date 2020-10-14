@@ -24,6 +24,41 @@ const attrsToDivs = R.pipe(
 )
 
 
+const DatasetsMenu = () => {
+    // <Label>Datasets</Label>
+    // <fieldset>{ listItems }</fieldset>
+    const selector = ({ datasets: items = [] }) => items
+    const items = useSelector(selector)
+    const divs = R.map(item => {
+        const label = R.prop('label')(item)
+        const lens = R.lensPath(['description', 'data_vars'])
+        const data_vars = R.view(lens, item)
+        return <MenuItem key={ label }
+                         label={ label }
+                         data_vars={ data_vars } />
+    })(items)
+    return (
+        <div className="Menu Menu-container">
+            <div className="Menu Menu-title">Datasets</div>
+            <div className="Menu Menu-body">{ divs }</div>
+        </div>)
+}
+
+
+const MenuItem = ({ children, label, data_vars }) => {
+    const names = R.keys(data_vars)
+    const listItems = R.map(
+        name => <li key={ name }>{ name }</li>
+    )(names)
+    return (
+        <div className="Menu Menu-item">
+            <div className="Menu Menu-title">{ label }</div>
+            <ul>
+                { listItems }
+            </ul>
+        </div>)
+}
+
 class LayerMenu extends React.Component {
     render() {
         // Datasets toggles
@@ -50,8 +85,7 @@ class LayerMenu extends React.Component {
         const { baseURL } = this.props
 
         return (<div className="layer-menu-container">
-                <Label>Datasets</Label>
-                <fieldset>{ listItems }</fieldset>
+                <DatasetsMenu />
                 <Label>Coastlines, borders, lakes</Label>
                 <fieldset>
                     <CoastlinesToggle />
