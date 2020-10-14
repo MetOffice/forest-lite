@@ -1,5 +1,5 @@
 import React from "react"
-import { connect } from "react-redux"
+import { connect, useSelector, useDispatch } from "react-redux"
 import { setActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
 import ColorPaletteMenu from "./ColorPaletteMenu.js"
@@ -70,25 +70,22 @@ class LayerMenu extends React.Component {
     }
 }
 
-class _CoastlinesToggle extends React.Component {
-    render() {
-        // Coastlines toggle
-        const { active, dispatch } = this.props
-        const onChange = ev => {
-            const action = setFlag({
-                coastlines: ev.target.checked
-            })
-            this.props.dispatch(action)
-        }
-        return (<Item key="coastlines"
-                      checked={ active }
-                      onChange={ onChange }>Coastlines</Item>)
+
+const CoastlinesToggle = () => {
+    const selector = ({ coastlines: active = true }) => active
+    const active = useSelector(selector)
+    const dispatch = useDispatch()
+    const onChange = ev => {
+        const action = setFlag({
+            coastlines: ev.target.checked
+        })
+        dispatch(action)
     }
+    return (<Item key="coastlines"
+                  checked={ active }
+                  onChange={ onChange }>Coastlines</Item>)
+
 }
-const CoastlinesToggle = connect(state => {
-    const { coastlines: active = true } = state
-    return { active }
-})(_CoastlinesToggle)
 
 
 const Item = (props) => {
