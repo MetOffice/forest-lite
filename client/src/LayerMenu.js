@@ -1,6 +1,6 @@
 import React from "react"
 import { connect, useSelector, useDispatch } from "react-redux"
-import { setActive, setFlag } from "./actions.js"
+import { toggleActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
 import ColorPaletteMenu from "./ColorPaletteMenu.js"
 import Info from "./Info.js"
@@ -55,8 +55,7 @@ const MenuItem = ({ children, item }) => {
         (name, index) => {
             const onClick = () => {
                 const payload = { dataset: label, data_var: name }
-                const action = { type: "TOGGLE_ACTIVE", payload }
-                dispatch(action)
+                dispatch(toggleActive(payload))
             }
             let className
             if (index === 0) {
