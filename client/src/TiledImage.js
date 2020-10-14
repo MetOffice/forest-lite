@@ -10,8 +10,22 @@ import * as tiling from "./tiling.js"
 import { set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 
 
+const dataVarById = datasetId => state => {
+    const { datasets = [] } = state
+    if (datasets.length > 0) {
+        const flags = datasets[datasetId].active || {}
+        return R.pipe(
+            R.pickBy(R.identity),
+            R.keys,
+            R.head
+        )(flags)
+    }
+    return null
+}
+
+
 const _HoverToolComponent = props => {
-    const { figure, renderer, active, description } = props
+    const { figure, renderer, active, description, datasetId } = props
     const [ tool, setTool ] = useState(null)
 
     // Add a HoverTool once after component renders
@@ -25,25 +39,23 @@ const _HoverToolComponent = props => {
         setTool(hover_tool)
     }, [])
 
+    const dataVar = useSelector(dataVarById(datasetId))
+
     // Update tooltip if tool or description change
     useEffect(() => {
         let tooltips = [
             ["Value", "@image @units"],
         ]
         if (typeof description != "undefined") {
-            if (typeof description.data_vars.data != "undefined") {
-                const pairs = R.toPairs(description.data_vars.data.attrs)
-                tooltips = R.concat(tooltips, pairs)
-            }
-            if (typeof description.data_vars.air_temperature != "undefined") {
-                const pairs = R.toPairs(description.data_vars.air_temperature.attrs)
+            if (typeof description.data_vars[dataVar] != "undefined") {
+                const pairs = R.toPairs(description.data_vars[dataVar].attrs)
                 tooltips = R.concat(tooltips, pairs)
             }
         }
         if (tool !== null) {
             tool.tooltips = tooltips
         }
-    }, [tool, description])
+    }, [tool, description, dataVar])
 
     // Render HoverTool active state
     if (tool !== null) {
@@ -149,6 +161,7 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         return active
     })
     const hover_tool = useSelector(state => state.hover_tool || true)
+    const dataVar = useSelector(dataVarById(datasetId))
 
     const { palette = [], low = 0, high = 1 } = useSelector(state => {
         const { datasets = [] } = state
@@ -172,11 +185,15 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
     }
 
     // Construct endpoint
-    const templateURL = `${baseURL}/datasets/${datasetId}/data/times/${time}/tiles/{Z}/{X}/{Y}`
+    const templateURL = `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
 
     renderer.visible = active
 
     if (active) {
+        // Only fetch if variable selected
+        if (dataVar == null) {
+            return null
+        }
 
         const { x_range, y_range } = ranges
 
