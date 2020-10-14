@@ -115,15 +115,20 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         setRenderer(renderer)
     }, [])
 
+    const dataVar = useSelector(dataVarById(datasetId))
     useEffect(() => {
         // Set ColorMapper initial settings from server
         fetch(`${baseURL}/datasets/${datasetId}/palette`)
             .then(response => response.json())
+            .then(palettes => {
+                const { default: primary, data_vars = {} } = palettes
+                return data_vars[dataVar] || primary
+            })
             .then(({ colors, low, high }) => {
                 const data = { palette: colors, low, high }
                 dispatch(setDatasetColorbar(datasetId, data))
             })
-    }, [color_mapper])
+    }, [color_mapper, dataVar])
 
     useEffect(() => {
         // Initial times
@@ -161,7 +166,6 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         return active
     })
     const hover_tool = useSelector(state => state.hover_tool || true)
-    const dataVar = useSelector(dataVarById(datasetId))
 
     const { palette = [], low = 0, high = 1 } = useSelector(state => {
         const { datasets = [] } = state
