@@ -37,10 +37,16 @@ fieldset {
 }
 .Menu-title {
     font-weight: bold;
-    margin-top: 20px;
-    margin-left: 5px;
 }
-.Menu-body {
+.Menu-title-container {
+    margin: 10px;
+    margin-left: 6px;
+}
+.Menu-list-container {
+    margin-right: 0.5em;
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-color: #ccc white;
 }
 .Menu-item {
     padding: 0.5em;
@@ -53,10 +59,17 @@ fieldset {
 }
 .Menu-item li {
     cursor: pointer;
-    padding: 5px;
+    padding: 0.7em;
     border-radius: 4px;
+    margin-left: 1em;
+    margin-right: 1em;
+    width: max-content;
 }
 .Menu-item li:hover {
     background-color: #333;
     color: white;
+}
+.Menu__checked {
+    color: #333;
+    background-color: #9effdd;
 }

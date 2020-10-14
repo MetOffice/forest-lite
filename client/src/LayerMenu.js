@@ -25,17 +25,11 @@ const attrsToDivs = R.pipe(
 
 
 const DatasetsMenu = () => {
-    // <Label>Datasets</Label>
-    // <fieldset>{ listItems }</fieldset>
     const selector = ({ datasets: items = [] }) => items
     const items = useSelector(selector)
     const divs = R.map(item => {
         const label = R.prop('label')(item)
-        const lens = R.lensPath(['description', 'data_vars'])
-        const data_vars = R.view(lens, item)
-        return <MenuItem key={ label }
-                         label={ label }
-                         data_vars={ data_vars } />
+        return <MenuItem key={ label } item={ item } />
     })(items)
     return (
         <div className="Menu Menu-container">
@@ -45,45 +39,50 @@ const DatasetsMenu = () => {
 }
 
 
-const MenuItem = ({ children, label, data_vars }) => {
+const MenuItem = ({ children, item }) => {
+    const dispatch = useDispatch()
+    const label = R.prop('label')(item)
+    let description
+    if (typeof item.description === "undefined") {
+        description = ""
+    } else {
+        description = attrsToDivs(item.description.attrs)
+    }
+    const dataVarsLens = R.lensPath(['description', 'data_vars'])
+    const data_vars = R.view(dataVarsLens, item)
     const names = R.keys(data_vars)
-    const listItems = R.map(
-        name => <li key={ name }>{ name }</li>
+    const listItems = R.addIndex(R.map)(
+        (name, index) => {
+            const onClick = () => {
+                const payload = { dataset: label, data_var: name }
+                const action = { type: "TOGGLE_ACTIVE", payload }
+                dispatch(action)
+            }
+            let className
+            if (index === 0) {
+                className = "Menu__checked"
+            } else {
+                className = ""
+            }
+            return <li className={ className } key={ name } onClick={ onClick }>{ name }</li>
+        }
     )(names)
     return (
         <div className="Menu Menu-item">
-            <div className="Menu Menu-title">{ label }</div>
+            <div className="Menu Menu-title-container">
+                <span className="Menu Menu-title">{ label }</span>
+                <Info>{ description }</Info>
+            </div>
+            <div className="Menu Menu-list-container">
             <ul>
                 { listItems }
             </ul>
+            </div>
         </div>)
 }
 
 class LayerMenu extends React.Component {
     render() {
-        // Datasets toggles
-        const items = this.props.items
-        const listItems = items.map(item => {
-            const onChange = this.handleChange(item)
-
-            let description
-            if (typeof item.description === "undefined") {
-                description = ""
-            } else {
-                description = attrsToDivs(item.description.attrs)
-            }
-
-            return (
-                <Item key={ item.id }
-                         onChange={ onChange }>
-                    { item.label }
-                    <Info>{ description }</Info>
-                </Item>
-            )
-        })
-
-        const { baseURL } = this.props
-
         return (<div className="layer-menu-container">
                 <DatasetsMenu />
                 <Label>Coastlines, borders, lakes</Label>
@@ -91,16 +90,6 @@ class LayerMenu extends React.Component {
                     <CoastlinesToggle />
                 </fieldset>
         </div>)
-    }
-
-    handleChange(item) {
-        return ((ev) => {
-            const action = setActive({
-                id: item.id,
-                flag: ev.target.checked
-            })
-            this.props.dispatch(action)
-        })
     }
 }
 

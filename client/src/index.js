@@ -53,7 +53,6 @@ window.main = function(baseURL) {
                                       timeMiddleware,
                                       datasetsMiddleware,
                                       zoomMiddleware,
-                                      logActionMiddleware,
                                   ))
     // store.subscribe(() => { console.log(store.getState()) })
 
