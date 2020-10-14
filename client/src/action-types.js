@@ -1,5 +1,6 @@
 // Action keywords
 export const SET_ACTIVE = 'SET_ACTIVE'
+export const TOGGLE_ACTIVE = 'TOGGLE_ACTIVE'
 export const SET_URL = 'SET_URL'
 export const SET_FIGURE = 'SET_FIGURE'
 export const SET_DATASET = 'SET_DATASET'

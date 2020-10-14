@@ -1,5 +1,6 @@
 import {
     SET_ACTIVE,
+    TOGGLE_ACTIVE,
     SET_STATE,
     SET_URL,
     SET_DATASET,
@@ -29,6 +30,7 @@ import {
 
 // Action creators
 export const setActive = payload => ({ type: SET_ACTIVE, payload })
+export const toggleActive = payload => ({ type: TOGGLE_ACTIVE, payload })
 export const set_url = url => { return { type: SET_URL, payload: url } }
 export const set_dataset = name => { return { type: SET_DATASET, payload: name } }
 export const set_datasets = names => { return { type: SET_DATASETS, payload: names } }

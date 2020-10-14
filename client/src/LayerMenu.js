@@ -1,6 +1,6 @@
 import React from "react"
-import { connect } from "react-redux"
-import { setActive, setFlag } from "./actions.js"
+import { connect, useSelector, useDispatch } from "react-redux"
+import { toggleActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
 import ColorPaletteMenu from "./ColorPaletteMenu.js"
 import Info from "./Info.js"
@@ -24,71 +24,92 @@ const attrsToDivs = R.pipe(
 )
 
 
+const DatasetsMenu = () => {
+    const selector = ({ datasets: items = [] }) => items
+    const items = useSelector(selector)
+    const divs = R.map(item => {
+        const label = R.prop('label')(item)
+        return <MenuItem key={ label } item={ item } />
+    })(items)
+    return (
+        <div className="Menu Menu-container">
+            <div className="Menu Menu-title">Datasets</div>
+            <div className="Menu Menu-body">{ divs }</div>
+        </div>)
+}
+
+
+const MenuItem = ({ children, item }) => {
+    const dispatch = useDispatch()
+    const label = R.prop('label')(item)
+    let description
+    if (typeof item.description === "undefined") {
+        description = ""
+    } else {
+        description = attrsToDivs(item.description.attrs)
+    }
+    const dataVarsLens = R.lensPath(['description', 'data_vars'])
+    const data_vars = R.view(dataVarsLens, item)
+    const names = R.keys(data_vars)
+    const active = item.active || {}
+    const listItems = R.map(
+        name => {
+            const onClick = () => {
+                const payload = { dataset: label, data_var: name }
+                dispatch(toggleActive(payload))
+            }
+            let className
+            let flag = active[name] || false
+            if (flag) {
+                className = "Menu__checked"
+            } else {
+                className = ""
+            }
+            return <li className={ className } key={ name } onClick={ onClick }>{ name }</li>
+        }
+    )(names)
+    return (
+        <div className="Menu Menu-item">
+            <div className="Menu Menu-title-container">
+                <span className="Menu Menu-title">{ label }</span>
+                <Info>{ description }</Info>
+            </div>
+            <div className="Menu Menu-list-container">
+            <ul>
+                { listItems }
+            </ul>
+            </div>
+        </div>)
+}
+
 class LayerMenu extends React.Component {
     render() {
-        // Datasets toggles
-        const items = this.props.items
-        const listItems = items.map(item => {
-            const onChange = this.handleChange(item)
-
-            let description
-            if (typeof item.description === "undefined") {
-                description = ""
-            } else {
-                description = attrsToDivs(item.description.attrs)
-            }
-
-            return (
-                <Item key={ item.id }
-                         onChange={ onChange }>
-                    { item.label }
-                    <Info>{ description }</Info>
-                </Item>
-            )
-        })
-
-        const { baseURL } = this.props
-
         return (<div className="layer-menu-container">
-                <Label>Datasets</Label>
-                <fieldset>{ listItems }</fieldset>
+                <DatasetsMenu />
                 <Label>Coastlines, borders, lakes</Label>
                 <fieldset>
                     <CoastlinesToggle />
                 </fieldset>
         </div>)
     }
+}
 
-    handleChange(item) {
-        return ((ev) => {
-            const action = setActive({
-                id: item.id,
-                flag: ev.target.checked
-            })
-            this.props.dispatch(action)
+
+const CoastlinesToggle = () => {
+    const selector = ({ coastlines: active = true }) => active
+    const active = useSelector(selector)
+    const dispatch = useDispatch()
+    const onChange = ev => {
+        const action = setFlag({
+            coastlines: ev.target.checked
         })
+        dispatch(action)
     }
-}
+    return (<Item key="coastlines"
+                  checked={ active }
+                  onChange={ onChange }>Coastlines</Item>)
 
-class _CoastlinesToggle extends React.Component {
-    render() {
-        // Coastlines toggle
-        const { active, dispatch } = this.props
-        const onChange = ev => {
-            const action = setFlag({
-                coastlines: ev.target.checked
-            })
-            this.props.dispatch(action)
-        }
-        return (<Item key="coastlines"
-                      checked={ active }
-                      onChange={ onChange }>Coastlines</Item>)
-    }
 }
-const CoastlinesToggle = connect(state => {
-    const { coastlines: active = true } = state
-    return { active }
-})(_CoastlinesToggle)
 
 
 const Item = (props) => {
