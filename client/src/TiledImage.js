@@ -121,8 +121,8 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         fetch(`${baseURL}/datasets/${datasetId}/palette`)
             .then(response => response.json())
             .then(palettes => {
-                const { default: primary, data_vars = {} } = palettes
-                return data_vars[dataVar] || primary
+                const { default: primary } = palettes
+                return palettes[dataVar] || primary
             })
             .then(({ colors, low, high }) => {
                 const data = { palette: colors, low, high }

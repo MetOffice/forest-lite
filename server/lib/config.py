@@ -23,8 +23,7 @@ class Palette(BaseModel):
 class Dataset(BaseModel):
     label: str
     driver: Driver = Driver()
-    palette: dict = {}
-    data_vars: Dict[str, Palette] = {}
+    palettes: Dict[str, Palette] = {}
 
 
 class Config(BaseModel):
