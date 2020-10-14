@@ -2,6 +2,7 @@ import React from "react"
 import { connect } from "react-redux"
 import * as Bokeh from "@bokeh/bokehjs"
 import * as R from "ramda"
+import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import "./Colorbar.css"
 
 
@@ -80,9 +81,11 @@ export const mapStateToProps = (state, ownProps) => {
     const { datasetId } = ownProps
     const { datasets = [] } = state
     const {
-        colorbar = {},
         active: flags = {}
     } = datasets[datasetId]
+
+    const dataVar = dataVarById(datasetId)(state)
+    const colorbar = colorbarByIdAndVar(datasetId)(dataVar)(state)
     const {
         palette = [],
         low = 0,
