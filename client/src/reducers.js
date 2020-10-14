@@ -3,6 +3,7 @@
  */
 import {
     SET_ACTIVE,
+    TOGGLE_ACTIVE,
     SET_FLAG,
     SET_FIGURE,
     SET_DATASET,
@@ -38,11 +39,26 @@ const activeReducer = (state, action) => {
 }
 
 
+const toggleActiveReducer = (state, action) => {
+    // Update state.datasets[datasetId].active[dataVar]
+    const { payload } = action
+    const { dataset, data_var } = payload
+    const fn = R.ifElse(
+        R.propEq("label", dataset),
+        R.over(R.lensPath(["active", data_var]), R.not),
+        R.identity
+    )
+    return R.evolve({ datasets: R.map(fn) })(state)
+}
+
+
 export const rootReducer = (state = "", action) => {
     const { type, payload } = action
     switch (type) {
         case SET_ACTIVE:
             return activeReducer(state, action)
+        case TOGGLE_ACTIVE:
+            return toggleActiveReducer(state, action)
         case SET_FLAG:
             return Object.assign({}, state, payload)
         case SET_FIGURE:

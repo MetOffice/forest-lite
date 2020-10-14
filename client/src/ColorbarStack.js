@@ -8,7 +8,6 @@ import * as R from "ramda"
 const ColorbarStack = () => {
     const datasets = useSelector(state => state.datasets || [])
     const makeColorbars = R.addIndex(R.map)((dataset, index) => {
-        console.log(dataset)
         return <Colorbar key={ index } datasetId={ index } />
     })
     return <>{ makeColorbars(datasets) }</>

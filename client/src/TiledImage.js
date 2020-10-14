@@ -143,7 +143,8 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         const { datasets = [] } = state
         let active = false
         if (datasets.length > 0) {
-            active = datasets[datasetId].active
+            const flags = datasets[datasetId].active || {}
+            active = R.any(R.identity, R.values(flags))
         }
         return active
     })
