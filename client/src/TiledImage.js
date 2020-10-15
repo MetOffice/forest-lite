@@ -8,7 +8,7 @@ import {
 import * as R from "ramda"
 import * as tiling from "./tiling.js"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
-import { set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
+import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 import AutoLimits from "./AutoLimits.js"
 
 
@@ -134,7 +134,9 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
     // Callback listening to source changes
     const onLimits = useCallback(
         ({ low, high }) => {
-            console.log(datasetId, dataVar, low, high)
+            const path = [datasetId, dataVar]
+            const action = set_limits({ low, high, path })
+            dispatch(action)
         }, [ datasetId, dataVar ])
 
     // Render component
