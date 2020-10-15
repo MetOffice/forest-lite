@@ -35,7 +35,7 @@ def test_viewport_endpoint_from_config(tmpdir):
         yaml.dump(data, stream)
 
     # Patch main.get_settings
-    main.app.dependency_overrides[main.get_settings] = get_settings(config_file)
+    main.app.dependency_overrides[config.get_settings] = get_settings(config_file)
 
     response = client.get("/viewport")
     result = response.json()
