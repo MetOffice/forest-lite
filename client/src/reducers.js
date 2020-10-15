@@ -26,7 +26,17 @@ import {
     FETCH_IMAGE_SUCCESS
 } from "./action-types.js"
 import * as R from "ramda"
-import { compose, lensProp, lensPath, set } from "ramda"
+import {
+    identity,
+    compose,
+    lensProp,
+    lensPath,
+    set,
+    over,
+    map,
+    mapObjIndexed,
+    not
+} from "ramda"
 
 
 const activeReducer = (state, action) => {
@@ -40,16 +50,43 @@ const activeReducer = (state, action) => {
 }
 
 
-const toggleActiveReducer = (state, action) => {
+export const toggleActiveReducer = (state, action) => {
     // Update state.datasets[datasetId].active[dataVar]
     const { payload } = action
     const { dataset, data_var } = payload
-    const fn = R.ifElse(
-        R.propEq("label", dataset),
-        R.over(R.lensPath(["active", data_var]), R.not),
-        R.identity
-    )
-    return R.evolve({ datasets: R.map(fn) })(state)
+
+    // Choose reduction algorithm
+    const behaviour = "radio"
+    let editActive
+    if (behaviour === "radio") {
+        // Radio select logic
+        const isDataVar = (value, key) => {
+            if (key === data_var) {
+                return value
+            } else {
+                return false
+            }
+        }
+        const updateActive = compose(
+            over(lensProp("active"), mapObjIndexed(isDataVar)),
+            over(lensPath(["active", data_var]), not),
+        )
+        editActive = R.ifElse(
+            R.propEq("label", dataset),
+            updateActive,
+            R.identity
+        )
+
+    } else {
+        // Multi-select logic
+        editActive = R.ifElse(
+            R.propEq("label", dataset),
+            R.over(R.lensPath(["active", data_var]), R.not),
+            R.identity
+        )
+    }
+    const datasetsLens = lensProp("datasets")
+    return over(datasetsLens, map(editActive), state)
 }
 
 
