@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { connect, useDispatch, useSelector } from "react-redux"
 import {
     ColumnDataSource,
@@ -9,6 +9,7 @@ import * as R from "ramda"
 import * as tiling from "./tiling.js"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import { set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
+import AutoLimits from "./AutoLimits.js"
 
 
 const _HoverToolComponent = props => {
@@ -130,6 +131,12 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
             })
     }, [])
 
+    // Callback listening to source changes
+    const onLimits = useCallback(
+        ({ low, high }) => {
+            console.log(datasetId, dataVar, low, high)
+        }, [ datasetId, dataVar ])
+
     // Render component
     const ranges = useSelector(state => state.figure || null)
     const time = useSelector(state => {
@@ -197,12 +204,14 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         tiling.renderTiles(source)(urls)
     }
 
-    // HoverTool
-    return <HoverToolComponent
-                datasetId={ datasetId }
-                figure={ figure }
-                renderer={ renderer }
-                active={ hover_tool } />
+    return (<>
+            <HoverToolComponent
+                    datasetId={ datasetId }
+                    figure={ figure }
+                    renderer={ renderer }
+                    active={ hover_tool } />
+            <AutoLimits source={ source } onChange={ onLimits } />
+        </>)
 }
 
 
