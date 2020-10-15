@@ -1,5 +1,6 @@
 const { rootReducer } = require("../src/reducers.js")
 const {
+    set_limits,
     setHoverTool,
     setColorbar,
     setContours,
@@ -53,4 +54,42 @@ test("setActive", () => {
         ]
     }
     expect(actual).toEqual(expected)
+})
+
+
+describe("setLimits", () => {
+    test("given high, low values", () => {
+        const state = {}
+        const action = set_limits({ low: 100, high: 200 })
+        const actual = rootReducer(state, action)
+        const expected = {
+            limits: {
+                low: 100,
+                high: 200
+            }
+        }
+        expect(actual).toEqual(expected)
+    })
+
+
+    test("given datasetId, dataVar", () => {
+        const state = {}
+        const action = set_limits({
+            low: 100,
+            high: 200,
+            path: [1, "air_temperature"]
+        })
+        const actual = rootReducer(state, action)
+        const expected = {
+            limits: {
+                1: {
+                    air_temperature: {
+                        low: 100,
+                        high: 200
+                    }
+                }
+            }
+        }
+        expect(actual).toEqual(expected)
+    })
 })

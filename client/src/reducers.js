@@ -26,6 +26,7 @@ import {
     FETCH_IMAGE_SUCCESS
 } from "./action-types.js"
 import * as R from "ramda"
+import { compose, lensProp, lensPath, set } from "ramda"
 
 
 const activeReducer = (state, action) => {
@@ -93,7 +94,7 @@ export const rootReducer = (state = "", action) => {
         case SET_PLAYING:
             return Object.assign({}, state, {playing: payload})
         case SET_LIMITS:
-            return Object.assign({}, state, {limits: payload})
+            return setLimitsReducer(state, action)
         case SET_STATE:
             return R.clone(payload)
         case SET_TIMES:
@@ -123,4 +124,12 @@ const datasetIdReducer = prop => (state, action) => {
         return dataset
     })
     return Object.assign({}, state, { datasets: updatedDatasets })
+}
+
+
+const setLimitsReducer = (state, action) => {
+    const { payload } = action
+    const { low, high, path = [] } = payload
+    const limitsLens = compose(lensProp("limits"), lensPath(path))
+    return set(limitsLens, {low, high}, state)
 }
