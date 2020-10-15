@@ -131,4 +131,4 @@ async def palette(dataset_id: int,
                   settings: config.Settings = Depends(config.get_settings)):
     config_obj = config.load_config(settings.config_file)
     dataset = config_obj.datasets[dataset_id]
-    return dataset.palette
+    return dataset.palettes

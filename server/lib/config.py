@@ -1,6 +1,6 @@
 """Configuration parsing"""
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 
 
 class Viewport(BaseModel):
@@ -14,10 +14,16 @@ class Driver(BaseModel):
     settings: dict = {}
 
 
+class Palette(BaseModel):
+    colors: List[str] = []
+    low: float = 0
+    high: float = 1
+
+
 class Dataset(BaseModel):
     label: str
     driver: Driver = Driver()
-    palette: dict = {}
+    palettes: Dict[str, Palette] = {}
 
 
 class Config(BaseModel):
