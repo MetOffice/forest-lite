@@ -1,12 +1,12 @@
 import React, { useEffect } from "react"
 import {
     filter,
+    flatten,
     not,
     head,
     tail,
     compose,
     reduce,
-    map,
     max,
     min
 } from "ramda"
@@ -18,23 +18,10 @@ const AutoLimits = ({ source, onChange }) => {
             const arrayMax = x => reduce(max, head(x), tail(x))
             const arrayMin = x => reduce(min, head(x), tail(x))
             const removeNaN = filter(compose(not, isNaN))
-            const maskedArrayMin = compose(arrayMin, removeNaN)
-            const maskedArrayMax = compose(arrayMax, removeNaN)
-
-            // TODO: Abstract general dimension reduce pattern
-            const imageMin = compose(
-                maskedArrayMin,
-                map(maskedArrayMin),
-                map(map(maskedArrayMin)),
-            )
-            const imageMax = compose(
-                maskedArrayMax,
-                map(maskedArrayMax),
-                map(map(maskedArrayMax)),
-            )
+            const values = removeNaN(flatten(source.data.image))
             onChange({
-                high: imageMax(source.data.image),
-                low: imageMin(source.data.image),
+                high: arrayMax(values),
+                low: arrayMin(values),
             })
         }
 
