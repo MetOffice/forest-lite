@@ -1,12 +1,14 @@
-const { rootReducer } = require("../src/reducers.js")
+const { rootReducer, toggleActiveReducer } = require("../src/reducers.js")
 const {
     set_limits,
     setHoverTool,
     setColorbar,
     setContours,
     setFigure,
-    setActive
+    setActive,
+    toggleActive
 } = require("../src/actions.js")
+const { reduce } = require("ramda")
 
 
 const dummy = () => ({ type: "DUMMY" })
@@ -89,6 +91,58 @@ describe("setLimits", () => {
                     }
                 }
             }
+        }
+        expect(actual).toEqual(expected)
+    })
+})
+
+
+describe("toggleActiveReducer", () => {
+    describe("given toggleActive action", () => {
+        const dataset = "Dataset"
+        const data_var = "Variable"
+        const state = {
+            datasets: [
+                { label: dataset }
+            ]
+        }
+        const action = toggleActive({ dataset, data_var })
+        const actual = toggleActiveReducer(state, action)
+        const expected = {
+            datasets: [
+                {
+                    label: dataset,
+                    active: { Variable: true }
+                }
+            ]
+        }
+        expect(actual).toEqual(expected)
+    })
+
+    describe("given multiple variables", () => {
+        const dataset = "Dataset"
+        const state = {
+            datasets: [
+                { label: dataset }
+            ]
+        }
+        const actions = [
+            toggleActive({ dataset, data_var: "A" }),
+            toggleActive({ dataset, data_var: "B" }),
+            toggleActive({ dataset, data_var: "C" })
+        ]
+        const actual = reduce(toggleActiveReducer, state, actions)
+        const expected = {
+            datasets: [
+                {
+                    label: dataset,
+                    active: {
+                        A: false,
+                        B: false,
+                        C: true
+                    }
+                }
+            ]
         }
         expect(actual).toEqual(expected)
     })
