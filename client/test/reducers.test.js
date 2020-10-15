@@ -146,4 +146,29 @@ describe("toggleActiveReducer", () => {
         }
         expect(actual).toEqual(expected)
     })
+
+    describe("given same variable multiple times", () => {
+        const dataset = "Dataset"
+        const state = {
+            datasets: [
+                { label: dataset }
+            ]
+        }
+        const actions = [
+            toggleActive({ dataset, data_var: "A" }),
+            toggleActive({ dataset, data_var: "A" })
+        ]
+        const actual = reduce(toggleActiveReducer, state, actions)
+        const expected = {
+            datasets: [
+                {
+                    label: dataset,
+                    active: {
+                        A: false
+                    }
+                }
+            ]
+        }
+        expect(actual).toEqual(expected)
+    })
 })

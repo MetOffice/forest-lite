@@ -61,7 +61,11 @@ export const toggleActiveReducer = (state, action) => {
     if (behaviour === "radio") {
         // Radio select logic
         const isDataVar = (value, key) => {
-            return key === data_var
+            if (key === data_var) {
+                return value
+            } else {
+                return false
+            }
         }
         const updateActive = compose(
             over(lensProp("active"), mapObjIndexed(isDataVar)),
