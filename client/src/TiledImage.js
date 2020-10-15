@@ -136,6 +136,7 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         ({ low, high }) => {
             const path = [datasetId, dataVar]
             const action = set_limits({ low, high, path })
+            console.log(low, high)
             dispatch(action)
         }, [ datasetId, dataVar ])
 
