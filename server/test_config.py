@@ -48,3 +48,14 @@ def test_config_given_named_palette():
     result = config.datasets[0].palettes["key"].dict()["colors"]
     expect = list(bokeh.palettes.all_palettes[name][number])
     assert result == expect
+
+
+def test_config_named_palette_reversed():
+    name = "Blues"
+    number = 3
+    reverse = True
+    result = NamedPalette(name=name,
+                          number=number,
+                          reverse=reverse).palette().colors
+    expect = list(bokeh.palettes.all_palettes[name][number])[::-1]
+    assert result == expect
