@@ -1,6 +1,6 @@
 """Configuration parsing"""
 import bokeh.palettes
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, root_validator, validator, ValidationError
 from typing import List, Dict, Union
 
 
@@ -26,6 +26,17 @@ class NamedPalette(BaseModel):
     number: int
     low: float = 0
     high: float = 1
+
+    @root_validator()
+    def must_be_valid_bokeh_palette(cls, values):
+        try:
+            name = values.get("name")
+            number = values.get("number")
+            bokeh.palettes.all_palettes[name][number]
+        except KeyError:
+            msg = f"{name} {number} not in bokeh.palettes.all_palette"
+            raise ValueError(msg)
+        return values
 
     def palette(self):
         colors = bokeh.palettes.all_palettes[self.name][self.number]

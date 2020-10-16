@@ -1,3 +1,5 @@
+import pytest
+from pydantic import ValidationError
 import lib.config
 from lib.config import Palette, NamedPalette
 import bokeh.palettes
@@ -23,6 +25,11 @@ def test_config_named_palette():
     result = NamedPalette(name=name, number=number).palette().colors
     expect = list(bokeh.palettes.all_palettes[name][number])
     assert result == expect
+
+
+def test_config_named_palette_raises_validation_error():
+    with pytest.raises(ValidationError):
+        NamedPalette(name="Foo", number=1)
 
 
 def test_config_given_named_palette():
