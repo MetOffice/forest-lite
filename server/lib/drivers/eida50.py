@@ -32,6 +32,12 @@ class Driver:
             path = paths[-1]
             with xarray.open_dataset(path, engine="h5netcdf") as nc:
                 data = nc.to_dict(data=False)
+            # Filter data_vars
+            if "data_vars" in self.settings:
+                data["data_vars"] = {
+                    key: value for key, value in data["data_vars"].items()
+                    if key in self.settings["data_vars"]
+                }
             return data
         else:
             return {}

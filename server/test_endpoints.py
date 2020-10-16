@@ -8,7 +8,7 @@ import main, config
 client = TestClient(main.app)
 
 
-def sample_h5netcdf(path):
+def sample_h5netcdf(path, data_vars=None):
     # EIDA50 sample
     with h5netcdf.File(path, "w") as f:
         f.dimensions = {
@@ -45,15 +45,18 @@ def sample_h5netcdf(path):
         })
 
         # Data
-        v = f.create_variable("data",
-                              ("time", "latitude", "longitude"), "f")
-        v[:] = [[0, 1], [2, 3]]
-        v.attrs.update({
-            "_FillValue": -99999.,
-            "units": "K",
-            "standard_name": "toa_brightness_temperature",
-            "long_name": "toa_brightness_temperature",
-        })
+        if data_vars is None:
+            data_vars = ["data"]
+        for data_var in data_vars:
+            v = f.create_variable(data_var,
+                                  ("time", "latitude", "longitude"), "f")
+            v[:] = [[0, 1], [2, 3]]
+            v.attrs.update({
+                "_FillValue": -99999.,
+                "units": "K",
+                "standard_name": "toa_brightness_temperature",
+                "long_name": "toa_brightness_temperature",
+            })
 
 
 def sample_config(netcdf_path):
@@ -98,6 +101,46 @@ def test_tile_endpoint(tmpdir):
     assert actual["data"]["dw"] == [40075016.68557849]
     assert actual["data"]["dh"] == [40075016.685578495]
     # assert np.shape(actual["data"]["image"][0]) == (64, 64)
+
+
+def override_get_settings(path):
+    settings = config.Settings(config_file=path)
+    main.app.dependency_overrides[config.get_settings] = lambda: settings
+
+
+def test_dataset_data_vars(tmpdir):
+
+    # NetCDF file
+    netcdf_path = str(tmpdir / "test-file.nc")
+    data_vars = ["geopotential_height", "air_temperature"]
+    sample_h5netcdf(netcdf_path, data_vars)
+
+    # Configure application
+    path = str( tmpdir / "test-config.yaml" )
+    data = {
+        "datasets": [
+            {
+                "label": "Label",
+                "driver": {
+                    "name": "eida50",
+                    "settings": {
+                        "pattern": netcdf_path,
+                        "data_vars": ["air_temperature"]
+                    }
+                },
+            }
+        ]
+    }
+    with open(path, "w") as stream:
+        yaml.dump(data, stream)
+
+    # Configure client
+    override_get_settings(path)
+
+    response = client.get("/datasets/0").json()
+    actual = list(response["data_vars"].keys())
+    expect = ["air_temperature"]
+    assert actual == expect
 
 
 @pytest.mark.skip("needs attention")
