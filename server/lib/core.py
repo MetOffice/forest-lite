@@ -53,6 +53,11 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
 
     assert values.ndim == 2, f"dims: {var.dims}"
 
+    # Mask moisture_content_of_soil_layer (TODO: Generalise)
+    if "moisture_content" in data_var:
+        fill_value = values.max()
+        values = np.ma.masked_equal(values, fill_value)
+
     data = lib.tiling.data_tile(lons, lats, values, zxy,
                                 tile_size=TILE_SIZE)
     data.update({
