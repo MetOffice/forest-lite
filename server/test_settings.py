@@ -26,7 +26,7 @@ def test_datasets_endpoint(tmpdir):
         yaml.dump(data, stream)
 
     # Patch main.get_settings
-    main.app.dependency_overrides[main.get_settings] = get_settings(path)
+    main.app.dependency_overrides[config.get_settings] = get_settings(path)
 
     # GET /datasets endpoint
     response = client.get("/datasets")

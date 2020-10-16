@@ -2,6 +2,7 @@ from fastapi import APIRouter, Response, Depends
 import lib.core
 import lib.drivers
 from bokeh.core.json_encoder import serialize_json
+import numpy as np
 import config
 
 
