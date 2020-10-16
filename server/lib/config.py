@@ -24,6 +24,7 @@ class Palette(BaseModel):
 class NamedPalette(BaseModel):
     name: str
     number: int
+    reverse: bool = False
     low: float = 0
     high: float = 1
 
@@ -40,6 +41,8 @@ class NamedPalette(BaseModel):
 
     def palette(self):
         colors = bokeh.palettes.all_palettes[self.name][self.number]
+        if self.reverse:
+            colors = colors[::-1]
         return Palette(colors=colors, low=self.low, high=self.high)
 
 
