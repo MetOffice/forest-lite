@@ -1,15 +1,34 @@
 import React from "react"
-import { connect } from "react-redux"
+import { connect, useSelector } from "react-redux"
 import * as Bokeh from "@bokeh/bokehjs"
 import * as R from "ramda"
+import { compose, identity, filter, keys } from "ramda"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import "./Colorbar.css"
 
 
+const ColorbarTitle = ({ colorbar, datasetId }) => {
+    const title = useSelector(state => {
+        const { datasets = [] } = state
+        const { active = {}, description = {} } = datasets[datasetId]
+        const { data_vars ={} } = description
+        const activeVars = compose(keys, filter(identity))(active)
+        if (activeVars.length > 0) {
+            const data_var = data_vars[activeVars[0]]
+            const { attrs = {} } = data_var
+            const { units = "", standard_name = "" } = attrs
+            return `${standard_name} [${units}]`
+        }
+        return ""
+    })
+    colorbar.title = title
+    return null
+}
+
 class Colorbar extends React.Component {
     constructor(props) {
         super(props)
-        const { el } = props
+        const { el, title = "" } = props
         const padding = 10
         const colorbarHeight = 15
         const figure = Bokeh.Plotting.figure({
@@ -38,19 +57,20 @@ class Colorbar extends React.Component {
             major_tick_line_color: "black",
             bar_line_color: "black",
             background_fill_alpha: 0,
-            title: "",
+            title: title,
             sizing_mode: "stretch_both"
         })
         figure.add_layout(colorbar, "below")
-        this.state = { color_mapper, figure }
+        this.state = { color_mapper, figure, colorbar }
     }
     componentDidMount() {
         const { figure } = this.state
         Bokeh.Plotting.show(figure, this.el)
     }
     render() {
-        const { color_mapper } = this.state
+        const { color_mapper, colorbar } = this.state
         const { visible, limits: {low, high}, palette } = this.props
+        const { datasetId } = this.props
 
         // Hide/show container element
         let style
@@ -71,9 +91,15 @@ class Colorbar extends React.Component {
         color_mapper.high = high
         color_mapper.palette = palette
 
-        return <div style={ style }
+        return (
+            <div style={ style }
                     className="colorbar-container"
-                    ref={ el => this.el = el } />
+                    ref={ el => this.el = el }>
+                <ColorbarTitle
+                    datasetId={ datasetId }
+                    colorbar={ colorbar } />
+            </div>
+        )
     }
 }
 
