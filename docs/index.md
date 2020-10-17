@@ -49,3 +49,13 @@ npm start
 ```
 
 This will compile and serve the client application at `localhost:8080`
+
+
+### Developer guide
+
+Building the `forest-lite` client on a new machine requires a recent version of `npm`.
+Navigate to the `client` directory and run `npm install` to download the required
+packages into the `node_modules` directory.
+
+The data server Python dependencies are listed in `requirements.txt`, they can
+be installed using `conda install --file requirements.txt -c conda-forge`.
