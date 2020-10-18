@@ -38,11 +38,18 @@ for now it takes lessons learned from the [FOREST](https://github.com/MetOffice/
 
 ```yaml
 datasets:
-  - label: EIDA50
+  - label: Satellite outgoing longwave radiation
+    palettes:
+      default:
+        name: Greys
+        number: 256
+        reverse: true
     driver:
       name: eida50
       settings:
         pattern: path/to/EIDA50_*.nc
+        data_vars:
+          - data
 ```
 
 **Note:** This schema may change in future releases
