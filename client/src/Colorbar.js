@@ -16,8 +16,12 @@ const ColorbarTitle = ({ colorbar, datasetId }) => {
         if (activeVars.length > 0) {
             const data_var = data_vars[activeVars[0]]
             const { attrs = {} } = data_var
-            const { units = "", standard_name = "" } = attrs
-            return `${standard_name} [${units}]`
+            const {
+                units = "",
+                standard_name = false,
+                long_name = false } = attrs
+            const name = standard_name || long_name || ""
+            return `${name} [${units}]`
         }
         return ""
     })
@@ -32,19 +36,21 @@ class Colorbar extends React.Component {
         const padding = 10
         const colorbarHeight = 15
         const figure = Bokeh.Plotting.figure({
+            x_range: new Bokeh.Range1d({ start: 0, end: 1 }),
+            y_range: new Bokeh.Range1d({ start: 0, end: 1 }),
             height: 0,
             min_border: 0,
             background_fill_alpha: 0,
             border_fill_alpha: 0,
             outline_line_color: null,
             toolbar_location: null,
-            sizing_mode: "stretch_both"
+            sizing_mode: "stretch_both",
         })
         figure.xaxis[0].visible = false
         figure.yaxis[0].visible = false
         const color_mapper = new Bokeh.LinearColorMapper({
-            "low": 200,
-            "high": 300,
+            "low": 0,
+            "high": 1,
             "palette": ["#440154", "#208F8C", "#FDE724"],
             "nan_color": "rgba(0,0,0,0)"
         })
@@ -72,6 +78,9 @@ class Colorbar extends React.Component {
         const { visible, limits: {low, high}, palette } = this.props
         const { datasetId } = this.props
 
+        color_mapper.low = low
+        color_mapper.high = high
+
         // Hide/show container element
         let style
         if (visible) {
@@ -80,16 +89,10 @@ class Colorbar extends React.Component {
             style = { display: "none" }
         }
 
-        if (palette.length === 0) {
-            return <div style={ style }
-                        className="colorbar-container"
-                        ref={ el => this.el = el } />
+        if (palette.length !== 0) {
+            // Edit palette parameters
+            color_mapper.palette = palette
         }
-
-        // Edit palette parameters
-        color_mapper.low = low
-        color_mapper.high = high
-        color_mapper.palette = palette
 
         return (
             <div style={ style }
