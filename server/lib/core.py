@@ -48,6 +48,10 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
             elif dim.startswith("depth"):
                 # Take first depth level
                 idx[dim] = 0
+            elif dim.startswith("dim"):
+                # TODO: implement correct search algorithm
+                idx[dim] = 0
+
         values = nc[data_var][idx].values
         units = nc[data_var].units
 
