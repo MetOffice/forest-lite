@@ -115,12 +115,14 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
 
     useEffect(() => {
         // Initial times
-        fetch(`${baseURL}/datasets/${label}/times?limit=7`)
-            .then((response) => response.json())
-            .then((data) => {
-                let action = set_times(data)
-                dispatch(action)
-            })
+        if (datasetId === 0) {
+            fetch(`${baseURL}/datasets/${label}/times?limit=7`)
+                .then((response) => response.json())
+                .then((data) => {
+                    let action = set_times(data)
+                    dispatch(action)
+                })
+        }
 
         // Dataset description (TODO: Move to better place)
         let endpoint = `${baseURL}/datasets/${datasetId}`
