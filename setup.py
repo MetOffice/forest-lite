@@ -7,5 +7,10 @@ setuptools.setup(
     author="Andrew Ryan",
     author_email="andrew.ryan@metoffice.gov.uk",
     packages=setuptools.find_packages(),
-    python_requires=">=3.6"
+    python_requires=">=3.6",
+    entry_points={
+        "console_scripts": [
+            "forest_lite=forest_lite.cli:app"
+        ]
+    }
 )
