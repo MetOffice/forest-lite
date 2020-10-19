@@ -1,12 +1,16 @@
 import pytest
 from pydantic import ValidationError
-import lib.config
-from lib.config import Palette, NamedPalette, Dataset
+from forest_lite.server.lib.config import (
+    Config,
+    Driver,
+    Palette,
+    NamedPalette,
+    Dataset)
 import bokeh.palettes
 
 
 def test_config_object():
-    config = lib.config.Config.from_dict({
+    config = Config.from_dict({
         "datasets": [{"label": "Name"}]
     })
     assert config.datasets == [Dataset(label="Name")]
@@ -16,7 +20,7 @@ def test_config_dataset():
     dataset = Dataset(label="Label",
                       driver={"name": "EIDA50", "settings": {}})
     assert dataset.label == "Label"
-    assert dataset.driver == lib.config.Driver(name="EIDA50", settings={})
+    assert dataset.driver == Driver(name="EIDA50", settings={})
 
 
 def test_config_named_palette():
@@ -35,7 +39,7 @@ def test_config_named_palette_raises_validation_error():
 def test_config_given_named_palette():
     name = "Blues"
     number = 3
-    config = lib.config.Config(
+    config = Config(
         datasets=[
             {
                 "label": "Name",

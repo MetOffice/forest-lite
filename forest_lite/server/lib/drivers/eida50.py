@@ -1,7 +1,7 @@
 import os
 import glob
 import xarray
-import lib.core
+from forest_lite.server.lib import core
 from pydantic import BaseModel, validator
 from typing import List
 
@@ -24,7 +24,7 @@ class Driver:
 
     def data_tile(self, data_var, timestamp_ms, z, x, y):
         pattern = self.settings.pattern
-        return lib.core.get_data_tile(pattern, data_var, timestamp_ms, z, x, y)
+        return core.get_data_tile(pattern, data_var, timestamp_ms, z, x, y)
 
     def get_times(self, limit):
         pattern = self.settings.pattern
