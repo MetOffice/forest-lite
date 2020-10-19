@@ -1,9 +1,15 @@
 import typer
-import xarray
-import forest_lite.server.main
+import uvicorn
+import forest_lite.server.main as _main
+from forest_lite.server import config
 
 
 app = typer.Typer()
+
+
+def get_settings():
+    print("Command line settings")
+    raise Exception
 
 
 @app.command()
@@ -13,5 +19,5 @@ def main(file_name: str):
 
     A simplified interface to the FOREST Lite server tool
     """
-    dataset = xarray.open_dataset(file_name)
-    print(dataset)
+    _main.app.dependency_overrides[config.get_settings] = get_settings
+    uvicorn.run(_main.app, port=1234)
