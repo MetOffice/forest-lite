@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
-from forest_lite.server import config
 from forest_lite.server.routers import atlas, datasets, palettes, viewport
 
 
