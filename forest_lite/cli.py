@@ -1,5 +1,6 @@
 import typer
 import xarray
+import forest_lite.server.main
 
 
 app = typer.Typer()

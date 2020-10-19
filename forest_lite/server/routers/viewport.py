@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-import config
+from forest_lite.server import config
 
 
 router = APIRouter()

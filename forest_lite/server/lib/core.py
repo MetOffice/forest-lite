@@ -4,7 +4,7 @@ import xarray
 import numpy as np
 import datetime as dt
 import forest.geo
-import lib.tiling
+from forest_lite.server.lib import tiling
 from functools import lru_cache
 
 
@@ -62,8 +62,8 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
         fill_value = values.max()
         values = np.ma.masked_equal(values, fill_value)
 
-    data = lib.tiling.data_tile(lons, lats, values, zxy,
-                                tile_size=TILE_SIZE)
+    data = tiling.data_tile(lons, lats, values, zxy,
+                            tile_size=TILE_SIZE)
     data.update({
         "units": [units]
     })
