@@ -1,6 +1,6 @@
 import yaml
 from fastapi.testclient import TestClient
-import main, config
+from forest_lite.server import main, config
 
 
 client = TestClient(main.app)

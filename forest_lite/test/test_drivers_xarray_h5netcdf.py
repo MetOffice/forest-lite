@@ -1,5 +1,5 @@
 from helpers import sample_h5netcdf_dim0
-from lib.drivers import eida50
+from forest_lite.server.lib.drivers import eida50
 
 
 def test_dim0(tmpdir):

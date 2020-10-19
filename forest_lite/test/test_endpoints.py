@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 import yaml
 import h5netcdf
-import main, config
+from forest_lite.server import main, config
 from helpers import sample_h5netcdf
 
 
