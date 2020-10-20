@@ -7,7 +7,7 @@ from forest_lite.server import config
 app = typer.Typer()
 
 
-def get_settings(file_name):
+def get_settings(file_name, driver_name):
     def fn():
         return config.Settings(datasets=[
             {
@@ -19,7 +19,7 @@ def get_settings(file_name):
                     }
                 },
                 "driver": {
-                    "name": "eida50",
+                    "name": driver_name,
                     "settings": {
                         "pattern": file_name
                     }
@@ -30,12 +30,12 @@ def get_settings(file_name):
 
 
 @app.command()
-def main(file_name: str):
+def main(file_name: str, driver: str = "eida50"):
     """
     FOREST Lite viewer
 
     A simplified interface to the FOREST Lite server tool
     """
-    callback = get_settings(file_name)
+    callback = get_settings(file_name, driver)
     _main.app.dependency_overrides[config.get_settings] = callback
     uvicorn.run(_main.app, port=1234)
