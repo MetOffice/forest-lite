@@ -48,7 +48,7 @@ class NamedPalette(BaseModel):
 
 class Dataset(BaseModel):
     label: str
-    view: str = "eida50"
+    view: str = "tiled_image"
     driver: Driver = Driver()
     palettes: Dict[str, Palette] = {}
 

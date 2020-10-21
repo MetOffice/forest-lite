@@ -13,7 +13,7 @@ class Layers extends React.Component {
         const makeComponents = R.addIndex(R.map)(
             (dataset, datasetId) => {
                 const { label, view } = dataset
-                if (view === "eida50") {
+                if (view === "tiled_image") {
                     return <TiledImage
                                 key={ label }
                                 label={ label }
