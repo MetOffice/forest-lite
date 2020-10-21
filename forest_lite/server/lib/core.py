@@ -3,8 +3,8 @@ import glob
 import xarray
 import numpy as np
 import datetime as dt
-# import forest.geo
-from forest_lite.server.lib import tiling, geo
+from forest import geo
+from forest_lite.server.lib import tiling
 from functools import lru_cache
 
 

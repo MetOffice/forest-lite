@@ -1,8 +1,7 @@
 """Wrap forest.geo to make an easier interface"""
 import cartopy
 import numpy as np
-# import forest.geo
-from forest_lite.server.lib import geo
+from forest import geo
 
 
 GOOGLE_X_LIMITS = cartopy.crs.Mercator.GOOGLE.x_limits
