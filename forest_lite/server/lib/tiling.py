@@ -1,7 +1,8 @@
 """Wrap forest.geo to make an easier interface"""
 import cartopy
 import numpy as np
-import forest.geo
+# import forest.geo
+from forest_lite.server.lib import geo
 
 
 GOOGLE_X_LIMITS = cartopy.crs.Mercator.GOOGLE.x_limits
@@ -16,16 +17,15 @@ def _extent(limits):
     return limits[1] - limits[0]
 
 
-def data_tile(lons, lats, values, zxy, tile_size=128):
+def data_tile(gx, gy, values, zxy, tile_size=128):
     """Convenient function to generate data tile"""
     level, _, _ = zxy
-    gx, gy = web_mercator(lons, lats)
     x_range, y_range = tile_extents(zxy)
-    image = forest.geo.datashader_stretch(values, gx, gy,
-                                          x_range,
-                                          y_range,
-                                          plot_width=tile_size,
-                                          plot_height=tile_size)
+    image = geo.datashader_stretch(values, gx, gy,
+                                   x_range,
+                                   y_range,
+                                   plot_width=tile_size,
+                                   plot_height=tile_size)
     # Convert tile information to Bokeh image data
     x = x_range[0]
     y = y_range[0]
@@ -56,15 +56,15 @@ def tile_extents(zxy):
 def web_mercator(lons, lats):
     """Similar to forest.geo.web_mercator but preserves array shape"""
     if (lons.ndim == 1):
-        gx, _ = forest.geo.web_mercator(
+        gx, _ = geo.web_mercator(
             lons,
             np.zeros(len(lons), dtype="d"))
-        _, gy = forest.geo.web_mercator(
+        _, gy = geo.web_mercator(
             np.zeros(len(lats), dtype="d"),
             lats)
         return gx, gy
     elif (lons.ndim == 2) and (lats.ndim == 2):
-        gx, gy = forest.geo.web_mercator(lons, lats)
+        gx, gy = geo.web_mercator(lons, lats)
         gx = gx.reshape(lons.shape)
         gx = np.ma.masked_invalid(gx)
         gy = gy.reshape(lats.shape)

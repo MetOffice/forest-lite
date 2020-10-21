@@ -14,8 +14,11 @@ def get_settings(file_name, driver_name):
                 "label": file_name,
                 "palettes": {
                     "default": {
-                        "name": "Oranges",
-                        "number": 256
+                        "name": "Greys",
+                        "number": 256,
+                        "reverse": True,
+                        "low": 200,
+                        "high": 300
                     }
                 },
                 "driver": {
