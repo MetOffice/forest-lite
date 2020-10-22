@@ -12,15 +12,15 @@ class Layers extends React.Component {
         const { baseURL, figure } = this.props
         const makeComponents = R.addIndex(R.map)(
             (dataset, datasetId) => {
-                const { label, driver } = dataset
-                if (driver === "eida50") {
+                const { label, view } = dataset
+                if (view === "tiled_image") {
                     return <TiledImage
                                 key={ label }
                                 label={ label }
                                 datasetId={ datasetId }
                                 baseURL={ baseURL }
                                 figure={ figure } />
-                } else if (driver === "rdt") {
+                } else if (view === "rdt") {
                     return <RDT
                                 key={ label }
                                 baseURL={ baseURL }

@@ -209,13 +209,13 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         tiling.renderTiles(source)(urls)
     }
 
+    //        <AutoLimits source={ source } onChange={ onLimits } />
     return (<>
             <HoverToolComponent
                     datasetId={ datasetId }
                     figure={ figure }
                     renderer={ renderer }
                     active={ hover_tool } />
-            <AutoLimits source={ source } onChange={ onLimits } />
         </>)
 }
 

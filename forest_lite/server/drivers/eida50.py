@@ -20,7 +20,6 @@ class Driver:
     def __init__(self, name, settings):
         self.name = name
         self.settings = Settings(**settings)
-        print(self.settings)
 
     def data_tile(self, data_var, timestamp_ms, z, x, y):
         pattern = self.settings.pattern

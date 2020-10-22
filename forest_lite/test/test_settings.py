@@ -6,33 +6,32 @@ from forest_lite.server import main, config
 client = TestClient(main.app)
 
 
-def get_settings(config_file):
+def get_settings(data):
     def wrapper():
-        return config.Settings(config_file=config_file)
+        return config.Settings(**data)
     return wrapper
 
 
-def test_datasets_endpoint(tmpdir):
+def test_datasets_endpoint():
 
-    # Prepare fake config.yaml
-    path = str(tmpdir / "test-conf.yaml")
+    # Prepare fake config
     data = {
         "datasets": [
             {"label": "Foo"},
             {"label": "Bar"}
         ]
     }
-    with open(path, "w") as stream:
-        yaml.dump(data, stream)
 
     # Patch main.get_settings
-    main.app.dependency_overrides[config.get_settings] = get_settings(path)
+    main.app.dependency_overrides[config.get_settings] = get_settings(data)
 
     # GET /datasets endpoint
     response = client.get("/datasets")
     assert response.json() == {
         "datasets": [
-            {"label": "Foo", "id": 0, "driver": ""},
-            {"label": "Bar", "id": 1, "driver": ""},
+            {"label": "Foo", "id": 0, "driver": "",
+             "view": "tiled_image"},
+            {"label": "Bar", "id": 1, "driver": "",
+             "view": "tiled_image"},
         ]
     }

@@ -1,9 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
-import yaml
 import h5netcdf
 from forest_lite.server import main, config
-from helpers import sample_h5netcdf
+from forest_lite.test.helpers import sample_h5netcdf
 
 
 client = TestClient(main.app)
@@ -26,18 +25,16 @@ def sample_config(netcdf_path):
 
 
 def test_tile_endpoint(tmpdir):
-    config_path = str(tmpdir / "test-config.yaml")
     netcdf_path = str(tmpdir / "test-netcdf.nc")
 
     # Config file
-    with open(config_path, "w") as stream:
-        yaml.dump(sample_config(netcdf_path), stream)
+    data = sample_config(netcdf_path)
 
     # NetCDF file
     sample_h5netcdf(netcdf_path)
 
     # System under test
-    settings = config.Settings(config_file=config_path)
+    settings = config.Settings(**data)
     main.app.dependency_overrides[config.get_settings] = lambda: settings
     response = client.get("/datasets/0/data/times/0/tiles/0/0/0")
     actual = response.json()
@@ -53,8 +50,8 @@ def test_tile_endpoint(tmpdir):
     # assert np.shape(actual["data"]["image"][0]) == (64, 64)
 
 
-def override_get_settings(path):
-    settings = config.Settings(config_file=path)
+def override_get_settings(data):
+    settings = config.Settings(**data)
     main.app.dependency_overrides[config.get_settings] = lambda: settings
 
 
@@ -66,7 +63,6 @@ def test_dataset_data_vars(tmpdir):
     sample_h5netcdf(netcdf_path, data_vars)
 
     # Configure application
-    path = str( tmpdir / "test-config.yaml" )
     data = {
         "datasets": [
             {
@@ -81,11 +77,9 @@ def test_dataset_data_vars(tmpdir):
             }
         ]
     }
-    with open(path, "w") as stream:
-        yaml.dump(data, stream)
 
     # Configure client
-    override_get_settings(path)
+    override_get_settings(data)
 
     response = client.get("/datasets/0").json()
     actual = list(response["data_vars"].keys())

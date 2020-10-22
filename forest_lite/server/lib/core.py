@@ -3,12 +3,12 @@ import glob
 import xarray
 import numpy as np
 import datetime as dt
-import forest.geo
+from forest import geo
 from forest_lite.server.lib import tiling
 from functools import lru_cache
 
 
-TILE_SIZE = 128 # 256 # 64  # 128
+TILE_SIZE = 256 # 256 # 64  # 128
 
 
 def get_data_tile(pattern, data_var, timestamp_ms, z, x, y):
@@ -61,8 +61,28 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
     if "moisture_content" in data_var:
         fill_value = values.max()
         values = np.ma.masked_equal(values, fill_value)
+    return _tile({
+        "longitude": lons,
+        "latitude": lats,
+        "values": values,
+        "units": units
+    }, z, x, y)
 
-    data = tiling.data_tile(lons, lats, values, zxy,
+
+def _tile(tilable, z, x, y):
+    """Convenient interface for extension drivers"""
+    zxy = (z, x, y)
+    if "longitude" in tilable:
+        lons = tilable["longitude"]
+        lats = tilable["latitude"]
+        web_mercator_x, web_mercator_y = tiling.web_mercator(lons, lats)
+    else:
+        web_mercator_x = tilable["web_mercator_x"]
+        web_mercator_y = tilable["web_mercator_y"]
+    values = tilable["values"]
+    units = tilable["units"]
+    data = tiling.data_tile(web_mercator_x, web_mercator_y,
+                            values, zxy,
                             tile_size=TILE_SIZE)
     data.update({
         "units": [units]
@@ -114,7 +134,7 @@ def image_data(name, path, timestamp_ms, tile_size=TILE_SIZE):
             if len(pts[0]) > 0:
                 i = pts[0][0]
                 values = nc["data"][i].values
-        data = forest.geo.stretch_image(lons,
+        data = geo.stretch_image(lons,
                                         lats,
                                         values,
                                         plot_width=n,
@@ -125,7 +145,7 @@ def image_data(name, path, timestamp_ms, tile_size=TILE_SIZE):
             lons = nc["longitude"].values
             lats = nc["latitude"].values
             values = nc["relative_humidity"][0, 0].values
-        data = forest.geo.stretch_image(lons,
+        data = geo.stretch_image(lons,
                                         lats,
                                         values,
                                         plot_width=n,

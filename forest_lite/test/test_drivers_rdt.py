@@ -1,6 +1,6 @@
 import pytest
 import datetime as dt
-from forest_lite.server.lib.drivers import rdt
+from forest_lite.server.drivers import rdt
 
 
 @pytest.mark.skip("broken test")

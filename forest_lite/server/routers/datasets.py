@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Response, Depends
-from forest_lite.server.lib import core, drivers
+from forest_lite.server import drivers
+from forest_lite.server.lib import core
 from bokeh.core.json_encoder import serialize_json
 import numpy as np
 from forest_lite.server import config
@@ -14,6 +15,7 @@ async def datasets(response: Response,
     # response.headers["Cache-Control"] = "max-age=31536000"
     return {"datasets": [{"label": dataset.label,
                           "driver": dataset.driver.name,
+                          "view": dataset.view,
                           "id": i}
                          for i, dataset in enumerate(settings.datasets)]}
 
