@@ -28,6 +28,11 @@ class Injectable:
 
     def override(self, method_name):
         def decorator(fn):
+            if not hasattr(self, method_name):
+                msg = (
+                    f"'{self.__class__.__name__}' does not have"
+                    f" attribute '{method_name}'")
+                raise AttributeError(msg)
             setattr(self, method_name, solve_dependencies(fn))
             return fn
         return decorator

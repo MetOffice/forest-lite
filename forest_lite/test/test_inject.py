@@ -1,3 +1,4 @@
+import pytest
 from forest_lite.server.inject import Use, Injectable
 from unittest.mock import sentinel, Mock
 
@@ -75,3 +76,16 @@ def test_override_passes_original_keyword_arguments():
 
     dependency.assert_called_once_with()
     assert result == sentinel.x
+
+
+def test_override_raises_exception_if_method_not_on_parent():
+
+    class Driver(Injectable):
+        pass
+
+    driver = Driver()
+
+    with pytest.raises(AttributeError):
+        @driver.override("method")
+        def custom_fn():
+            pass
