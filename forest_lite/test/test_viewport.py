@@ -1,5 +1,4 @@
 import pytest
-import yaml
 from fastapi.testclient import TestClient
 from forest_lite.server import main, config
 
@@ -7,13 +6,18 @@ from forest_lite.server import main, config
 client = TestClient(main.app)
 
 
-def get_settings(config_file):
+def override(fn):
+    main.app.dependency_overrides[config.get_settings] = fn
+
+
+def get_settings(data):
     def fn():
-        return config.Settings(config_file=config_file)
+        return config.Settings(**data)
     return fn
 
 
 def test_viewport_endpoint_default():
+    override(get_settings({}))
     response = client.get("/viewport")
     result = response.json()
     expect = {
@@ -23,19 +27,16 @@ def test_viewport_endpoint_default():
     assert result == expect
 
 
-def test_viewport_endpoint_from_config(tmpdir):
+def test_viewport_endpoint_from_config():
     data = {
         "viewport": {
             "longitude": [10, 20],
             "latitude": [30, 40]
         }
     }
-    config_file = str(tmpdir / "config.yaml")
-    with open(config_file, "w") as stream:
-        yaml.dump(data, stream)
 
     # Patch main.get_settings
-    main.app.dependency_overrides[config.get_settings] = get_settings(config_file)
+    override(get_settings(data))
 
     response = client.get("/viewport")
     result = response.json()
