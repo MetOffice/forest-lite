@@ -37,3 +37,41 @@ def test_override_calls_dendency():
     result = driver.method()
     dependency.assert_called_once_with()
     assert result == sentinel.value
+
+
+def test_override_passes_original_positional_args():
+    dependency = Mock(return_value=sentinel.value)
+
+    class Driver(Injectable):
+        def method(self, x):
+            raise Exception
+
+    driver = Driver()
+
+    @driver.override("method")
+    def custom_fn(x, value = Use(dependency)):
+        return x
+
+    result = driver.method(sentinel.x)
+
+    dependency.assert_called_once_with()
+    assert result == sentinel.x
+
+
+def test_override_passes_original_keyword_arguments():
+    dependency = Mock(return_value=sentinel.value)
+
+    class Driver(Injectable):
+        def method(self, x):
+            raise Exception
+
+    driver = Driver()
+
+    @driver.override("method")
+    def custom_fn(x=None, value = Use(dependency)):
+        return x
+
+    result = driver.method(x=sentinel.x)
+
+    dependency.assert_called_once_with()
+    assert result == sentinel.x

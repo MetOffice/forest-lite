@@ -1,4 +1,17 @@
-"""Simple dependency injection framework"""
+"""Minimal dependency injection framework
+
+Allows users to extend existing drivers without needing to
+use class inheritance
+
+>>> driver = Driver()
+>>> @driver.override("times")
+... def my_method():
+...     return "My value"
+
+It does not prevent users from extending drivers via
+traditional approaches, e.g. class inheritance.
+
+"""
 from inspect import signature
 
 
@@ -21,10 +34,11 @@ class Injectable:
 
 
 def solve_dependencies(fn):
-    def wrapper():
-        kwargs = {}
+    def wrapper(*args, **kwargs):
+        deps = {}
         for key, param in signature(fn).parameters.items():
             if hasattr(param.default, "dependency"):
-                kwargs[key] = param.default.dependency()
-        return fn(**kwargs)
+                deps[key] = param.default.dependency()
+        kwargs.update(deps)
+        return fn(*args, **kwargs)
     return wrapper
