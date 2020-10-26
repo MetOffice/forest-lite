@@ -12,8 +12,15 @@ import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from
 import AutoLimits from "./AutoLimits.js"
 
 
-const _HoverToolComponent = props => {
-    const { figure, renderer, active, description, datasetId } = props
+/**
+ * React component to render a Bokeh HoverTool
+ */
+const HoverToolComponent = ({
+    figure,
+    renderer,
+    active,
+    tooltips = []
+}) => {
     const [ tool, setTool ] = useState(null)
 
     // Add a HoverTool once after component renders
@@ -27,23 +34,12 @@ const _HoverToolComponent = props => {
         setTool(hover_tool)
     }, [])
 
-    const dataVar = useSelector(dataVarById(datasetId))
-
-    // Update tooltip if tool or description change
+    // Update tooltip if tool or tooltips change
     useEffect(() => {
-        let tooltips = [
-            ["Value", "@image @units"],
-        ]
-        if (typeof description != "undefined") {
-            if (typeof description.data_vars[dataVar] != "undefined") {
-                const pairs = R.toPairs(description.data_vars[dataVar].attrs)
-                tooltips = R.concat(tooltips, pairs)
-            }
-        }
         if (tool !== null) {
             tool.tooltips = tooltips
         }
-    }, [tool, description, dataVar])
+    }, [tool, tooltips])
 
     // Render HoverTool active state
     if (tool !== null) {
@@ -51,15 +47,30 @@ const _HoverToolComponent = props => {
     }
     return null
 }
-const HoverToolComponent = connect((state, ownProps) => {
+
+
+/**
+ * Selector to pick tooltips from state
+ */
+const selectTooltips = (datasetId, dataVar) => state => {
+    let tooltips = [
+        ["Value", "@image @units"],
+    ]
+
+    // Parse additional tooltips from state
     const { datasets=[] } = state
-    const { datasetId } = ownProps
     let description = null
     if (datasets.length > 0) {
         description = datasets[datasetId].description
+        if (typeof description != "undefined") {
+            if (typeof description.data_vars[dataVar] != "undefined") {
+                const pairs = R.toPairs(description.data_vars[dataVar].attrs)
+                tooltips = R.concat(tooltips, pairs)
+            }
+        }
     }
-    return { description }
-})(_HoverToolComponent)
+    return tooltips
+}
 
 
 const TiledImage = ({ figure, datasetId, label, baseURL }) => {
@@ -104,6 +115,7 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
     }, [])
 
     const dataVar = useSelector(dataVarById(datasetId))
+    const tooltips = useSelector(selectTooltips(datasetId, dataVar))
     useEffect(() => {
         // Set ColorMapper initial settings from server
         fetch(`${baseURL}/datasets/${datasetId}/palette`)
@@ -212,7 +224,7 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
     //        <AutoLimits source={ source } onChange={ onLimits } />
     return (<>
             <HoverToolComponent
-                    datasetId={ datasetId }
+                    tooltips={ tooltips }
                     figure={ figure }
                     renderer={ renderer }
                     active={ hover_tool } />
