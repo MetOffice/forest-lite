@@ -20,9 +20,6 @@ import {
     fetch_image,
     fetch_image_success
 } from "./actions.js"
-import { ImageFn } from "../extension"
-
-window.ImageFn = ImageFn
 
 // ReduxJS
 

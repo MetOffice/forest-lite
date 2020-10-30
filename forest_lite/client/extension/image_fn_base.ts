@@ -8,7 +8,7 @@ import {SpatialIndex} from "@bokeh/bokehjs/build/js/lib/core/util/spatial"
 import {concat} from "@bokeh/bokehjs/build/js/lib/core/util/array"
 import {NDArray, is_NDArray} from "@bokeh/bokehjs/build/js/lib/core/util/ndarray"
 
-export interface ImageFnDataBase extends XYGlyphData {
+export interface ImageDataBase extends XYGlyphData {
   image_data: HTMLCanvasElement[]
 
   _image: (NDArray | number[][])[]
@@ -19,7 +19,7 @@ export interface ImageFnDataBase extends XYGlyphData {
   sh: Arrayable<number>
 }
 
-export interface ImageFnBaseView extends ImageFnDataBase {}
+export interface ImageFnBaseView extends ImageDataBase {}
 
 export abstract class ImageFnBaseView extends XYGlyphView {
   model: ImageFnBase
@@ -33,7 +33,7 @@ export abstract class ImageFnBaseView extends XYGlyphView {
     this.connect(this.model.properties.global_alpha.change, () => this.renderer.request_render())
   }
 
-  protected _render(ctx: Context2d, indices: number[], {image_data, sx, sy, sw, sh}: ImageFnDataBase): void {
+  protected _render(ctx: Context2d, indices: number[], {image_data, sx, sy, sw, sh}: ImageDataBase): void {
     const old_smoothing = ctx.getImageSmoothingEnabled()
     ctx.setImageSmoothingEnabled(false)
 
@@ -232,3 +232,5 @@ export abstract class ImageFnBase extends XYGlyph {
     })
   }
 }
+ImageFnBase.__name__ = "ImageFnBase";
+ImageFnBase.init_ImageFnBase();

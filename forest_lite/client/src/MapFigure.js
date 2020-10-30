@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import * as Bokeh from "@bokeh/bokehjs"
 import Contours from "./Contours.js"
 import Layers from "./Layers.js"
@@ -6,6 +6,49 @@ import Lines from "./Lines.js"
 import OnPanZoom from "./OnPanZoom.js"
 import WMTS from "./WMTS.js"
 import XYRange from "./XYRange.js"
+import { ImageFn } from "../extension"
+
+
+window.ImageFn = ImageFn
+
+
+// Make an ImageFn glyph_renderer for a figure
+const ImageAnimation = ({figure}) => {
+    useEffect(() => {
+        const color_mapper = new Bokeh.LinearColorMapper({
+            low: 0,
+            high: 3,
+            palette: ["red", "green", "blue"]
+        })
+        const source = new Bokeh.ColumnDataSource({
+            data: {
+                x: [5009377.085697312],
+                y: [-7.450580596923828e-09],
+                dw: [626172.1357121617],
+                dh: [626172.1357121654],
+                image: [
+                    [[0, 1],
+                     [2, 3]]
+                ],
+            }
+        })
+        const args = {
+            x: { field: "x" },
+            y: { field: "y" },
+            dw: { field: "dw" },
+            dh: { field: "dh" },
+            image: { field: "image" },
+            color_mapper: color_mapper,
+            source: source
+        }
+        const renderer = figure._glyph.bind(figure)(
+            ImageFn,
+            "color_mapper,image,rows,cols,x,y,dw,dh",
+            [args])
+        console.log(renderer.glyph.parameter)
+    }, [])
+    return null
+}
 
 
 class MapFigure extends React.Component {
@@ -25,6 +68,7 @@ class MapFigure extends React.Component {
         figure.toolbar_location = null
         figure.min_border = 0
         figure.select_one(Bokeh.WheelZoomTool).active = true
+
         this.state = { figure }
     }
     componentDidMount() {
@@ -50,6 +94,7 @@ class MapFigure extends React.Component {
                     figure={ figure } line_color="LightBlue" />
                 <OnPanZoom figure={ figure } />
                 <XYRange figure={ figure } />
+                <ImageAnimation figure={ figure } />
             </div>
         )
     }

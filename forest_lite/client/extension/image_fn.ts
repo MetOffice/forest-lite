@@ -1,20 +1,21 @@
-import {ImageFnBase, ImageFnBaseView, ImageFnDataBase} from "./image_fn_base"
+import {ImageFnBase, ImageFnBaseView, ImageDataBase} from "./image_fn_base"
 import {ColorMapper} from "@bokeh/bokehjs/build/js/lib/models/mappers/color_mapper"
 import {LinearColorMapper} from "@bokeh/bokehjs/build/js/lib/models/mappers/linear_color_mapper"
 import {Arrayable} from "@bokeh/bokehjs/build/js/lib/core/types"
 import * as p from "@bokeh/bokehjs/build/js/lib/core/properties"
 
-export interface ImageFnData extends ImageFnDataBase {}
+export interface ImageData extends ImageDataBase {}
 
-export interface ImageFnView extends ImageFnData {}
+export interface ImageView extends ImageData {}
 
-export class ImageFnView extends ImageFnBaseView {
+export class ImageView extends ImageFnBaseView {
   model: ImageFn
   visuals: ImageFn.Visuals
 
   connect_signals(): void {
     super.connect_signals()
     this.connect(this.model.color_mapper.change, () => this._update_image())
+    this.connect(this.model.properties.parameter.change, () => this.renderer.request_render())
   }
 
   protected _update_image(): void {
@@ -39,6 +40,7 @@ export namespace ImageFn {
 
   export type Props = ImageFnBase.Props & {
     color_mapper: p.Property<ColorMapper>
+    parameter: p.Property<number>
   }
 
   export type Visuals = ImageFnBase.Visuals
@@ -48,17 +50,20 @@ export interface ImageFn extends ImageFn.Attrs {}
 
 export class ImageFn extends ImageFnBase {
   properties: ImageFn.Props
-  __view_type__: ImageFnView
+  __view_type__: ImageView
 
   constructor(attrs?: Partial<ImageFn.Attrs>) {
     super(attrs)
   }
 
   static init_ImageFn(): void {
-    this.prototype.default_view = ImageFnView
+    this.prototype.default_view = ImageView
 
     this.define<ImageFn.Props>({
       color_mapper: [ p.Instance, () => new LinearColorMapper({palette: Greys9()}) ],
+      parameter: [ p.Number,    1.0   ],
     })
   }
 }
+ImageFn.__name__ = "ImageFn";
+ImageFn.init_ImageFn();
