@@ -1,54 +1,39 @@
-import {XYGlyph, XYGlyphView, XYGlyphData} from "@bokehjs/models/glyphs/xy_glyph"
-import {Arrayable, NumberArray} from "@bokehjs/core/types"
-import * as p from "@bokehjs/core/properties"
-import {Context2d} from "@bokehjs/core/util/canvas"
-import {Selection, ImageIndex} from "@bokehjs/models/selections/selection"
-import {PointGeometry} from "@bokehjs/core/geometry"
-import {SpatialIndex} from "@bokehjs/core/util/spatial"
-import {concat} from "@bokehjs/core/util/array"
-import {NDArray, is_NDArray} from "@bokehjs/core/util/ndarray"
-import {assert} from "@bokehjs/core/util/assert"
+import {XYGlyph, XYGlyphView, XYGlyphData} from "@bokeh/bokehjs/build/js/lib/models/glyphs/xy_glyph"
+import {Arrayable} from "@bokeh/bokehjs/build/js/lib/core/types"
+import * as p from "@bokeh/bokehjs/build/js/lib/core/properties"
+import {Context2d} from "@bokeh/bokehjs/build/js/lib/core/util/canvas"
+import {Selection, ImageIndex} from "@bokeh/bokehjs/build/js/lib/models/selections/selection"
+import {PointGeometry} from "@bokeh/bokehjs/build/js/lib/core/geometry"
+import {SpatialIndex} from "@bokeh/bokehjs/build/js/lib/core/util/spatial"
+import {concat} from "@bokeh/bokehjs/build/js/lib/core/util/array"
+import {NDArray, is_NDArray} from "@bokeh/bokehjs/build/js/lib/core/util/ndarray"
 
-import {View} from "@bokehjs/core/view"
-
-type NDArrayFn = (t: number) => (NDArray | number[][])
-
-export interface ImageDataTimestampBase extends XYGlyphData {
+export interface ImageFnDataBase extends XYGlyphData {
   image_data: HTMLCanvasElement[]
 
-  // _image: (NDArray | number[][])[]
-  _image: (NDArrayFn)[]
-  _dw: NumberArray
-  _dh: NumberArray
+  _image: (NDArray | number[][])[]
+  _dw: Arrayable<number>
+  _dh: Arrayable<number>
 
-  sw: NumberArray
-  sh: NumberArray
+  sw: Arrayable<number>
+  sh: Arrayable<number>
 }
 
-export interface ImageTimestampBaseView extends ImageDataTimestampBase {}
+export interface ImageFnBaseView extends ImageFnDataBase {}
 
-export abstract class ImageTimestampBaseView extends XYGlyphView {
-  model: ImageTimestampBase
-  visuals: ImageTimestampBase.Visuals
+export abstract class ImageFnBaseView extends XYGlyphView {
+  model: ImageFnBase
+  visuals: ImageFnBase.Visuals
 
-  protected _width: NumberArray
-  protected _height: NumberArray
-
-  constructor(options: View.Options) {
-      super(options)
-  }
+  protected _width: Arrayable<number>
+  protected _height: Arrayable<number>
 
   connect_signals(): void {
     super.connect_signals()
     this.connect(this.model.properties.global_alpha.change, () => this.renderer.request_render())
-    this.connect(this.model.properties.time_stamp.change, () => {
-        // this.renderer.set_data()
-        this.renderer.request_render()
-    })
   }
 
-  protected _render(ctx: Context2d, indices: number[], {image_data, sx, sy, sw, sh}: ImageDataTimestampBase): void {
-
+  protected _render(ctx: Context2d, indices: number[], {image_data, sx, sy, sw, sh}: ImageFnDataBase): void {
     const old_smoothing = ctx.getImageSmoothingEnabled()
     ctx.setImageSmoothingEnabled(false)
 
@@ -75,19 +60,15 @@ export abstract class ImageTimestampBaseView extends XYGlyphView {
   protected abstract _flat_img_to_buf8(img: Arrayable<number>): Uint8Array
 
   protected _set_data(indices: number[] | null): void {
-    console.log("_set_data")
-
     this._set_width_heigh_data()
 
     for (let i = 0, end = this._image.length; i < end; i++) {
       if (indices != null && indices.indexOf(i) < 0)
         continue
 
-      const img = this._image[i](this.model.time_stamp)
-
+      const img = this._image[i]
       let flat_img: Arrayable<number>
       if (is_NDArray(img)) {
-        assert(img.dimension == 2, "expected a 2D array")
         flat_img = img
         this._height[i] = img.shape[0]
         this._width[i] = img.shape[1]
@@ -100,19 +81,18 @@ export abstract class ImageTimestampBaseView extends XYGlyphView {
       const buf8 = this._flat_img_to_buf8(flat_img)
       this._set_image_data_from_buffer(i, buf8)
     }
-
   }
 
-  protected _index_data(index: SpatialIndex): void {
-    const {data_size} = this
-
-    for (let i = 0; i < data_size; i++) {
+  _index_data(): SpatialIndex {
+    const points = []
+    for (let i = 0, end = this._x.length; i < end; i++) {
       const [l, r, t, b] = this._lrtb(i)
-      if (isNaN(l + r + t + b) || !isFinite(l + r + t + b))
-        index.add_empty()
-      else
-        index.add(l, b, r, t)
+      if (isNaN(l + r + t + b) || !isFinite(l + r + t + b)) {
+        continue
+      }
+      points.push({x0: l, y0: b, x1: r, y1: t, i})
     }
+    return new SpatialIndex(points)
   }
 
   _lrtb(i: number): [number, number, number, number]{
@@ -134,10 +114,10 @@ export abstract class ImageTimestampBaseView extends XYGlyphView {
       this.image_data = new Array(this._image.length)
 
     if (this._width == null || this._width.length != this._image.length)
-      this._width = new NumberArray(this._image.length)
+      this._width = new Array(this._image.length)
 
     if (this._height == null || this._height.length != this._image.length)
-      this._height = new NumberArray(this._image.length)
+      this._height = new Array(this._image.length)
   }
 
   protected _get_or_create_canvas(i: number): HTMLCanvasElement {
@@ -205,7 +185,6 @@ export abstract class ImageTimestampBaseView extends XYGlyphView {
     const {sx, sy} = geometry
     const x = this.renderer.xscale.invert(sx)
     const y = this.renderer.yscale.invert(sy)
-
     const candidates = this.index.indices({x0: x, x1: x, y0: y, y1: y})
     const result = new Selection()
 
@@ -219,41 +198,37 @@ export abstract class ImageTimestampBaseView extends XYGlyphView {
   }
 }
 
-export namespace ImageTimestampBase {
+export namespace ImageFnBase {
   export type Attrs = p.AttrsOf<Props>
 
   export type Props = XYGlyph.Props & {
-    image: p.NDArraySpec
+    image: p.NumberSpec
     dw: p.DistanceSpec
     dh: p.DistanceSpec
     global_alpha: p.Property<number>
-    time_stamp: p.Property<number>
     dilate: p.Property<boolean>
   }
 
   export type Visuals = XYGlyph.Visuals
 }
 
-export interface ImageTimestampBase extends ImageTimestampBase.Attrs {}
+export interface ImageFnBase extends ImageFnBase.Attrs {}
 
-export abstract class ImageTimestampBase extends XYGlyph {
-  properties: ImageTimestampBase.Props
-  __view_type__: ImageTimestampBaseView
+export abstract class ImageFnBase extends XYGlyph {
+  properties: ImageFnBase.Props
+  __view_type__: ImageFnBaseView
 
-  constructor(attrs?: Partial<ImageTimestampBase.Attrs>) {
+  constructor(attrs?: Partial<ImageFnBase.Attrs>) {
     super(attrs)
   }
 
-  static init_ImageTimestampBase(): void {
-    this.define<ImageTimestampBase.Props>({
-      image:        [ p.NDArraySpec ],
-      dw:           [ p.DistanceSpec ],
-      dh:           [ p.DistanceSpec ],
-      dilate:       [ p.Boolean, false ],
-      global_alpha: [ p.Number, 1.0 ],
-      time_stamp:   [ p.Number, 1.0 ],
+  static init_ImageFnBase(): void {
+    this.define<ImageFnBase.Props>({
+      image:        [ p.NumberSpec       ], // TODO (bev) array spec?
+      dw:           [ p.DistanceSpec     ],
+      dh:           [ p.DistanceSpec     ],
+      dilate:       [ p.Boolean,   false ],
+      global_alpha: [ p.Number,    1.0   ],
     })
   }
 }
-
-

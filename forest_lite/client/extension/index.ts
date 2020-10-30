@@ -1,1 +1,1 @@
-export { ImageTimestamp } from "./image_timestamp"
+export { ImageFn } from "./image_fn"
