@@ -1,14 +1,16 @@
-import {ImageFnBase, ImageFnBaseView, ImageDataBase} from "./image_fn_base"
+import {ImageBase, ImageBaseView, ImageDataBase} from "@bokeh/bokehjs/build/js/lib/models/glyphs/image_base"
 import {ColorMapper} from "@bokeh/bokehjs/build/js/lib/models/mappers/color_mapper"
 import {LinearColorMapper} from "@bokeh/bokehjs/build/js/lib/models/mappers/linear_color_mapper"
 import {Arrayable} from "@bokeh/bokehjs/build/js/lib/core/types"
 import * as p from "@bokeh/bokehjs/build/js/lib/core/properties"
 
-export interface ImageData extends ImageDataBase {}
+export interface ImageData extends ImageDataBase {
+    _fn: Function[]
+}
 
 export interface ImageView extends ImageData {}
 
-export class ImageView extends ImageFnBaseView {
+export class ImageView extends ImageBaseView {
   model: ImageFn
   visuals: ImageFn.Visuals
 
@@ -16,6 +18,11 @@ export class ImageView extends ImageFnBaseView {
     super.connect_signals()
     this.connect(this.model.color_mapper.change, () => this._update_image())
     this.connect(this.model.properties.parameter.change, () => this.renderer.request_render())
+  }
+
+  protected _set_data(indices: number[] | null): void {
+      this._image = this._fn.map(f => f(this.model.parameter))
+      super._set_data(indices)
   }
 
   protected _update_image(): void {
@@ -38,17 +45,18 @@ const Greys9 = () => ["#000000", "#252525", "#525252", "#737373", "#969696", "#b
 export namespace ImageFn {
   export type Attrs = p.AttrsOf<Props>
 
-  export type Props = ImageFnBase.Props & {
+  export type Props = ImageBase.Props & {
     color_mapper: p.Property<ColorMapper>
     parameter: p.Property<number>
+    fn: p.NumberSpec
   }
 
-  export type Visuals = ImageFnBase.Visuals
+  export type Visuals = ImageBase.Visuals
 }
 
 export interface ImageFn extends ImageFn.Attrs {}
 
-export class ImageFn extends ImageFnBase {
+export class ImageFn extends ImageBase {
   properties: ImageFn.Props
   __view_type__: ImageView
 
@@ -62,6 +70,7 @@ export class ImageFn extends ImageFnBase {
     this.define<ImageFn.Props>({
       color_mapper: [ p.Instance, () => new LinearColorMapper({palette: Greys9()}) ],
       parameter: [ p.Number,    1.0   ],
+      fn: [ p.NumberSpec, { field: "fn" } ]
     })
   }
 }
