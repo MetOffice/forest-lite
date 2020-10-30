@@ -29,7 +29,6 @@
       "dom.iterable"
     ],
     "baseUrl": ".",
-    "outDir": "./dist/lib",
     "paths": {
       "@bokeh/bokehjs/build/js/lib/*": [
         "./node_modules/@bokeh/bokehjs/build/js/lib/*",
