@@ -45,20 +45,34 @@ def nearcast_times(limits=None, times=Use(get_times)):
 
 @driver.override("description")
 def nearcast_description(file_names=Use(get_file_names)):
-    data_vars = get_data_vars(sorted(file_names)[-1])
+    items = get_data_vars(sorted(file_names)[-1])
     return {
+        "attrs": {
+            "product": "Nearcast",
+            "reference": "CIMSS, University Wisconsin-Madison"
+        },
         "data_vars": {
-            data_var: {} for data_var in data_vars
+            item["name"]: {
+                "attrs": {
+                    "long_name": item["name"],
+                    "units": item["units"],
+                }
+            } for item in items
         }
     }
 
 
 @lru_cache
 def get_data_vars(path):
+    items = []
     messages = pg.open(path)
     for message in messages.select():
-        yield message['name']
+        items.append({
+            "name": message['name'],
+            "units": message['units']
+        })
     messages.close()
+    return items
 
 
 @driver.override("tilable")
