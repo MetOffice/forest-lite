@@ -3,4 +3,4 @@ datasets:
     driver:
       name: nearcast
       settings:
-        pattern: *.grib
+        pattern: ${NEARCAST_DIR}/*.GRIB2
