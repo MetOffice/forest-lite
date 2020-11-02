@@ -1,0 +1,47 @@
+datasets:
+  - label: Nearcast
+    palettes:
+      default:
+        name: Viridis
+        number: 256
+        low: 200
+        high: 400
+      Precipitable water:
+        name: Oranges
+        number: 256
+        low: 0
+        high: 20
+      U component of wind:
+        colors:
+          - '#053061'
+          - '#2166ac'
+          - '#4393c3'
+          - '#92c5de'
+          - '#d1e5f0'
+          - 'rgba(0,0,0,0)'
+          - '#fddbc7'
+          - '#f4a582'
+          - '#d6604d'
+          - '#b2182b'
+          - '#67001f'
+        low: '-20'
+        high: 20
+      V component of wind:
+        colors:
+          - '#053061'
+          - '#2166ac'
+          - '#4393c3'
+          - '#92c5de'
+          - '#d1e5f0'
+          - 'rgba(0,0,0,0)'
+          - '#fddbc7'
+          - '#f4a582'
+          - '#d6604d'
+          - '#b2182b'
+          - '#67001f'
+        low: '-20'
+        high: 20
+    driver:
+      name: nearcast
+      settings:
+        pattern: ${NEARCAST_DIR}/*.GRIB2

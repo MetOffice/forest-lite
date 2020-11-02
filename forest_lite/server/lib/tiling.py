@@ -54,6 +54,10 @@ def tile_extents(zxy):
 
 def web_mercator(lons, lats):
     """Similar to forest.geo.web_mercator but preserves array shape"""
+    if isinstance(lons, list):
+        lons = np.asarray(lons)
+    if isinstance(lats, list):
+        lats = np.asarray(lats)
     if (lons.ndim == 1):
         gx, _ = geo.web_mercator(
             lons,
