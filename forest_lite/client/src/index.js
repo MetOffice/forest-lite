@@ -21,7 +21,6 @@ import {
     fetch_image_success
 } from "./actions.js"
 
-
 // ReduxJS
 
 // Middlewares

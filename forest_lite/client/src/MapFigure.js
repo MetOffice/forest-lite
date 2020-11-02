@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import * as Bokeh from "@bokeh/bokehjs"
 import Contours from "./Contours.js"
 import Layers from "./Layers.js"
@@ -25,6 +25,7 @@ class MapFigure extends React.Component {
         figure.toolbar_location = null
         figure.min_border = 0
         figure.select_one(Bokeh.WheelZoomTool).active = true
+
         this.state = { figure }
     }
     componentDidMount() {

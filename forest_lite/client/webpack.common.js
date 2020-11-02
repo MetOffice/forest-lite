@@ -9,6 +9,9 @@ module.exports = {
         filename: '[name].min.js',
         path: path.resolve(__dirname, "static")
     },
+    resolve: {
+        extensions: [".tsx", ".ts", ".js"],
+    },
     module: {
         rules: [{
             test: /\.css$/,
@@ -24,6 +27,10 @@ module.exports = {
                     "@babel/plugin-proposal-export-namespace-from"
                 ]
             }
+        }, {
+            test: /\.tsx?$/,
+            use: 'awesome-typescript-loader',
+            exclude: /node_modules/
         }]
     }
 }
