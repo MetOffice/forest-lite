@@ -62,36 +62,33 @@ def get_data_vars(path):
 
 
 @driver.override("tilable")
-def nearcast_tilable(data_var, timestamp_ms):
-    print(data_var, timestamp_ms)
-    return {
-        "longitude": [0, 1, 2],
-        "latitude": [0, 1, 2],
-        "values": [
-            [0, 1, 2],
-            [2, 3 ,4],
-            [3, 4, 5]
-        ],
-        "units": ""
-    }
+def nearcast_tilable(data_var, timestamp_ms, file_names=Use(get_file_names)):
+    valid_time = dt.datetime.fromtimestamp(timestamp_ms / 1000.)
+    path = sorted(file_names)[-1]
+    pressure = 1000
+    return get_grib2_data(path, valid_time, data_var, pressure)
 
 
 def get_grib2_data(path, valid_time, variable, pressure):
     cache = {}
-
-    validTime = dt.datetime.strptime(str(valid_time), "%Y-%m-%d %H:%M:%S")
-    vTime = "{0:d}{1:02d}".format(validTime.hour, validTime.minute)
-
-    messages = pg.index(path, "name", "scaledValueOfFirstFixedSurface", "validityTime")
+    messages = pg.index(path,
+                        "name",
+                        "scaledValueOfFirstFixedSurface",
+                        "validityTime")
     if len(path) > 0:
-        field = messages.select(name=variable, scaledValueOfFirstFixedSurface=int(pressure), validityTime=vTime)[0]
+        levels = sorted(set(get_first_fixed_surface(path, variable)))
+        level = levels[0]
+        times = sorted(set(get_validity(path, variable)))
+        time = times[0]
+        vTime = "{0:d}{1:02d}".format(time.hour, time.minute)
+        field = messages.select(
+            name=variable,
+            scaledValueOfFirstFixedSurface=int(level),
+            validityTime=vTime)[0]
         cache["longitude"] = field.latlons()[1][0,:]
         cache["latitude"] = field.latlons()[0][:,0]
-        cache["data"] = field.values
+        cache["values"] = field.values
         cache["units"] = field.units
-        cache["name"] = field.name
-        cache["valid"] = "{0:02d}:{1:02d} UTC".format(validTime.hour, validTime.minute)
-        cache["initial"] = "blah"
         scaledLowerLevel = float(field.scaledValueOfFirstFixedSurface)
         scaleFactorLowerLevel = float(field.scaleFactorOfFirstFixedSurface)
         lowerSigmaLevel = str(round(scaledLowerLevel * 10**-scaleFactorLowerLevel, 2))
@@ -101,3 +98,27 @@ def get_grib2_data(path, valid_time, variable, pressure):
         cache['layer'] = lowerSigmaLevel+"-"+upperSigmaLevel
     messages.close()
     return cache
+
+
+def get_first_fixed_surface(path, variable):
+    messages = pg.index(path, "name")
+    try:
+        for message in messages.select(name=variable):
+            yield message["scaledValueOfFirstFixedSurface"]
+    except ValueError:
+        # messages.select(name=variable) raises ValueError if not found
+        pass
+    messages.close()
+
+
+def get_validity(path, variable):
+    messages = pg.index(path, "name")
+    try:
+        for message in messages.select(name=variable):
+            validTime = "{0:8d}{1:04d}".format(message["validityDate"],
+                                               message["validityTime"])
+            yield dt.datetime.strptime(validTime, "%Y%m%d%H%M")
+    except ValueError:
+        # messages.select(name=variable) raises ValueError if not found
+        pass
+    messages.close()
