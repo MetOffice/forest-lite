@@ -14,8 +14,8 @@ class BaseDriver(Injectable):
 
     def tilable(self, timestamp_ms, data_var):
         return {
-            "longitude": np.array([], dtype="f"),
-            "latitude": np.array([], dtype="f"),
+            "longitude": [],
+            "latitude": [],
             "values": np.empty((0, 0), dtype="f"),
             "units": ""
         }
