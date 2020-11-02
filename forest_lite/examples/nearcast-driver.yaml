@@ -1,5 +1,11 @@
 datasets:
   - label: Nearcast
+    palettes:
+      default:
+        name: Viridis
+        number: 256
+        low: 1
+        high: 6
     driver:
       name: nearcast
       settings:

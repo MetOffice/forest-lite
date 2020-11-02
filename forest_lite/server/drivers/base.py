@@ -1,3 +1,4 @@
+import numpy as np
 from forest_lite.server.lib import core
 from forest_lite.server.inject import Injectable
 
@@ -13,9 +14,10 @@ class BaseDriver(Injectable):
 
     def tilable(self, timestamp_ms, data_var):
         return {
-            "longitude": [],
-            "latitude": [],
-            "values": [],
+            "longitude": np.array([], dtype="f"),
+            "latitude": np.array([], dtype="f"),
+            "values": np.empty((0, 0), dtype="f"),
+            "units": ""
         }
 
     def description(self):
