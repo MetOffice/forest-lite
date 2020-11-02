@@ -55,10 +55,12 @@ def nearcast_description(file_names=Use(get_file_names)):
 
 @lru_cache
 def get_data_vars(path):
+    names = []
     messages = pg.open(path)
     for message in messages.select():
-        yield message['name']
+        names.append(message['name'])
     messages.close()
+    return names
 
 
 @driver.override("tilable")
