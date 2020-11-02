@@ -8,4 +8,10 @@ def from_spec(spec):
         mod_name, obj_name = spec.name.split(":")
         module = import_module(mod_name)
         return getattr(module, obj_name)
-    return module.Driver(spec.name, spec.settings)
+    try:
+        return module.Driver(spec.name, spec.settings)
+    except AttributeError:
+        # TODO: Mechanism to configure driver(s)
+        driver = module.driver
+        driver.settings = spec.settings
+        return driver
