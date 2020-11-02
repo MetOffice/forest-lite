@@ -6,9 +6,11 @@ import os
 import glob
 import re
 import string
+from functools import lru_cache
 from forest_lite.server.inject import Use
 from forest_lite.server.drivers.base import BaseDriver
 from pydantic import BaseModel
+import pygrib as pg
 
 
 class Settings(BaseModel):
@@ -42,12 +44,21 @@ def nearcast_times(limits=None, times=Use(get_times)):
 
 
 @driver.override("description")
-def nearcast_description():
+def nearcast_description(file_names=Use(get_file_names)):
+    data_vars = get_data_vars(sorted(file_names)[-1])
     return {
         "data_vars": {
-            "variable": {}
+            data_var: {} for data_var in data_vars
         }
     }
+
+
+@lru_cache
+def get_data_vars(path):
+    messages = pg.open(path)
+    for message in messages.select():
+        yield message['name']
+    messages.close()
 
 
 @driver.override("tilable")
