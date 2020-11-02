@@ -1,0 +1,6 @@
+datasets:
+  - label: Nearcast
+    driver:
+      name: nearcast
+      settings:
+        pattern: *.grib
