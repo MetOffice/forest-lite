@@ -63,13 +63,13 @@ def get_data_vars(path):
 
 @driver.override("tilable")
 def nearcast_tilable(data_var, timestamp_ms, file_names=Use(get_file_names)):
-    valid_time = dt.datetime.fromtimestamp(timestamp_ms / 1000.)
     path = sorted(file_names)[-1]
-    pressure = 1000
-    return get_grib2_data(path, valid_time, data_var, pressure)
+    return get_grib2_data(path, timestamp_ms, data_var)
 
 
-def get_grib2_data(path, valid_time, variable, pressure):
+@lru_cache
+def get_grib2_data(path, timestamp_ms, variable):
+    valid_time = dt.datetime.fromtimestamp(timestamp_ms / 1000.)
     cache = {}
     messages = pg.index(path,
                         "name",
