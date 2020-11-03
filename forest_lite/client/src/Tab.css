@@ -1,0 +1,19 @@
+.tab__header {
+    min-width: 200px;
+    font-family: Helvetica;
+    font-size: 1.4em;
+    display: flex;
+    padding: 5px;
+}
+
+.tab__choice {
+    flex-grow: 1;
+}
+
+.tab__choice--active {
+    font-weight: bold;
+}
+
+.tab__choice:hover {
+    cursor: pointer;
+}

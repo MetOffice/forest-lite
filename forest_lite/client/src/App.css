@@ -3,6 +3,10 @@ body {
     overflow: hidden;
 }
 
+.hidden {
+    display: none;
+}
+
 #root {
     display: grid;
     height: 100vh;

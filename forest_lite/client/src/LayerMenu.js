@@ -1,11 +1,10 @@
-import React from "react"
+import React, { useState } from "react"
 import { connect, useSelector, useDispatch } from "react-redux"
 import { toggleActive, setFlag } from "./actions.js"
 import "./LayerMenu.css"
-import ColorPaletteMenu from "./ColorPaletteMenu.js"
 import Info from "./Info.js"
-import HoverToolToggle from "./HoverToolToggle.js"
-import ColorbarToggle from "./ColorbarToggle.js"
+import Tab from "./Tab.js"
+import Nav from "./Nav.js"
 import * as R from "ramda"
 
 
@@ -83,16 +82,40 @@ const MenuItem = ({ children, item }) => {
         </div>)
 }
 
-class LayerMenu extends React.Component {
-    render() {
-        return (<div className="layer-menu-container">
+const TabChoice = ({ children, onClick, active=false }) => {
+    const className = `tab__choice ${active ? "tab__choice--active": ""}`
+    return (
+        <div className={ className } onClick={ onClick }>{ children }</div>
+    )
+}
+
+const LayerMenu = () => {
+    const [ tabName, setTabName ] = useState("datasets")
+    const showTab = tabName => () => {
+        setTabName(tabName)
+    }
+    return (<div className="layer-menu-container">
+            <div className="tab__header">
+                <TabChoice active={ tabName === "datasets" }
+                           onClick={ showTab("datasets") }>
+                    Datasets
+                </TabChoice>
+                <TabChoice active={ tabName === "navigation" }
+                           onClick={ showTab("navigation") }>
+                    Navigation
+                </TabChoice>
+            </div>
+            <Tab active={ tabName === "navigation" } >
+                <Nav />
+            </Tab>
+            <Tab active={ tabName === "datasets" } >
                 <DatasetsMenu />
                 <Label>Coastlines, borders, lakes</Label>
                 <fieldset>
                     <CoastlinesToggle />
                 </fieldset>
-        </div>)
-    }
+            </Tab>
+    </div>)
 }
 
 

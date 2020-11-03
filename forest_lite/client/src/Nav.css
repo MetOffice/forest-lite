@@ -1,0 +1,11 @@
+.nav__container {
+    padding: 100px;
+}
+
+.nav__item:hover {
+    cursor: pointer;
+}
+
+.nav__item--selected {
+    font-weight: bold;
+}
