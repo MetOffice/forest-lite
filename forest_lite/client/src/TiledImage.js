@@ -73,22 +73,69 @@ const selectTooltips = (datasetId, dataVar) => state => {
 }
 
 
+/**
+ * Load image(s) from REST endpoints
+ */
+const ImageURL = ({ urls, source, }) => {
+    useEffect(() => {
+        tiling.renderTiles(source)(urls)
+    }, [ JSON.stringify(urls) ])
+    return null
+}
+
+const getURLs = (baseURL, datasetId, dataVar, time, ranges) => {
+    // Construct endpoint
+    const templateURL = `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
+
+    // Only fetch if variable selected
+    if (dataVar == null) {
+        return null
+    }
+    // Validate state
+    if (ranges == null) {
+        return null
+    }
+    if (time == null) {
+        return null
+    }
+
+    const { x_range, y_range } = ranges
+    if (x_range  == null) return null
+    if (y_range  == null) return null
+
+    // React to axis change indirectly
+    const level = tiling.findZoomLevel(
+        x_range,
+        y_range,
+        tiling.WEB_MERCATOR_EXTENT
+    )
+    const tiles = tiling.getTiles(
+        x_range,
+        y_range,
+        tiling.WEB_MERCATOR_EXTENT,
+        level
+    ).map(({x, y, z}) => [x, y, z])
+    return tiles.map(([x, y, z]) => tiling.getURL(templateURL, x, y, z))
+}
+
+
+/**
+ * Tile images from application state
+ */
 const TiledImage = ({ figure, datasetId, label, baseURL }) => {
     const dispatch = useDispatch()
-    const [color_mapper, setColormapper] = useState(null)
     const [source, setSource] = useState(null)
     const [renderer, setRenderer] = useState(null)
+    const [color_mapper, setColormapper] = useState(null)
+    const [urls, setURLs] = useState([])
 
     useEffect(() => {
-        let low, high, palette
         let color_mapper = new LinearColorMapper({
             "low": 200,
             "high": 300,
             "palette": ["#440154", "#208F8C", "#FDE724"],
             "nan_color": "rgba(0,0,0,0)"
         })
-        setColormapper(color_mapper)
-
         const source = new ColumnDataSource({
             data: {
                 x: [],
@@ -100,8 +147,6 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
                 units: []
             }
         })
-        setSource(source)
-
         const renderer = figure.image({
             x: { field: "x" },
             y: { field: "y" },
@@ -112,6 +157,8 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
             color_mapper: color_mapper,
         })
         setRenderer(renderer)
+        setSource(source)
+        setColormapper(color_mapper)
     }, [])
 
     const dataVar = useSelector(dataVarById(datasetId))
@@ -177,14 +224,6 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         colorbarByIdAndVar(datasetId)(dataVar)
     )
 
-    // Validate state
-    if (ranges == null) {
-        return null
-    }
-    if (time == null) {
-        return null
-    }
-
     // Update LinearColorMapper
     if (color_mapper != null) {
         color_mapper.palette = palette
@@ -192,34 +231,21 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         color_mapper.high = high
     }
 
-    // Construct endpoint
-    const templateURL = `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
-
-    renderer.visible = active
-
-    if (active) {
-        // Only fetch if variable selected
-        if (dataVar == null) {
-            return null
-        }
-
-        const { x_range, y_range } = ranges
-
-        // React to axis change indirectly
-        const level = tiling.findZoomLevel(
-            x_range,
-            y_range,
-            tiling.WEB_MERCATOR_EXTENT
-        )
-        const tiles = tiling.getTiles(
-            x_range,
-            y_range,
-            tiling.WEB_MERCATOR_EXTENT,
-            level
-        ).map(({x, y, z}) => [x, y, z])
-        const urls = tiles.map(([x, y, z]) => tiling.getURL(templateURL, x, y, z))
-        tiling.renderTiles(source)(urls)
+    if (renderer != null) {
+        renderer.visible = active
     }
+
+    // Compute URLs
+    useEffect(() => {
+        const urls = getURLs(baseURL, datasetId, dataVar, time, ranges)
+        if (urls != null) {
+            setURLs(urls)
+        }
+    }, [ baseURL, datasetId, dataVar, time, JSON.stringify(ranges) ])
+
+    if (source == null) return null
+    if (renderer == null) return null
+    if (color_mapper == null) return null
 
     //        <AutoLimits source={ source } onChange={ onLimits } />
     return (<>
@@ -228,6 +254,7 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
                     figure={ figure }
                     renderer={ renderer }
                     active={ hover_tool } />
+            <ImageURL source={ source } urls={ urls } />
         </>)
 }
 

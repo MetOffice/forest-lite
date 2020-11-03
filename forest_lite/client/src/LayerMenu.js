@@ -54,7 +54,8 @@ const MenuItem = ({ children, item }) => {
     const active = item.active || {}
     const listItems = R.map(
         name => {
-            const onClick = () => {
+            const onClick = (ev) => {
+                ev.preventDefault()
                 const payload = { dataset: label, data_var: name }
                 dispatch(toggleActive(payload))
             }
