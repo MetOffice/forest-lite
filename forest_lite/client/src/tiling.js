@@ -27,7 +27,13 @@ export const renderTiles = source =>  urls => {
         }
     })
     return Promise.all(promises)
-        .then(images => images.reduce(imageReducer, {}))
+        .then(images => images.reduce(imageReducer, {
+            x: [],
+            y: [],
+            dw: [],
+            dh: [],
+            image: []
+        }))
         .then(data => {
             source.data = data
             source.change.emit()
