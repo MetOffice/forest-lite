@@ -136,13 +136,7 @@ async def axis(dataset_id: int,
     """GET dimension values related to particular data_var"""
     dataset = settings.datasets[dataset_id]
     driver = drivers.from_spec(dataset.driver)
-    points = driver.points(data_var, dim_name)
-    obj = {
-        "dataset_id": dataset_id,
-        "data_var": data_var,
-        "dim_name": dim_name,
-        "points": points
-    }
+    obj = driver.points(data_var, dim_name)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")

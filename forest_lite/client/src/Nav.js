@@ -76,7 +76,19 @@ const Nav = ({ baseURL }) => {
         if (url != null) {
             fetch(url)
                 .then(response => response.json())
-                .then(json => json.points)
+                .then(json => {
+                    console.log(json)
+                    return json
+                })
+                .then(json => {
+                    // Transform points
+                    if (json.attrs.standard_name === "time") {
+                        return json.data.map(d => {
+                            return new Date(d)
+                        })
+                    }
+                    return json.data
+                })
                 .then(setPoints)
         }
     }, [ dataset, variable, dimension ])
