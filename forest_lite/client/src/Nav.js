@@ -4,25 +4,26 @@ import Select from "./Select.js"
 import "./Nav.css"
 
 
-const selectDatasets = state => {
-    return state.datasets || []
+/**
+ * Select active dataVars
+ */
+export const selectActive = state => {
+    const datasets = state.datasets || []
+    return datasets.flatMap(dataset => {
+        const active = dataset.active || {}
+        const dataVars = Object.keys(active).filter(key =>  active[key])
+        return dataVars.map(dataVar => {
+            return {
+                label: dataset.label,
+                id: dataset.datasetId,
+                dataVar: dataVar
+            }
+        })
+    })
 }
 
-
-const List = ({ labels, onClick, selectedLabel }) => {
-    const listItems = labels.map(label => {
-        const selected = selectedLabel === label
-        let className
-        if (selected) {
-            className = "nav__item nav__item--selected"
-        } else {
-            className = "nav__item"
-        }
-        return <li key={ label }
-            className={ className }
-            onClick={ onClick(label) }>{ label }</li>
-    })
-    return <ul>{ listItems }</ul>
+export const selectDatasets = state => {
+    return state.datasets || []
 }
 
 
@@ -39,40 +40,40 @@ const pointURL = (baseURL, datasetID, variable, dimension) => {
     return `${baseURL}/datasets/${datasetID}/${variable}/axis/${dimension}`
 }
 
-const Nav = ({ baseURL }) => {
-    const [ dataset, setDataset ] = useState(null)
-    const [ variable, setVariable ] = useState(null)
-    const [ dimension, setDimension ] = useState(null)
-    const [ point, setPoint ] = useState(null)
-    const [ variables, setVariables ] = useState([])
-    const [ dimensions, setDimensions ] = useState([])
-    const [ points, setPoints ] = useState([])
 
+const NavPanel = ({ baseURL, datasetName, dataVar }) => {
+    // Dimensions
+    const [ dimension, setDimension ] = useState(null)
+    const [ dimensions, setDimensions ] = useState([])
+
+    // Points
+    const [ point, setPoint ] = useState(null)
+    const [ points, setPoints ] = useState([])
+    const pointLabels = points.map((point, index) => `${index} - ${point}`)
+
+    // Populate variables list
     const datasets = useSelector(selectDatasets)
     const labels = datasets.map(dataset => dataset.label)
     const toID = datasets.reduce((agg, dataset) => {
         agg[dataset.label] = dataset.id
         return agg
     }, {})
-
-    // Populate variables list
     useEffect(() => {
-        if ( dataset != null ) {
-            const index = labels.indexOf(dataset)
+        if ( datasetName != null ) {
+            const index = labels.indexOf(datasetName)
             const variables = getDataVars(datasets[index])
-            setVariables(variables)
-            if ( variables.indexOf(variable) !== -1 ) {
+            if ( variables.indexOf(dataVar) !== -1 ) {
                 const description = datasets[index].description
-                const dims = description.data_vars[variable].dims
+                const dims = description.data_vars[dataVar].dims
                 setDimensions(dims)
             }
         }
-    }, [ dataset, variable ])
+    }, [ datasetName, dataVar ])
 
     // Get dimension points from REST endpoint
     useEffect(() => {
-        const datasetID = toID[dataset]
-        const url = pointURL(baseURL, datasetID, variable, dimension)
+        const datasetID = toID[datasetName]
+        const url = pointURL(baseURL, datasetID, dataVar, dimension)
         if (url != null) {
             fetch(url)
                 .then(response => response.json())
@@ -91,32 +92,37 @@ const Nav = ({ baseURL }) => {
                 })
                 .then(setPoints)
         }
-    }, [ dataset, variable, dimension ])
+    }, [ datasetName, dataVar, dimension ])
 
-    const pointLabels = points.map((point, index) => `${index} - ${point}`)
+    return (<div className="nav__panel">
+        <div className="nav__title">{ datasetName }</div>
+        <div className="nav__title--caption">{ dataVar }</div>
+        <Select
+            label="Dimension:"
+            value={ dimension }
+            values={ dimensions }
+            callback={ setDimension  } />
+        <Select
+            label="Axis:"
+            value={ point }
+            values={ pointLabels }
+            callback={ setPoint  } />
+    </div>)
+}
 
+const Nav = ({ baseURL }) => {
+    const activeLayers = useSelector(selectActive)
+    const panels = activeLayers.map(layer => {
+        const key = `${layer.label} ${layer.dataVar}`
+        return <NavPanel
+                    key={ key }
+                    baseURL={ baseURL }
+                    datasetName={ layer.label }
+                    dataVar={ layer.dataVar } />
+    })
     return (
         <div className="nav__container">
-            <Select
-                label="Dataset:"
-                value={ dataset }
-                values={ labels }
-                callback={ setDataset  } />
-            <Select
-                label="Variable:"
-                value={ variable }
-                values={ variables }
-                callback={ setVariable  } />
-            <Select
-                label="Dimension:"
-                value={ dimension }
-                values={ dimensions }
-                callback={ setDimension  } />
-            <Select
-                label="Axis:"
-                value={ point }
-                values={ pointLabels }
-                callback={ setPoint  } />
+            { panels }
         </div>
     )
 }
