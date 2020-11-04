@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
+import moment from "moment-timezone"
+import { uniq } from "ramda"
 import Select from "./Select.js"
 import "./Nav.css"
 
@@ -46,10 +48,11 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
     const [ dimension, setDimension ] = useState(null)
     const [ dimensions, setDimensions ] = useState([])
 
-    // Points
-    const [ point, setPoint ] = useState(null)
-    const [ points, setPoints ] = useState([])
-    const pointLabels = points.map((point, index) => `${index} - ${point}`)
+    // Point in N-dimensional space
+    const [ point, setPoint ] = useState({})
+
+    // Axes
+    const [ axes, setAxes ] = useState([])
 
     // Populate variables list
     const datasets = useSelector(selectDatasets)
@@ -65,7 +68,10 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
             if ( variables.indexOf(dataVar) !== -1 ) {
                 const description = datasets[index].description
                 const dims = description.data_vars[dataVar].dims
-                setDimensions(dims)
+                const dimensions = dims.filter(dim => {
+                    return ["latitude", "longitude"].indexOf(dim) === -1
+                })
+                setDimensions(dimensions)
             }
         }
     }, [ datasetName, dataVar ])
@@ -73,40 +79,69 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
     // Get dimension points from REST endpoint
     useEffect(() => {
         const datasetID = toID[datasetName]
-        const url = pointURL(baseURL, datasetID, dataVar, dimension)
-        if (url != null) {
-            fetch(url)
+
+        // Dimension endpoints
+        const requests = dimensions.map(dim => {
+            const url = pointURL(baseURL, datasetID, dataVar, dim)
+            return {
+                dimension: dim,
+                url
+            }
+        }).filter(request => request.url != null)
+
+        // Fetch dimensions
+        const promises = requests.map(request => {
+            return fetch(request.url)
                 .then(response => response.json())
                 .then(json => {
-                    console.log(json)
                     return json
                 })
                 .then(json => {
                     // Transform points
                     if (json.attrs.standard_name === "time") {
                         return json.data.map(d => {
-                            return new Date(d)
+                            return moment(d).tz("UTC").format()
                         })
                     }
                     return json.data
                 })
-                .then(setPoints)
+                .then(uniq)
+                .then(values => {
+                    return {
+                        dimension: request.dimension,
+                        values: values
+                    }
+                })
+        })
+
+        // Gather dimension data
+        Promise.all(promises)
+               .then(setAxes)
+
+    }, [ datasetName, dataVar, dimensions ])
+
+    const selects = axes.map(axis => {
+        const label = `Dimension: ${axis.dimension}`
+        const callback = (value) => {
+            const replace = {}
+            replace[axis.dimension] = value
+            setPoint({
+                ...point,
+                ...replace
+            })
         }
-    }, [ datasetName, dataVar, dimension ])
+        return <Select
+            key={ axis.dimension }
+            label={ label }
+            value={ point[axis.dimension] }
+            values={ axis.values }
+            callback={ callback  } />
+    })
 
     return (<div className="nav__panel">
         <div className="nav__title">{ datasetName }</div>
-        <div className="nav__title--caption">{ dataVar }</div>
-        <Select
-            label="Dimension:"
-            value={ dimension }
-            values={ dimensions }
-            callback={ setDimension  } />
-        <Select
-            label="Axis:"
-            value={ point }
-            values={ pointLabels }
-            callback={ setPoint  } />
+        <div className="nav__title--caption">Variable: { dataVar }</div>
+        { selects }
     </div>)
 }
 
