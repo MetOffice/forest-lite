@@ -98,7 +98,7 @@ const LayerMenu = () => {
             <div className="tab__header">
                 <TabChoice active={ tabName === "datasets" }
                            onClick={ showTab("datasets") }>
-                    Datasets
+                    Layer
                 </TabChoice>
                 <TabChoice active={ tabName === "navigation" }
                            onClick={ showTab("navigation") }>

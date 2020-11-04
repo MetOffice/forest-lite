@@ -1,5 +1,6 @@
 .nav__container {
-    padding: 100px;
+    padding: 1.2em;
+    padding-top: 0;
 }
 
 .nav__item:hover {
