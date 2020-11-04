@@ -54,3 +54,16 @@ class Driver:
             return data
         else:
             return {}
+
+    def points(self, data_var, dim_name):
+        pattern = self.settings.pattern
+        paths = sorted(glob.glob(pattern))
+        if len(paths) > 0:
+            return self._points(paths[-1], data_var, dim_name)
+        else:
+            return []
+
+    def _points(self, path, data_var, dim_name):
+        with xarray.open_dataset(path, engine="h5netcdf") as nc:
+            points = nc[dim_name].values
+        return points

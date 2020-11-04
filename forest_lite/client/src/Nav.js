@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
+import Select from "./Select.js"
 import "./Nav.css"
 
 
@@ -30,16 +31,29 @@ const getDataVars = tree => {
 }
 
 
-const Nav = () => {
+const pointURL = (baseURL, datasetID, variable, dimension) => {
+    if (baseURL == null) return null
+    if (datasetID == null) return null
+    if (variable == null) return null
+    if (dimension == null) return null
+    return `${baseURL}/datasets/${datasetID}/${variable}/axis/${dimension}`
+}
+
+const Nav = ({ baseURL }) => {
     const [ dataset, setDataset ] = useState(null)
     const [ variable, setVariable ] = useState(null)
     const [ dimension, setDimension ] = useState(null)
+    const [ point, setPoint ] = useState(null)
     const [ variables, setVariables ] = useState([])
     const [ dimensions, setDimensions ] = useState([])
+    const [ points, setPoints ] = useState([])
 
     const datasets = useSelector(selectDatasets)
     const labels = datasets.map(dataset => dataset.label)
-    const onClick = label => () => { setDataset(label) }
+    const toID = datasets.reduce((agg, dataset) => {
+        agg[dataset.label] = dataset.id
+        return agg
+    }, {})
 
     // Populate variables list
     useEffect(() => {
@@ -55,26 +69,42 @@ const Nav = () => {
         }
     }, [ dataset, variable ])
 
-    const selectVar = label => () => {
-        setVariable(label)
-    }
-    const selectDim = label => () => {
-        setDimension(label)
-    }
+    // Get dimension points from REST endpoint
+    useEffect(() => {
+        const datasetID = toID[dataset]
+        const url = pointURL(baseURL, datasetID, variable, dimension)
+        if (url != null) {
+            fetch(url)
+                .then(response => response.json())
+                .then(json => json.points)
+                .then(setPoints)
+        }
+    }, [ dataset, variable, dimension ])
+
+    const pointLabels = points.map((point, index) => `${index} - ${point}`)
 
     return (
         <div className="nav__container">
-            <div>Datasets</div>
-            <List labels={ labels } selectedLabel={ dataset } onClick={ onClick } />
-            <div>Variables</div>
-            <List labels={ variables } selectedLabel={ variable } onClick={ selectVar } />
-            <div>Dimensions</div>
-            <List labels={ dimensions } selectedLabel={ dimension } onClick={ selectDim } />
-            <div>
-                <div>Dataset: { dataset }</div>
-                <div>Variable: { variable }</div>
-                <div>Dimension: { dimension }</div>
-            </div>
+            <Select
+                label="Dataset:"
+                value={ dataset }
+                values={ labels }
+                callback={ setDataset  } />
+            <Select
+                label="Variable:"
+                value={ variable }
+                values={ variables }
+                callback={ setVariable  } />
+            <Select
+                label="Dimension:"
+                value={ dimension }
+                values={ dimensions }
+                callback={ setDimension  } />
+            <Select
+                label="Axis:"
+                value={ point }
+                values={ pointLabels }
+                callback={ setPoint  } />
         </div>
     )
 }

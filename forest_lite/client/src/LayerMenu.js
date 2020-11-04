@@ -89,7 +89,7 @@ const TabChoice = ({ children, onClick, active=false }) => {
     )
 }
 
-const LayerMenu = () => {
+const LayerMenu = ({ baseURL }) => {
     const [ tabName, setTabName ] = useState("datasets")
     const showTab = tabName => () => {
         setTabName(tabName)
@@ -106,7 +106,7 @@ const LayerMenu = () => {
                 </TabChoice>
             </div>
             <Tab active={ tabName === "navigation" } >
-                <Nav />
+                <Nav baseURL={ baseURL } />
             </Tab>
             <Tab active={ tabName === "datasets" } >
                 <DatasetsMenu />
