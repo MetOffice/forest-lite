@@ -1,0 +1,47 @@
+/**
+ * Menu component
+ */
+.Menu {
+    font-family: Helvetica, Arial, sans-serif;
+}
+.Menu-container {
+    margin-left: 6px;
+}
+.Menu-title {
+    font-weight: bold;
+}
+.Menu-title-container {
+    margin: 10px;
+    margin-left: 6px;
+}
+.Menu-list-container {
+    margin-right: 0.5em;
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-color: #ccc white;
+}
+.Menu-item {
+    padding: 0.5em;
+    border-bottom: 1px solid #ccc;
+}
+.Menu-item ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.Menu-item li {
+    cursor: pointer;
+    padding: 0.7em;
+    border-radius: 4px;
+    margin-left: 1em;
+    margin-right: 1em;
+    width: max-content;
+}
+.Menu-item li:hover {
+    background-color: #333;
+    color: white;
+}
+.Menu__checked {
+    color: #333;
+    background-color: #9effdd;
+}
