@@ -247,8 +247,8 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
     if (renderer == null) return null
     if (color_mapper == null) return null
 
-    //        <AutoLimits source={ source } onChange={ onLimits } />
     return (<>
+            <AutoLimits source={ source } onChange={ onLimits } />
             <HoverToolComponent
                     tooltips={ tooltips }
                     figure={ figure }
