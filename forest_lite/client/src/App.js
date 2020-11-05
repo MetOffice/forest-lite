@@ -4,7 +4,7 @@ import MapFigure from "./MapFigure.js"
 import Title from "./Title.js"
 import ColorbarStack from "./ColorbarStack.js"
 import ColorPaletteFetch from "./ColorPaletteFetch.js"
-import LayerMenu from "./LayerMenu.js"
+import Sidebar from "./Sidebar.js"
 import ViewPort from "./ViewPort.js"
 import ZoomButton from "./ZoomButton.js"
 import "./App.css"
@@ -18,7 +18,7 @@ const App = (props) => {
                 <Title/>
             </div>
             <div className="App-sidebar">
-                <LayerMenu baseURL={ baseURL } />
+                <Sidebar baseURL={ baseURL } />
             </div>
             <div className="App-colorbar">
                 <ColorbarStack />

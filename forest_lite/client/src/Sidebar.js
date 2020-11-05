@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { connect, useSelector, useDispatch } from "react-redux"
 import { toggleActive, setFlag } from "./actions.js"
-import "./LayerMenu.css"
+import "./Sidebar.css"
 import Info from "./Info.js"
 import Tab from "./Tab.js"
 import Nav from "./Nav.js"
@@ -89,7 +89,7 @@ const TabChoice = ({ children, onClick, active=false }) => {
     )
 }
 
-const LayerMenu = ({ baseURL }) => {
+const Sidebar = ({ baseURL }) => {
     const [ tabName, setTabName ] = useState("datasets")
     const showTab = tabName => () => {
         setTabName(tabName)
@@ -158,4 +158,4 @@ const mapStateToProps = state => {
 }
 
 
-export default connect(mapStateToProps)(LayerMenu)
+export default connect(mapStateToProps)(Sidebar)
