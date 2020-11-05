@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux"
 import { toggleActive } from "./actions.js"
 import Info from "./Info.js"
 import * as R from "ramda"
+import "./DatasetsMenu.css"
 
 
 const attrsToDivs = R.pipe(
