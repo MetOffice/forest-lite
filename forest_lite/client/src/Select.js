@@ -5,13 +5,25 @@ import "./Select.css"
 /**
  * HTML Select widget
  */
-const Select = ({ value, values, label, callback }) => {
+const Select = ({ value, values = [], label, callback = null }) => {
     const onChange = ev => {
-        callback(ev.target.value)
+        if (callback != null) {
+            callback(ev.target.value)
+        }
     }
     const options = values.map(option => {
-        return <option key={ option }
-                       value={ option }>{ option }</option>
+        // TODO: Support optgroup
+        if (typeof option !== "object") {
+            return <option key={ option }
+                           value={ option }>{ option }</option>
+        } else {
+            const { label="", values=[] } = option
+            const subOptions = values.map(value => {
+                const key = JSON.stringify({ label, value })
+                return <option key={ key } value={ key }>{ value }</option>
+            })
+            return <optgroup key={ label } label={ label }>{ subOptions }</optgroup>
+        }
     })
     return (<div className="select__container">
         <label
