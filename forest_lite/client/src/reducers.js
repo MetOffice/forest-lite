@@ -4,6 +4,7 @@
 import {
     SET_ACTIVE,
     TOGGLE_ACTIVE,
+    SET_ONLY_ACTIVE,
     SET_FLAG,
     SET_FIGURE,
     SET_DATASET,
@@ -27,8 +28,11 @@ import {
 } from "./action-types.js"
 import * as R from "ramda"
 import {
+    F,
+    defaultTo,
     identity,
     compose,
+    pipe,
     lensProp,
     lensPath,
     set,
@@ -47,6 +51,24 @@ const activeReducer = (state, action) => {
         R.identity
     )
     return R.evolve({ datasets: R.map(fn) })(state)
+}
+
+const onlyActiveReducer = (state, action) => {
+    // Mark all false except payload
+    const { payload } = action
+    const { dataset: datasetName, data_var: dataVar } = payload
+    const updateDataset = dataset => {
+        const { active={}, label=null } = dataset
+        let flags = mapObjIndexed(F)(active)
+        if (label != null) {
+            flags[dataVar] = (label === datasetName)
+        }
+        return set(lensProp("active"), flags, dataset)
+    }
+    return over(lensProp("datasets"), pipe(
+        defaultTo([]),
+        map(updateDataset)
+    ), state)
 }
 
 
@@ -95,6 +117,8 @@ export const rootReducer = (state = "", action) => {
     switch (type) {
         case SET_ACTIVE:
             return activeReducer(state, action)
+        case SET_ONLY_ACTIVE:
+            return onlyActiveReducer(state, action)
         case TOGGLE_ACTIVE:
             return toggleActiveReducer(state, action)
         case SET_FLAG:

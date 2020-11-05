@@ -6,6 +6,7 @@ const {
     setContours,
     setFigure,
     setActive,
+    setOnlyActive,
     toggleActive
 } = require("../src/actions.js")
 const { reduce } = require("ramda")
@@ -170,5 +171,80 @@ describe("toggleActiveReducer", () => {
             ]
         }
         expect(actual).toEqual(expected)
+    })
+})
+
+
+describe("setOnlyActive", () => {
+    describe("given action", () => {
+        const dataset = "Dataset"
+        const data_var = "Variable"
+        const state = {
+            datasets: [
+                { label: dataset }
+            ]
+        }
+        const action = setOnlyActive({ dataset, data_var })
+        const actual = rootReducer(state, action)
+        const expected = {
+            datasets: [
+                {
+                    label: dataset,
+                    active: { Variable: true }
+                }
+            ]
+        }
+        expect(actual).toEqual(expected)
+    })
+
+    describe("given multiple variables", () => {
+        const dataset = "Dataset"
+        const state = {
+            datasets: [
+                { label: dataset }
+            ]
+        }
+        const actions = [
+            toggleActive({ dataset, data_var: "A" }),
+            toggleActive({ dataset, data_var: "B" }),
+            toggleActive({ dataset, data_var: "C" }),
+            setOnlyActive({ dataset, data_var: "A" })
+        ]
+        const actual = reduce(rootReducer, state, actions)
+        const expected = {
+            datasets: [
+                {
+                    label: dataset,
+                    active: {
+                        A: true,
+                        B: false,
+                        C: false
+                    }
+                }
+            ]
+        }
+        expect(actual).toEqual(expected)
+    })
+
+    describe("given same variable in multiple datasets", () => {
+        const state = {
+            datasets: [
+                { label: "Foo" },
+                { label: "Bar" }
+            ]
+        }
+        const actions = [
+            setOnlyActive({ dataset: "Foo", data_var: "Name" }),
+            setOnlyActive({ dataset: "Bar", data_var: "Name" })
+        ]
+        const actual = reduce(rootReducer, state, actions)
+        const expected = {
+            datasets: [
+                { label: "Foo", active: { Name: false } },
+                { label: "Bar", active: { Name: true } },
+            ]
+        }
+        expect(actual.datasets[1]).toEqual(expected.datasets[1])
+        expect(actual.datasets[0]).toEqual(expected.datasets[0])
     })
 })
