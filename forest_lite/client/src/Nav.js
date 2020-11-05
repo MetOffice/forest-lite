@@ -139,8 +139,6 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
     })
 
     return (<div className="nav__panel">
-        <div className="nav__title">{ datasetName }</div>
-        <div className="nav__title--caption">Variable: { dataVar }</div>
         { selects }
     </div>)
 }
