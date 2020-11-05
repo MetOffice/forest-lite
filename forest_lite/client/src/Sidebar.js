@@ -31,16 +31,10 @@ const Sidebar = ({ baseURL }) => {
                            onClick={ showTab("datasets") }>
                     Layer
                 </TabChoice>
-                <TabChoice active={ tabName === "navigation" }
-                           onClick={ showTab("navigation") }>
-                    Navigation
-                </TabChoice>
             </div>
-            <Tab active={ tabName === "navigation" } >
-                <Nav baseURL={ baseURL } />
-            </Tab>
             <Tab active={ tabName === "datasets" } >
                 <DatasetsMenu />
+                <Nav baseURL={ baseURL } />
                 <Label>Coastlines, borders, lakes</Label>
                 <fieldset>
                     <CoastlinesToggle />
