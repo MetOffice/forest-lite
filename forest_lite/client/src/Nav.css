@@ -1,0 +1,30 @@
+.nav__container {
+    padding: 1.2em;
+    padding-top: 0;
+}
+
+.nav__panel {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.nav__title {
+    font-family: Helvetica;
+    font-weight: bold;
+    font-size: 1.4em;
+    margin-bottom: 0.4em;
+}
+
+.nav__title--caption {
+    font-family: Helvetica;
+    font-size: 0.9em;
+    margin-bottom: 1em;
+}
+
+.nav__item:hover {
+    cursor: pointer;
+}
+
+.nav__item--selected {
+    font-weight: bold;
+}

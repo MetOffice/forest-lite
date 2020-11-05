@@ -1,0 +1,23 @@
+.tab__header {
+    min-width: 200px;
+    font-family: Helvetica;
+    font-size: 1.4em;
+    display: flex;
+    padding: 5px;
+    padding-bottom: 0;
+    margin-bottom: 1em;
+    border-bottom: 1px solid #ccc;
+}
+
+.tab__choice {
+    color: #333;
+    margin-right: 1em;
+}
+
+.tab__choice--active {
+    border-bottom: 4px solid #666;
+}
+
+.tab__choice:hover {
+    cursor: pointer;
+}

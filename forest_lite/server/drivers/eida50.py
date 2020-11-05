@@ -54,3 +54,21 @@ class Driver:
             return data
         else:
             return {}
+
+    def points(self, data_var, dim_name):
+        """Coordinate/Dimension meta-data and values"""
+        pattern = self.settings.pattern
+        paths = sorted(glob.glob(pattern))
+        attrs = {}
+        data = []
+        if len(paths) > 0:
+            path = paths[-1]
+            with xarray.open_dataset(path, engine="h5netcdf") as nc:
+                attrs = nc[dim_name].attrs
+                data = nc[dim_name].values
+        return {
+            "data_var": data_var,
+            "dim_name": dim_name,
+            "data": data,
+            "attrs": attrs
+        }

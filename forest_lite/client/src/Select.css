@@ -1,0 +1,12 @@
+.select__container {
+    margin-bottom: 1em;
+}
+.select__label {
+    display: block;
+    font-family: Helvetica;
+    font-size: 0.9em;
+}
+
+.select__select {
+    width: 100%;
+}

@@ -126,3 +126,19 @@ async def palette(dataset_id: int,
                   settings: config.Settings = Depends(config.get_settings)):
     dataset = settings.datasets[dataset_id]
     return dataset.palettes
+
+
+@router.get("/datasets/{dataset_id}/{data_var}/axis/{dim_name}")
+async def axis(dataset_id: int,
+               data_var: str,
+               dim_name: str,
+               settings: config.Settings = Depends(config.get_settings)):
+    """GET dimension values related to particular data_var"""
+    dataset = settings.datasets[dataset_id]
+    driver = drivers.from_spec(dataset.driver)
+    obj = driver.points(data_var, dim_name)
+    content = serialize_json(obj)
+    response = Response(content=content,
+                        media_type="application/json")
+    #  response.headers["Cache-Control"] = "max-age=31536000"
+    return response
