@@ -6,20 +6,34 @@ import numpy as np
 from forest_lite.server import config
 from typing import Optional
 import json
+from forest_lite.server.config import Settings, get_settings
+from forest_lite.server.routers.auth import (
+    User,
+    get_current_active_user
+)
 
 
 router = APIRouter()
 
 
+async def get_datasets(settings: Settings = Depends(get_settings),
+                       user: User = Depends(get_current_active_user)):
+    """Curate datasets by user"""
+    # TODO: Select datasets for authenticated users
+    if user:
+        return [settings.datasets[0]]
+    return settings.datasets
+
+
 @router.get("/datasets")
 async def datasets(response: Response,
-                   settings: config.Settings = Depends(config.get_settings)):
+                   _datasets = Depends(get_datasets)):
     # response.headers["Cache-Control"] = "max-age=31536000"
     return {"datasets": [{"label": dataset.label,
                           "driver": dataset.driver.name,
                           "view": dataset.view,
                           "id": i}
-                         for i, dataset in enumerate(settings.datasets)]}
+                 for i, dataset in enumerate(_datasets)]}
 
 
 # TODO: Deprecate this endpoint

@@ -2,13 +2,13 @@ import argparse
 import os
 import uvicorn
 import fastapi
-from fastapi import Request
+from fastapi import Request, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
-from forest_lite.server.routers import atlas, datasets, palettes, viewport
+from forest_lite.server.routers import auth, atlas, datasets, palettes, viewport
 
 
 app = fastapi.FastAPI()
@@ -16,6 +16,7 @@ app.include_router(atlas.router)
 app.include_router(datasets.router)
 app.include_router(palettes.router)
 app.include_router(viewport.router)
+app.include_router(auth.router)
 
 
 # CORS
@@ -46,13 +47,18 @@ templates = Jinja2Templates(directory=templates_dir)
 
 @app.get("/")
 async def root(request: Request):
+    """Static index.html entry point"""
     host, port = request.scope.get("server")
     env_base_url = os.getenv("BASE_URL")
     if env_base_url:
         baseURL = env_base_url
     else:
-        baseURL = str(request.url)[:-1]  # Remove trailing /
-    print(request.headers)
+        # Normalise request URL to act as baseURL for React App
+        baseURL = str(request.url)
+        if "?" in baseURL:
+            baseURL = baseURL.split("?")[0]
+        if baseURL.endswith("/"):
+            baseURL = baseURL[:-1]  # Remove trailing /
     context = {"request": request,
                "baseURL": baseURL}
     return templates.TemplateResponse("index.html", context)

@@ -1,19 +1,33 @@
-import React from "react"
+import React, { useState } from "react"
 import AnimationControls from "./AnimationControls.js"
 import MapFigure from "./MapFigure.js"
 import Title from "./Title.js"
 import ColorbarStack from "./ColorbarStack.js"
 import ColorPaletteFetch from "./ColorPaletteFetch.js"
+import FetchDatasets from "./FetchDatasets.js"
 import Sidebar from "./Sidebar.js"
 import ViewPort from "./ViewPort.js"
 import ZoomButton from "./ZoomButton.js"
+import LoginForm from "./LoginForm.js"
 import "./App.css"
+import { AuthContext } from "./context/Auth.js"
 
 
 const App = (props) => {
+
+    // Simple localStorage authentication via tokens
+    const localStorageToken = localStorage.getItem("token")
+    const [ token, setAuthToken ] = useState(localStorageToken)
+    const setToken = (value) => {
+        localStorage.setItem("token", value)
+        setAuthToken(value)
+    }
+
     const { baseURL } = props
     return (
-        <>
+        // Pass current token and setToken callback to components
+        <AuthContext.Provider value={{ token, setToken }}>
+            <LoginForm baseURL={ baseURL } />
             <div className="App-title">
                 <Title/>
             </div>
@@ -32,7 +46,8 @@ const App = (props) => {
                 <ZoomButton />
             </div>
             <ColorPaletteFetch baseURL={ baseURL } />
-        </>
+            <FetchDatasets baseURL={ baseURL } />
+        </AuthContext.Provider>
     )
 }
 

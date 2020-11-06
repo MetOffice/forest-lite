@@ -24,12 +24,6 @@ window.main = function(baseURL) {
         </Provider>,
         document.getElementById("root"))
 
-    // Fetch datasets from server
-    fetch(`${baseURL}/datasets`)
-        .then(response => response.json())
-        .then(data => data.datasets)
-        .then(datasets => store.dispatch(set_datasets(datasets)))
-
     //   // RESTful image
     //   let image_source = new Bokeh.ColumnDataSource({
     //       data: {
