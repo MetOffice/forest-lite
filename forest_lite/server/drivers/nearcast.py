@@ -19,6 +19,7 @@ class Settings(BaseModel):
 
 
 class PointsAttrs(BaseModel):
+    standard_name: str = ""
     units: str = ""
 
 
@@ -109,17 +110,15 @@ def nearcast_points(data_var, dim_name,
     path = sorted(file_names)[-1]
     if dim_name == "level":
         data = sorted(set(get_first_fixed_surface(path, data_var)))
-        units = "Pa"
+        attrs = PointsAttrs(standard_name="pressure", units="Pa")
     else:
         data = sorted(set(get_validity(path, data_var)))
-        units = ""
+        attrs = PointsAttrs(standard_name="time")
     return Points(
         data_var=data_var,
         dim_name=dim_name,
         data=data,
-        attrs={
-            "units": units
-        }
+        attrs=attrs,
     ).dict()
 
 
