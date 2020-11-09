@@ -133,6 +133,8 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
             label = `Dimension: ${axis.dimension} [${axis.units}]`
         }
         const callback = (value) => {
+            console.log({ dimension: axis.dimension,
+                          value: value })
             const replace = {}
             replace[axis.dimension] = value
             setPoint({

@@ -21,7 +21,8 @@ class Driver:
         self.name = name
         self.settings = Settings(**settings)
 
-    def data_tile(self, data_var, timestamp_ms, z, x, y):
+    def data_tile(self, data_var, timestamp_ms, z, x, y,
+                  constraints=None):
         pattern = self.settings.pattern
         return core.get_data_tile(pattern, data_var, timestamp_ms, z, x, y)
 
