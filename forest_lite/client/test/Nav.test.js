@@ -64,9 +64,16 @@ afterEach(() => {
 test("NavPanel", async () => {
 
     // Fake fetch API
+    let urls = []
     window.fetch = jest.fn().mockImplementation(url => {
+        urls.push(url)
         return Promise.resolve({
-            json: () => Promise.resolve({})
+            json: () => Promise.resolve({
+                data: [0],
+                attrs: {
+                    standard_name: "time"
+                }
+            })
         })
     })
 
@@ -75,6 +82,7 @@ test("NavPanel", async () => {
     const datasets = [
         {
             label: datasetName,
+            id: 0,
             description: {
                 data_vars: {
                     Bar: {
@@ -97,6 +105,7 @@ test("NavPanel", async () => {
     })
 
     expect(container.textContent).toEqual("")
+    expect(urls).toEqual([])
 
     // Restore original fetch function
     window.fetch.mockClear()
