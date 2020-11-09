@@ -9,40 +9,13 @@ import string
 from functools import lru_cache
 from forest_lite.server.inject import Use
 from forest_lite.server.drivers.base import BaseDriver
+from forest_lite.server.drivers.types import Description, Points, PointsAttrs
 from pydantic import BaseModel
-from typing import Dict, List
 import pygrib as pg
 
 
 class Settings(BaseModel):
     pattern: str
-
-
-class PointsAttrs(BaseModel):
-    standard_name: str = ""
-    units: str = ""
-
-
-class Points(BaseModel):
-    data_var: str
-    dim_name: str
-    data: list
-    attrs: PointsAttrs
-
-
-class DataVarAttrs(BaseModel):
-    units: str = ""
-    long_name: str = ""
-
-
-class Datavar(BaseModel):
-    dims: List[str] = []
-    attrs: DataVarAttrs
-
-
-class Description(BaseModel):
-    attrs: Dict[str, str]
-    data_vars: Dict[str, Datavar]
 
 
 driver = BaseDriver()
