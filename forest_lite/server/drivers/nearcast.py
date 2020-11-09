@@ -9,6 +9,7 @@ import string
 from functools import lru_cache
 from forest_lite.server.inject import Use
 from forest_lite.server.drivers.base import BaseDriver
+from forest_lite.server.drivers.types import Description, Points, PointsAttrs
 from pydantic import BaseModel
 import pygrib as pg
 
@@ -46,20 +47,21 @@ def nearcast_times(limits=None, times=Use(get_times)):
 @driver.override("description")
 def nearcast_description(file_names=Use(get_file_names)):
     items = get_data_vars(sorted(file_names)[-1])
-    return {
+    return Description(**{
         "attrs": {
             "product": "Nearcast",
             "reference": "CIMSS, University Wisconsin-Madison"
         },
         "data_vars": {
             item["name"]: {
+                "dims": ["time", "level"],
                 "attrs": {
                     "long_name": item["name"],
                     "units": item["units"],
                 }
             } for item in items
         }
-    }
+    })
 
 
 @lru_cache
@@ -73,6 +75,24 @@ def get_data_vars(path):
         })
     messages.close()
     return items
+
+
+@driver.override("points")
+def nearcast_points(data_var, dim_name,
+                    file_names=Use(get_file_names)):
+    path = sorted(file_names)[-1]
+    if dim_name == "level":
+        data = sorted(set(get_first_fixed_surface(path, data_var)))
+        attrs = PointsAttrs(standard_name="pressure", units="Pa")
+    else:
+        data = sorted(set(get_validity(path, data_var)))
+        attrs = PointsAttrs(standard_name="time")
+    return Points(
+        data_var=data_var,
+        dim_name=dim_name,
+        data=data,
+        attrs=attrs,
+    ).dict()
 
 
 @driver.override("tilable")
