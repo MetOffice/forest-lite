@@ -43,7 +43,7 @@ const pointURL = (baseURL, datasetID, variable, dimension) => {
 }
 
 
-export const NavPanel = ({ baseURL, datasetName, dataVar }) => {
+export const NavPanel = ({ baseURL, datasets, datasetName, dataVar }) => {
     // Dimensions
     const [ dimension, setDimension ] = useState(null)
     const [ dimensions, setDimensions ] = useState([])
@@ -55,7 +55,6 @@ export const NavPanel = ({ baseURL, datasetName, dataVar }) => {
     const [ axes, setAxes ] = useState([])
 
     // Populate variables list
-    const datasets = useSelector(selectDatasets)
     const labels = datasets.map(dataset => dataset.label)
     const toID = datasets.reduce((agg, dataset) => {
         agg[dataset.label] = dataset.id
@@ -156,11 +155,13 @@ export const NavPanel = ({ baseURL, datasetName, dataVar }) => {
 
 const Nav = ({ baseURL }) => {
     const activeLayers = useSelector(selectActive)
+    const datasets = useSelector(selectDatasets)
     const panels = activeLayers.map(layer => {
         const key = `${layer.label} ${layer.dataVar}`
         return <NavPanel
                     key={ key }
                     baseURL={ baseURL }
+                    datasets={ datasets }
                     datasetName={ layer.label }
                     dataVar={ layer.dataVar } />
     })

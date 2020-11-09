@@ -62,7 +62,6 @@ afterEach(() => {
 
 
 test("NavPanel", async () => {
-    const store = createStore()
 
     // Fake fetch API
     window.fetch = jest.fn().mockImplementation(url => {
@@ -71,15 +70,30 @@ test("NavPanel", async () => {
         })
     })
 
+    const datasetName = "Foo"
+    const dataVar = "Bar"
+    const datasets = [
+        {
+            label: datasetName,
+            description: {
+                data_vars: {
+                    Bar: {
+                        dims: ["time", "level"]
+                    }
+                }
+            }
+        }
+    ]
+
     // Asynchronous act() to resolve promises
     await act(async () => {
         render(
-            <Provider store={store}>
-                <NavPanel
-                    baseURL=""
-                    datasetName={ null }
-                    dataVar={ null } />
-            </Provider>, container)
+            <NavPanel
+                baseURL=""
+                datasets={ datasets }
+                datasetName={ datasetName }
+                dataVar={ dataVar } />
+            , container)
     })
 
     expect(container.textContent).toEqual("")
