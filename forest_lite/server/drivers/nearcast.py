@@ -10,11 +10,26 @@ from functools import lru_cache
 from forest_lite.server.inject import Use
 from forest_lite.server.drivers.base import BaseDriver
 from pydantic import BaseModel
+from typing import Dict
 import pygrib as pg
 
 
 class Settings(BaseModel):
     pattern: str
+
+
+class DataVarAttrs(BaseModel):
+    units: str = ""
+    long_name: str = ""
+
+
+class Attrs(BaseModel):
+    attrs: DataVarAttrs
+
+
+class Description(BaseModel):
+    attrs: Dict[str, str]
+    data_vars: Dict[str, Attrs]
 
 
 driver = BaseDriver()
@@ -46,7 +61,7 @@ def nearcast_times(limits=None, times=Use(get_times)):
 @driver.override("description")
 def nearcast_description(file_names=Use(get_file_names)):
     items = get_data_vars(sorted(file_names)[-1])
-    return {
+    return Description(**{
         "attrs": {
             "product": "Nearcast",
             "reference": "CIMSS, University Wisconsin-Madison"
@@ -59,7 +74,7 @@ def nearcast_description(file_names=Use(get_file_names)):
                 }
             } for item in items
         }
-    }
+    })
 
 
 @lru_cache
