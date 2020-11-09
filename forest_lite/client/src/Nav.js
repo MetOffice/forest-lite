@@ -99,18 +99,22 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
                 })
                 .then(json => {
                     // Transform points
+                    let data = json.data
                     if (json.attrs.standard_name === "time") {
-                        return json.data.map(d => {
+                        data = json.data.map(d => {
                             return moment(d).tz("UTC").format()
                         })
                     }
-                    return json.data
+                    return {
+                        data: uniq(data),
+                        units: json.attrs.units || ""
+                    }
                 })
-                .then(uniq)
-                .then(values => {
+                .then(packet => {
                     return {
                         dimension: request.dimension,
-                        values: values
+                        values: packet.data,
+                        units: packet.units
                     }
                 })
         })
@@ -122,7 +126,12 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
     }, [ datasetName, dataVar, dimensions ])
 
     const selects = axes.map(axis => {
-        const label = `Dimension: ${axis.dimension}`
+        let label
+        if (axis.units === "") {
+            label = `Dimension: ${axis.dimension}`
+        } else {
+            label = `Dimension: ${axis.dimension} [${axis.units}]`
+        }
         const callback = (value) => {
             const replace = {}
             replace[axis.dimension] = value
