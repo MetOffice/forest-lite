@@ -97,15 +97,18 @@ test("NavPanel", async () => {
     await act(async () => {
         render(
             <NavPanel
-                baseURL=""
+                baseURL="base"
                 datasets={ datasets }
                 datasetName={ datasetName }
                 dataVar={ dataVar } />
             , container)
     })
 
-    expect(container.textContent).toEqual("")
-    expect(urls).toEqual([])
+    // expect(container.textContent).toEqual("")
+    expect(urls).toEqual([
+        "base/datasets/0/Bar/axis/time",
+        "base/datasets/0/Bar/axis/level"
+    ])
 
     // Restore original fetch function
     window.fetch.mockClear()
