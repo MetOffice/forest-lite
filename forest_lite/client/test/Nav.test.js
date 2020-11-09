@@ -44,6 +44,9 @@ test("selectActive", () => {
 })
 
 
+beforeAll(() => {
+})
+
 let container = null
 beforeEach(() => {
     container = document.createElement("div")
@@ -58,13 +61,30 @@ afterEach(() => {
 })
 
 
-test("NavPanel", () => {
+test("NavPanel", async () => {
     const store = createStore()
-    act(() => {
+
+    // Fake fetch API
+    window.fetch = jest.fn().mockImplementation(url => {
+        return Promise.resolve({
+            json: () => Promise.resolve({})
+        })
+    })
+
+    // Asynchronous act() to resolve promises
+    await act(async () => {
         render(
             <Provider store={store}>
-                <NavPanel />
+                <NavPanel
+                    baseURL=""
+                    datasetName={ null }
+                    dataVar={ null } />
             </Provider>, container)
     })
+
     expect(container.textContent).toEqual("")
+
+    // Restore original fetch function
+    window.fetch.mockClear()
+    delete window.fetch
 })
