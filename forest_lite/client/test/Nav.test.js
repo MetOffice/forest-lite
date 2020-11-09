@@ -1,4 +1,10 @@
+import React from "react"
+import { Provider } from "react-redux"
 import { selectDatasets, selectActive } from "../src/Nav.js"
+import { render, unmountComponentAtNode } from "react-dom"
+import { act } from "react-dom/test-utils"
+import { NavPanel } from "../src/Nav.js"
+import { createStore } from "../src/create-store.js"
 
 
 test("selectDatasets", () => {
@@ -35,4 +41,30 @@ test("selectActive", () => {
         }
     ]
     expect(actual).toEqual(expected)
+})
+
+
+let container = null
+beforeEach(() => {
+    container = document.createElement("div")
+    document.body.appendChild(container)
+})
+
+
+afterEach(() => {
+    unmountComponentAtNode(container)
+    container.remove()
+    container = null
+})
+
+
+test("NavPanel", () => {
+    const store = createStore()
+    act(() => {
+        render(
+            <Provider store={store}>
+                <NavPanel />
+            </Provider>, container)
+    })
+    expect(container.textContent).toEqual("")
 })
