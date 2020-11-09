@@ -67,6 +67,7 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
             const variables = getDataVars(datasets[index])
             if ( variables.indexOf(dataVar) !== -1 ) {
                 const description = datasets[index].description
+                console.log(description)
                 const dims = description.data_vars[dataVar].dims
                 const dimensions = dims.filter(dim => {
                     return ["latitude", "longitude"].indexOf(dim) === -1

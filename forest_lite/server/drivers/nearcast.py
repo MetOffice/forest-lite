@@ -10,7 +10,7 @@ from functools import lru_cache
 from forest_lite.server.inject import Use
 from forest_lite.server.drivers.base import BaseDriver
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, List
 import pygrib as pg
 
 
@@ -18,18 +18,30 @@ class Settings(BaseModel):
     pattern: str
 
 
+class PointsAttrs(BaseModel):
+    units: str = ""
+
+
+class Points(BaseModel):
+    data_var: str
+    dim_name: str
+    data: list
+    attrs: PointsAttrs
+
+
 class DataVarAttrs(BaseModel):
     units: str = ""
     long_name: str = ""
 
 
-class Attrs(BaseModel):
+class Datavar(BaseModel):
+    dims: List[str] = []
     attrs: DataVarAttrs
 
 
 class Description(BaseModel):
     attrs: Dict[str, str]
-    data_vars: Dict[str, Attrs]
+    data_vars: Dict[str, Datavar]
 
 
 driver = BaseDriver()
@@ -68,6 +80,7 @@ def nearcast_description(file_names=Use(get_file_names)):
         },
         "data_vars": {
             item["name"]: {
+                "dims": ["time", "level"],
                 "attrs": {
                     "long_name": item["name"],
                     "units": item["units"],
@@ -88,6 +101,26 @@ def get_data_vars(path):
         })
     messages.close()
     return items
+
+
+@driver.override("points")
+def nearcast_points(data_var, dim_name,
+                    file_names=Use(get_file_names)):
+    path = sorted(file_names)[-1]
+    if dim_name == "level":
+        data = sorted(set(get_first_fixed_surface(path, data_var)))
+        units = "Pa"
+    else:
+        data = sorted(set(get_validity(path, data_var)))
+        units = ""
+    return Points(
+        data_var=data_var,
+        dim_name=dim_name,
+        data=data,
+        attrs={
+            "units": units
+        }
+    ).dict()
 
 
 @driver.override("tilable")
