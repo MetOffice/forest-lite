@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react"
-import { useSelector } from "react-redux"
+import { useSelector, useDispatch } from "react-redux"
 import moment from "moment-timezone"
 import { uniq } from "ramda"
 import Select from "./Select.js"
 import "./Nav.css"
+import { updateNavigate } from "./actions.js"
 
 
 /**
@@ -44,6 +45,10 @@ const pointURL = (baseURL, datasetID, variable, dimension) => {
 
 
 export const NavPanel = ({ baseURL, datasets, datasetName, dataVar }) => {
+
+    // Dispatch actions
+    const dispatch = useDispatch()
+
     // Dimensions
     const [ dimension, setDimension ] = useState(null)
     const [ dimensions, setDimensions ] = useState([])
@@ -131,8 +136,16 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar }) => {
             label = `Dimension: ${axis.dimension} [${axis.units}]`
         }
         const callback = (value) => {
-            console.log({ dimension: axis.dimension,
-                          value: value })
+            // TODO: Implement change to application state from here
+            const action = updateNavigate({
+                datasetName,
+                dataVar,
+                dimension: axis.dimension,
+                value
+            })
+            dispatch(action)
+
+            // Update internal state
             const replace = {}
             replace[axis.dimension] = value
             setPoint({

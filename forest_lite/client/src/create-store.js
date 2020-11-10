@@ -33,15 +33,19 @@ let datasetsMiddleware = store => next => action => {
 }
 
 
-export const createStore = () => {
-    return Redux.createStore(rootReducer,
-        Redux.applyMiddleware(
-            logActionMiddleware,
+export const createStore = ({ log=false } = {}) => {
+    let middlewares = []
+    if (log) {
+        // Optional: log actions as they flow through reducer
+        middlewares.push(logActionMiddleware)
+    }
+    middlewares = middlewares.concat([
             toolMiddleware,
             animationMiddleware,
             colorPaletteMiddleware,
             timeMiddleware,
             datasetsMiddleware,
-            zoomMiddleware,
-        ))
+            zoomMiddleware
+    ])
+    return Redux.createStore(rootReducer, Redux.applyMiddleware(...middlewares))
 }
