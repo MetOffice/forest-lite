@@ -28,6 +28,7 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.4.0",
     "jest-canvas-mock": "^2.2.0",
+    "msw": "^0.21.3",
     "react-test-renderer": "^16.14.0",
     "style-loader": "^1.2.1",
     "ts-loader": "^8.0.7",
@@ -36,7 +37,8 @@
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",
-    "webpack-merge": "^5.2.0"
+    "webpack-merge": "^5.2.0",
+    "whatwg-fetch": "^3.5.0"
   },
   "dependencies": {
     "@turf/turf": "^5.1.6",

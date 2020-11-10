@@ -94,13 +94,11 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar, point={} }) 
             }
         }).filter(request => request.url != null)
 
+
         // Fetch dimensions
         const promises = requests.map(request => {
             return fetch(request.url)
                 .then(response => response.json())
-                .then(json => {
-                    return json
-                })
                 .then(json => {
                     // Transform points
                     let data = json.data
@@ -123,11 +121,12 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar, point={} }) 
                 })
         })
 
+
         // Gather dimension data
         Promise.all(promises)
                .then(setAxes)
 
-    }, [ datasetName, dataVar, dimensions ])
+    }, [ datasetName, dataVar, JSON.stringify(dimensions) ])
 
     const selects = axes.map(axis => {
         let label
