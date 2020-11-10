@@ -25,6 +25,7 @@ import {
     FETCH_IMAGE_SUCCESS,
     SET_FLAG,
     TOGGLE_FLAG,
+    UPDATE_NAVIGATE,
     ZOOM_IN,
     ZOOM_OUT
 } from "./action-types"
@@ -76,6 +77,9 @@ export const setDatasetDescription = (datasetId, data) => {
 export const setDatasetColorbar = (datasetId, data) => {
     return { type: SET_DATASET_COLORBAR, payload: { datasetId, data } }
 }
+
+// Update navigate
+export const updateNavigate = payload => ({ type: UPDATE_NAVIGATE, payload })
 
 // Zoom control actions
 export const zoomIn = () => ({ type: ZOOM_IN })

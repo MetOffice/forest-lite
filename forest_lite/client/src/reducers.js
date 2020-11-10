@@ -23,6 +23,7 @@ import {
     SET_STATE,
     SET_TIMES,
     SET_TIME_INDEX,
+    UPDATE_NAVIGATE,
     FETCH_IMAGE,
     FETCH_IMAGE_SUCCESS
 } from "./action-types.js"
@@ -166,6 +167,8 @@ export const rootReducer = (state = "", action) => {
             return Object.assign({}, state, {is_fetching: true, image_url: payload})
         case FETCH_IMAGE_SUCCESS:
             return Object.assign({}, state, {is_fetching: false})
+        case UPDATE_NAVIGATE:
+            return navigateReducer(state, action)
         default:
             return state
     }
@@ -193,4 +196,20 @@ const setLimitsReducer = (state, action) => {
     const { low, high, path = [] } = payload
     const limitsLens = compose(lensProp("limits"), lensPath(path))
     return set(limitsLens, {low, high}, state)
+}
+
+
+/**
+ * Manage application navigation state
+ */
+const navigateReducer = (state, action) => {
+    const { type, payload } = action
+    switch (type) {
+        case UPDATE_NAVIGATE:
+            const { datasetName, dataVar, dimension, value } = payload
+            const path = ["navigate", datasetName, dataVar, dimension]
+            return set(lensPath(path), value, state)
+        default:
+            return state
+    }
 }

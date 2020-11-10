@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react"
-import { useSelector } from "react-redux"
+import { useSelector, useDispatch } from "react-redux"
 import moment from "moment-timezone"
-import { uniq } from "ramda"
+import { uniq, view, lensPath } from "ramda"
 import Select from "./Select.js"
 import "./Nav.css"
+import { updateNavigate } from "./actions.js"
 
 
 /**
@@ -28,6 +29,10 @@ export const selectDatasets = state => {
     return state.datasets || []
 }
 
+export const selectNavigate = state => {
+    return state.navigate || {}
+}
+
 
 const getDataVars = tree => {
     return Object.keys(tree.description.data_vars)
@@ -43,19 +48,19 @@ const pointURL = (baseURL, datasetID, variable, dimension) => {
 }
 
 
-const NavPanel = ({ baseURL, datasetName, dataVar }) => {
+export const NavPanel = ({ baseURL, datasets, datasetName, dataVar, point={} }) => {
+
+    // Dispatch actions
+    const dispatch = useDispatch()
+
     // Dimensions
     const [ dimension, setDimension ] = useState(null)
     const [ dimensions, setDimensions ] = useState([])
-
-    // Point in N-dimensional space
-    const [ point, setPoint ] = useState({})
 
     // Axes
     const [ axes, setAxes ] = useState([])
 
     // Populate variables list
-    const datasets = useSelector(selectDatasets)
     const labels = datasets.map(dataset => dataset.label)
     const toID = datasets.reduce((agg, dataset) => {
         agg[dataset.label] = dataset.id
@@ -67,7 +72,6 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
             const variables = getDataVars(datasets[index])
             if ( variables.indexOf(dataVar) !== -1 ) {
                 const description = datasets[index].description
-                console.log(description)
                 const dims = description.data_vars[dataVar].dims
                 const dimensions = dims.filter(dim => {
                     return ["latitude", "longitude"].indexOf(dim) === -1
@@ -133,17 +137,20 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
             label = `Dimension: ${axis.dimension} [${axis.units}]`
         }
         const callback = (value) => {
-            const replace = {}
-            replace[axis.dimension] = value
-            setPoint({
-                ...point,
-                ...replace
+            // TODO: Implement change to application state from here
+            const action = updateNavigate({
+                datasetName,
+                dataVar,
+                dimension: axis.dimension,
+                value
             })
+            dispatch(action)
         }
+        const value = point[axis.dimension] || null
         return <Select
             key={ axis.dimension }
             label={ label }
-            value={ point[axis.dimension] }
+            value={ value }
             values={ axis.values }
             callback={ callback  } />
     })
@@ -155,13 +162,18 @@ const NavPanel = ({ baseURL, datasetName, dataVar }) => {
 
 const Nav = ({ baseURL }) => {
     const activeLayers = useSelector(selectActive)
+    const datasets = useSelector(selectDatasets)
+    const navigate = useSelector(selectNavigate)
     const panels = activeLayers.map(layer => {
         const key = `${layer.label} ${layer.dataVar}`
+        const point = view(lensPath([ layer.label, layer.dataVar ]), navigate)
         return <NavPanel
                     key={ key }
                     baseURL={ baseURL }
+                    datasets={ datasets }
                     datasetName={ layer.label }
-                    dataVar={ layer.dataVar } />
+                    dataVar={ layer.dataVar }
+                    point={ point } />
     })
     return (
         <div className="nav__container">

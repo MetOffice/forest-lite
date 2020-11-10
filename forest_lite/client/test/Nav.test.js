@@ -1,4 +1,12 @@
+import React from "react"
+import { Provider } from "react-redux"
 import { selectDatasets, selectActive } from "../src/Nav.js"
+import { render, screen, fireEvent } from "@testing-library/react"
+import "@testing-library/jest-dom/extend-expect"
+import { act } from "react-dom/test-utils"
+import { NavPanel } from "../src/Nav.js"
+import { createStore } from "../src/create-store.js"
+import { updateNavigate } from "../src/actions.js"
 
 
 test("selectDatasets", () => {
@@ -35,4 +43,138 @@ test("selectActive", () => {
         }
     ]
     expect(actual).toEqual(expected)
+})
+
+
+beforeEach(() => {
+    // Fake fetch API
+    window.fetch = jest.fn().mockImplementation(url => {
+        const attrs = {
+            standard_name: "time"
+        }
+        return Promise.resolve({
+            json: () => Promise.resolve({
+                data: [0],
+                attrs: attrs
+            })
+        })
+    })
+})
+
+afterEach(() => {
+    // Restore original fetch function
+    window.fetch.mockClear()
+    delete window.fetch
+})
+
+
+test("NavPanel", async () => {
+    const store = createStore()
+
+    // Fake data
+    const datasetName = "Foo"
+    const dataVar = "Bar"
+    const datasets = [
+        {
+            label: datasetName,
+            id: 0,
+            description: {
+                data_vars: {
+                    Bar: {
+                        dims: ["time", "level"]
+                    }
+                }
+            }
+        }
+    ]
+
+    // Asynchronous act() to resolve promises
+    await act(async () => {
+        render(
+            <Provider store={ store } >
+                <NavPanel
+                    baseURL="base"
+                    datasets={ datasets }
+                    datasetName={ datasetName }
+                    dataVar={ dataVar } />
+            </Provider>
+        )
+    })
+
+    // Check select labels are correct
+    expect(screen.getByText("Dimension: time"))
+        .toBeInTheDocument()
+    expect(screen.getByText("Dimension: level"))
+        .toBeInTheDocument()
+
+    // Click first select menu
+    fireEvent.change(screen.getAllByTestId("select")[0], {
+        target: { value: "1970-01-01T00:00:00Z" }
+    })
+
+    // Check effect on application state
+    const actual = store.getState()
+    const expected = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    time: "1970-01-01T00:00:00Z"
+                }
+            }
+        }
+    }
+    expect(actual).toEqual(expected)
+})
+
+
+test("NavPanel renders application state", async () => {
+    // Set up application state
+    const store = createStore()
+    const action = updateNavigate({
+        datasetName: "Foo",
+        dataVar: "Bar",
+        dimension: "time",
+        value: "1970-01-01T00:00:00Z"
+    })
+
+    // Fake data
+    const datasetName = "Foo"
+    const dataVar = "Bar"
+    const datasets = [
+        {
+            label: datasetName,
+            id: 0,
+            description: {
+                data_vars: {
+                    Bar: {
+                        dims: ["time", "level"]
+                    }
+                }
+            }
+        }
+    ]
+    const point = {
+        time: "1970-01-01T00:00:00Z",
+        level: null
+    }
+
+    // Render component
+    await act(async () => {
+        render(
+            <Provider store={ store } >
+                <NavPanel
+                    baseURL="base"
+                    datasets={ datasets }
+                    datasetName={ datasetName }
+                    dataVar={ dataVar }
+                    point={ point } />
+            </Provider>
+        )
+        // Update store after component render
+        store.dispatch(action)
+    })
+
+
+    // Check select values are set correctly
+    expect(screen.getByDisplayValue(/1970/i)).toBeInTheDocument()
 })

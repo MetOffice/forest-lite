@@ -31,6 +31,7 @@ const Select = ({ value, values = [], label, callback = null }) => {
             htmlFor="unique-select">{ label }</label>
         <select
                 id="unique-select"
+                data-testid="select"
                 onChange={ onChange }
                 className="select__select"
                 value={ value || "" }>
