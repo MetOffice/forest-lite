@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import moment from "moment-timezone"
-import { uniq } from "ramda"
+import { uniq, view, lensPath } from "ramda"
 import Select from "./Select.js"
 import "./Nav.css"
 import { updateNavigate } from "./actions.js"
@@ -29,6 +29,10 @@ export const selectDatasets = state => {
     return state.datasets || []
 }
 
+export const selectNavigate = state => {
+    return state.navigate || {}
+}
+
 
 const getDataVars = tree => {
     return Object.keys(tree.description.data_vars)
@@ -44,7 +48,7 @@ const pointURL = (baseURL, datasetID, variable, dimension) => {
 }
 
 
-export const NavPanel = ({ baseURL, datasets, datasetName, dataVar }) => {
+export const NavPanel = ({ baseURL, datasets, datasetName, dataVar, point={} }) => {
 
     // Dispatch actions
     const dispatch = useDispatch()
@@ -52,9 +56,6 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar }) => {
     // Dimensions
     const [ dimension, setDimension ] = useState(null)
     const [ dimensions, setDimensions ] = useState([])
-
-    // Point in N-dimensional space
-    const [ point, setPoint ] = useState({})
 
     // Axes
     const [ axes, setAxes ] = useState([])
@@ -144,19 +145,12 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar }) => {
                 value
             })
             dispatch(action)
-
-            // Update internal state
-            const replace = {}
-            replace[axis.dimension] = value
-            setPoint({
-                ...point,
-                ...replace
-            })
         }
+        const value = point[axis.dimension] || null
         return <Select
             key={ axis.dimension }
             label={ label }
-            value={ point[axis.dimension] }
+            value={ value }
             values={ axis.values }
             callback={ callback  } />
     })
@@ -169,14 +163,17 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar }) => {
 const Nav = ({ baseURL }) => {
     const activeLayers = useSelector(selectActive)
     const datasets = useSelector(selectDatasets)
+    const navigate = useSelector(selectNavigate)
     const panels = activeLayers.map(layer => {
         const key = `${layer.label} ${layer.dataVar}`
+        const point = view(lensPath([ layer.label, layer.dataVar ]), navigate)
         return <NavPanel
                     key={ key }
                     baseURL={ baseURL }
                     datasets={ datasets }
                     datasetName={ layer.label }
-                    dataVar={ layer.dataVar } />
+                    dataVar={ layer.dataVar }
+                    point={ point } />
     })
     return (
         <div className="nav__container">

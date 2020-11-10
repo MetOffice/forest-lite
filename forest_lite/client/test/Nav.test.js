@@ -6,6 +6,7 @@ import "@testing-library/jest-dom/extend-expect"
 import { act } from "react-dom/test-utils"
 import { NavPanel } from "../src/Nav.js"
 import { createStore } from "../src/create-store.js"
+import { updateNavigate } from "../src/actions.js"
 
 
 test("selectDatasets", () => {
@@ -45,13 +46,9 @@ test("selectActive", () => {
 })
 
 
-test("NavPanel", async () => {
-    const store = createStore()
-
+beforeEach(() => {
     // Fake fetch API
-    let urls = []
     window.fetch = jest.fn().mockImplementation(url => {
-        urls.push(url)
         const attrs = {
             standard_name: "time"
         }
@@ -62,7 +59,19 @@ test("NavPanel", async () => {
             })
         })
     })
+})
 
+afterEach(() => {
+    // Restore original fetch function
+    window.fetch.mockClear()
+    delete window.fetch
+})
+
+
+test("NavPanel", async () => {
+    const store = createStore()
+
+    // Fake data
     const datasetName = "Foo"
     const dataVar = "Bar"
     const datasets = [
@@ -115,14 +124,57 @@ test("NavPanel", async () => {
         }
     }
     expect(actual).toEqual(expected)
+})
 
-    // Check REST API was called correctly
-    expect(urls).toEqual([
-        "base/datasets/0/Bar/axis/time",
-        "base/datasets/0/Bar/axis/level"
-    ])
 
-    // Restore original fetch function
-    window.fetch.mockClear()
-    delete window.fetch
+test("NavPanel renders application state", async () => {
+    // Set up application state
+    const store = createStore()
+    const action = updateNavigate({
+        datasetName: "Foo",
+        dataVar: "Bar",
+        dimension: "time",
+        value: "1970-01-01T00:00:00Z"
+    })
+
+    // Fake data
+    const datasetName = "Foo"
+    const dataVar = "Bar"
+    const datasets = [
+        {
+            label: datasetName,
+            id: 0,
+            description: {
+                data_vars: {
+                    Bar: {
+                        dims: ["time", "level"]
+                    }
+                }
+            }
+        }
+    ]
+    const point = {
+        time: "1970-01-01T00:00:00Z",
+        level: null
+    }
+
+    // Render component
+    await act(async () => {
+        render(
+            <Provider store={ store } >
+                <NavPanel
+                    baseURL="base"
+                    datasets={ datasets }
+                    datasetName={ datasetName }
+                    dataVar={ dataVar }
+                    point={ point } />
+            </Provider>
+        )
+        // Update store after component render
+        store.dispatch(action)
+    })
+
+
+    // Check select values are set correctly
+    expect(screen.getByDisplayValue(/1970/i)).toBeInTheDocument()
 })
