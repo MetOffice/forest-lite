@@ -1,12 +1,18 @@
 import React from "react"
 import { Provider } from "react-redux"
 import { selectDatasets, selectActive } from "../src/Nav.js"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
 import { act } from "react-dom/test-utils"
 import { NavPanel } from "../src/Nav.js"
 import { createStore } from "../src/create-store.js"
 import { updateNavigate } from "../src/actions.js"
+import { server } from "./server.js"
+
+
+beforeAll(() => server.listen())
+afterAll(() => server.close())
+afterEach(() => server.resetHandlers())
 
 
 test("selectDatasets", () => {
@@ -46,25 +52,18 @@ test("selectActive", () => {
 })
 
 
-beforeEach(() => {
-    // Fake fetch API
-    window.fetch = jest.fn().mockImplementation(url => {
-        const attrs = {
+test("Check fetch polyfill and msw", () => {
+    const expected = {
+        data: [ 0 ],
+        attrs: {
             standard_name: "time"
         }
-        return Promise.resolve({
-            json: () => Promise.resolve({
-                data: [0],
-                attrs: attrs
-            })
+    }
+    fetch("/base/endpoint")
+        .then(response => response.json())
+        .then(actual => {
+            expect(actual).toEqual(expected)
         })
-    })
-})
-
-afterEach(() => {
-    // Restore original fetch function
-    window.fetch.mockClear()
-    delete window.fetch
 })
 
 
@@ -90,16 +89,19 @@ test("NavPanel", async () => {
 
     // Asynchronous act() to resolve promises
     await act(async () => {
-        render(
+        await render(
             <Provider store={ store } >
                 <NavPanel
-                    baseURL="base"
+                    baseURL="/base"
                     datasets={ datasets }
                     datasetName={ datasetName }
                     dataVar={ dataVar } />
             </Provider>
         )
     })
+
+    // Wait for initial renders to complete
+    await waitFor(() => screen.getByText("Dimension: time"))
 
     // Check select labels are correct
     expect(screen.getByText("Dimension: time"))
@@ -173,6 +175,9 @@ test("NavPanel renders application state", async () => {
         // Update store after component render
         store.dispatch(action)
     })
+
+    // Wait for initial renders to complete
+    await waitFor(() => screen.getByText(/dimension: time/i))
 
 
     // Check select values are set correctly
