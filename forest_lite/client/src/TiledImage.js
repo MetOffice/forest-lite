@@ -85,11 +85,7 @@ const ImageURL = ({ urls, source, }) => {
 
 const getURLs = (baseURL, datasetId, dataVar, time, ranges) => {
     // Construct endpoint
-    const constraints = JSON.stringify({
-        time_0: time,
-        pressure_0: 1000
-    })
-    const templateURL = `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}?constraints=${constraints}`
+    const templateURL = `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
 
     // Only fetch if variable selected
     if (dataVar == null) {

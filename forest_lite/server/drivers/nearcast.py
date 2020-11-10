@@ -83,7 +83,7 @@ def nearcast_points(data_var, dim_name,
     path = sorted(file_names)[-1]
     if dim_name == "level":
         data = sorted(set(get_first_fixed_surface(path, data_var)))
-        attrs = PointsAttrs(standard_name="pressure", units="level")
+        attrs = PointsAttrs(standard_name="pressure", units="Pa")
     else:
         data = sorted(set(get_validity(path, data_var)))
         attrs = PointsAttrs(standard_name="time")
@@ -96,17 +96,13 @@ def nearcast_points(data_var, dim_name,
 
 
 @driver.override("tilable")
-def nearcast_tilable(data_var,
-                     timestamp_ms,
-                     constraints=None,
-                     file_names=Use(get_file_names)):
+def nearcast_tilable(data_var, timestamp_ms, file_names=Use(get_file_names)):
     path = sorted(file_names)[-1]
-    level = constraints.get("level")
-    return get_grib2_data(path, timestamp_ms, data_var, level)
+    return get_grib2_data(path, timestamp_ms, data_var)
 
 
 @lru_cache
-def get_grib2_data(path, timestamp_ms, variable, level):
+def get_grib2_data(path, timestamp_ms, variable):
     valid_time = dt.datetime.fromtimestamp(timestamp_ms / 1000.)
     cache = {}
     messages = pg.index(path,
@@ -114,9 +110,8 @@ def get_grib2_data(path, timestamp_ms, variable, level):
                         "scaledValueOfFirstFixedSurface",
                         "validityTime")
     if len(path) > 0:
-        if level is None:
-            levels = sorted(set(get_first_fixed_surface(path, variable)))
-            level = levels[0]
+        levels = sorted(set(get_first_fixed_surface(path, variable)))
+        level = levels[0]
         times = sorted(set(get_validity(path, variable)))
         time = times[0]
         vTime = "{0:d}{1:02d}".format(time.hour, time.minute)
