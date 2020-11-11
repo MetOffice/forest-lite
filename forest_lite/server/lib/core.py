@@ -11,14 +11,16 @@ from functools import lru_cache
 TILE_SIZE = 256 # 256 # 64  # 128
 
 
-def get_data_tile(pattern, data_var, timestamp_ms, z, x, y):
+def get_data_tile(pattern, data_var, z, x, y, query=None):
+    if query is not None:
+        # Hashable query
+        query = frozenset(query.items())
     path = get_path(pattern)
-    return _data_tile(path, data_var, timestamp_ms, z, x, y)
+    return _data_tile(path, data_var, z, x, y, query)
 
 
 @lru_cache
-def _data_tile(path, data_var, timestamp_ms, z, x, y):
-    time = np.datetime64(timestamp_ms, 'ms')
+def _data_tile(path, data_var, z, x, y, query):
     zxy = (z, x, y)
     with xarray.open_dataset(path, engine="h5netcdf") as nc:
 
@@ -30,32 +32,21 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
             if key.startswith("latitude"):
                 lats = var[key].values
 
-        # Filter pressure coordinate
-        idx = {}
-        for dim in var.dims:
-            if dim.startswith("time"):
-                # Search time axis
-                pts = np.where(nc.time.values == time)
-                if len(pts[0]) > 0:
-                    i = pts[0][0]
-                else:
-                    # TODO: Replace with Exception
-                    i = -1
-                idx[dim] = i
-            elif dim.startswith("pressure"):
-                # Take first pressure level
-                idx[dim] = 0
-            elif dim.startswith("depth"):
-                # Take first depth level
-                idx[dim] = 0
-            elif dim.startswith("dim"):
-                # TODO: implement correct search algorithm
-                idx[dim] = 0
+        # Find 2D values array
+        if query is None:
+            array = nc[data_var]
+        else:
+            idx = dict(query)
+            try:
+                array = nc[data_var].sel(**idx, method="nearest")
+            except ValueError:
+                idx = { key: int(value) for key, value in idx.items() }
+                array = nc[data_var].isel(**idx)
 
-        values = nc[data_var][idx].values
         units = nc[data_var].units
 
-    assert values.ndim == 2, f"dims: {var.dims}"
+    assert array.ndim == 2, f"dims: {var.dims}"
+    values = array.values
 
     # Mask moisture_content_of_soil_layer (TODO: Generalise)
     if "moisture_content" in data_var:

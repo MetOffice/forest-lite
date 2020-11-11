@@ -4,6 +4,8 @@ from forest_lite.server.lib import core
 from bokeh.core.json_encoder import serialize_json
 import numpy as np
 from forest_lite.server import config
+from typing import Optional
+import json
 
 
 router = APIRouter()
@@ -61,21 +63,20 @@ def find_datasets(settings, label):
             yield dataset
 
 
-@router.get("/datasets/{dataset_id}/{data_var}/times/{timestamp_ms}/tiles/{Z}/{X}/{Y}")
+@router.get("/datasets/{dataset_id}/{data_var}/tiles/{Z}/{X}/{Y}")
 async def data_tiles(dataset_id: int,
                      data_var: str,
-                     timestamp_ms: int,
                      Z: int, X: int, Y: int,
+                     query: Optional[str] = None,
                      settings: config.Settings = Depends(config.get_settings)):
     """GET data tile from dataset at particular time"""
+    if query is not None:
+        query = json.loads(query)
     dataset = settings.datasets[dataset_id]
     driver = drivers.from_spec(dataset.driver)
-    data = driver.data_tile(data_var,
-                            timestamp_ms,
-                            Z, X, Y)
+    data = driver.data_tile(data_var, Z, X, Y, query=query)
     obj = {
         "dataset_id": dataset_id,
-        "timestamp_ms": timestamp_ms,
         "tile": [X, Y, Z],
         "data": data
     }

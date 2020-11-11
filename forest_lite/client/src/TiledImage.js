@@ -6,6 +6,13 @@ import {
     HoverTool
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as R from "ramda"
+import {
+    compose,
+    lensIndex,
+    lensPath,
+    lensProp,
+    view
+} from "ramda"
 import * as tiling from "./tiling.js"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
@@ -59,12 +66,12 @@ const selectTooltips = (datasetId, dataVar) => state => {
 
     // Parse additional tooltips from state
     const { datasets=[] } = state
-    let description = null
     if (datasets.length > 0) {
-        description = datasets[datasetId].description
+        const { description } = datasets[datasetId]
         if (typeof description != "undefined") {
-            if (typeof description.data_vars[dataVar] != "undefined") {
-                const pairs = R.toPairs(description.data_vars[dataVar].attrs)
+            const { data_vars={} } = description
+            if (typeof data_vars[dataVar] != "undefined") {
+                const pairs = R.toPairs(data_vars[dataVar].attrs)
                 tooltips = R.concat(tooltips, pairs)
             }
         }
@@ -74,30 +81,66 @@ const selectTooltips = (datasetId, dataVar) => state => {
 
 
 /**
+ * Select a point
+ */
+export const selectPoint = (datasetName, dataVar) => {
+    return view(lensPath(["navigate", datasetName, dataVar]))
+}
+
+/**
+ * Select dataset name from ID
+ */
+export const selectDatasetName = id => {
+    return view(compose(
+        lensProp("datasets"),
+        lensIndex(id),
+        lensProp("label"),
+    ))
+}
+
+/**
  * Load image(s) from REST endpoints
  */
-const ImageURL = ({ urls, source, }) => {
+export const ImageURL = ({ urls, source, }) => {
     useEffect(() => {
         tiling.renderTiles(source)(urls)
     }, [ JSON.stringify(urls) ])
     return null
 }
 
-const getURLs = (baseURL, datasetId, dataVar, time, ranges) => {
-    // Construct endpoint
-    const templateURL = `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
 
-    // Only fetch if variable selected
-    if (dataVar == null) {
-        return null
+/**
+ * Map state to {Z}/{X}/{Y} URL
+ */
+export const getTemplate = (baseURL, datasetId, dataVar, time) => {
+    if (dataVar == null) return null
+    if (time == null) return null
+    return `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
+}
+
+
+/**
+ * Map state to {Z}/{X}/{Y} URL
+ */
+export const getTemplateQuery = (baseURL, datasetId, dataVar, query=null) => {
+    if (dataVar == null) return null
+    const url = `${baseURL}/datasets/${datasetId}/${dataVar}/tiles/{Z}/{X}/{Y}`
+    if (query == null) {
+        // Support 0-dimensional data
+        return url
+    } else {
+        const q = JSON.stringify(query)
+        return `${url}?query=${q}`
     }
-    // Validate state
-    if (ranges == null) {
-        return null
-    }
-    if (time == null) {
-        return null
-    }
+}
+
+
+/**
+ * Fill in Z, X and Y values
+ */
+export const getURLs = (templateURL, ranges) => {
+    if (templateURL == null) return null
+    if (ranges == null) return null
 
     const { x_range, y_range } = ranges
     if (x_range  == null) return null
@@ -120,13 +163,70 @@ const getURLs = (baseURL, datasetId, dataVar, time, ranges) => {
 
 
 /**
+ * Initialise application navigation state
+ */
+export const InitialTimes = ({ baseURL, datasetId, label }) => {
+    const dispatch = useDispatch()
+    useEffect(() => {
+        if (datasetId === 0) {
+            const endpoint = `${baseURL}/datasets/${label}/times?limit=7`
+            fetch(endpoint)
+                .then(response => {
+                    if (!response.ok) {
+                        console.error("Not OK")
+                    }
+                    return response.json()
+                })
+                .then((data) => {
+                    let action = set_times(data)
+                    dispatch(action)
+                })
+        }
+    }, [])
+    return null
+}
+
+
+/**
+ * Initialise dataset description state
+ */
+export const DatasetDescription = ({ baseURL, datasetId }) => {
+    const dispatch = useDispatch()
+    useEffect(() => {
+        let endpoint = `${baseURL}/datasets/${datasetId}`
+        fetch(endpoint)
+            .then(response => response.json())
+            .then(data => {
+                dispatch(setDatasetDescription(datasetId, data))
+            })
+    }, [])
+    return null
+}
+
+
+/**
+ * Console log REST URLs
+ */
+const URLPrinter = ({ template, ranges }) => {
+    useEffect(() => {
+        const urls = getURLs(template, ranges)
+        if (urls != null) {
+            urls.map(url => console.log(url))
+        }
+    }, [ template, JSON.stringify(ranges) ])
+    return null
+}
+
+
+/**
  * Tile images from application state
  */
-const TiledImage = ({ figure, datasetId, label, baseURL }) => {
+const TiledImage = ({ figure, datasetId, baseURL }) => {
     const dispatch = useDispatch()
     const [source, setSource] = useState(null)
     const [renderer, setRenderer] = useState(null)
     const [color_mapper, setColormapper] = useState(null)
+    const [ template, setTemplate ] = useState(null)
     const [urls, setURLs] = useState([])
 
     useEffect(() => {
@@ -161,7 +261,21 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         setColormapper(color_mapper)
     }, [])
 
+    // Configure REST URL template
+    const datasetName = useSelector(selectDatasetName(datasetId))
     const dataVar = useSelector(dataVarById(datasetId))
+    const time = useSelector(state => {
+        const { times, time_index } = state
+        if (typeof times === "undefined") return null
+        if (typeof time_index === "undefined") return null
+        return times[time_index]
+    })
+    const query = useSelector(selectPoint(datasetName, dataVar))
+    useEffect(() => {
+        setTemplate(getTemplateQuery(baseURL, datasetId, dataVar, query))
+    }, [ baseURL, datasetId, dataVar, JSON.stringify(query) ])
+
+    // Configure tooltips
     const tooltips = useSelector(selectTooltips(datasetId, dataVar))
     useEffect(() => {
         // Set ColorMapper initial settings from server
@@ -172,43 +286,17 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
             })
     }, [color_mapper])
 
-    useEffect(() => {
-        // Initial times
-        if (datasetId === 0) {
-            fetch(`${baseURL}/datasets/${label}/times?limit=7`)
-                .then((response) => response.json())
-                .then((data) => {
-                    let action = set_times(data)
-                    dispatch(action)
-                })
-        }
-
-        // Dataset description (TODO: Move to better place)
-        let endpoint = `${baseURL}/datasets/${datasetId}`
-        fetch(endpoint)
-            .then(response => response.json())
-            .then(data => {
-                dispatch(setDatasetDescription(datasetId, data))
-            })
-    }, [])
-
     // Callback listening to source changes
     const onLimits = useCallback(
         ({ low, high }) => {
             const path = [datasetId, dataVar]
             const action = set_limits({ low, high, path })
-            console.log(low, high)
             dispatch(action)
         }, [ datasetId, dataVar ])
 
     // Render component
     const ranges = useSelector(state => state.figure || null)
-    const time = useSelector(state => {
-        const { times, time_index } = state
-        if (typeof times === "undefined") return null
-        if (typeof time_index === "undefined") return null
-        return times[time_index]
-    })
+
     const active = useSelector(state => {
         const { datasets = [] } = state
         let active = false
@@ -237,17 +325,21 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
 
     // Compute URLs
     useEffect(() => {
-        const urls = getURLs(baseURL, datasetId, dataVar, time, ranges)
+        const urls = getURLs(template, ranges)
         if (urls != null) {
             setURLs(urls)
         }
-    }, [ baseURL, datasetId, dataVar, time, JSON.stringify(ranges) ])
+    }, [ template, JSON.stringify(ranges) ])
 
     if (source == null) return null
     if (renderer == null) return null
     if (color_mapper == null) return null
 
     return (<>
+            <URLPrinter
+                template={ template }
+                ranges={ ranges }
+                />
             <AutoLimits source={ source } onChange={ onLimits } />
             <HoverToolComponent
                     tooltips={ tooltips }
