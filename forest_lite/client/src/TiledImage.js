@@ -59,12 +59,12 @@ const selectTooltips = (datasetId, dataVar) => state => {
 
     // Parse additional tooltips from state
     const { datasets=[] } = state
-    let description = null
     if (datasets.length > 0) {
-        description = datasets[datasetId].description
+        const { description } = datasets[datasetId]
         if (typeof description != "undefined") {
-            if (typeof description.data_vars[dataVar] != "undefined") {
-                const pairs = R.toPairs(description.data_vars[dataVar].attrs)
+            const { data_vars={} } = description
+            if (typeof data_vars[dataVar] != "undefined") {
+                const pairs = R.toPairs(data_vars[dataVar].attrs)
                 tooltips = R.concat(tooltips, pairs)
             }
         }
@@ -76,7 +76,7 @@ const selectTooltips = (datasetId, dataVar) => state => {
 /**
  * Load image(s) from REST endpoints
  */
-const ImageURL = ({ urls, source, }) => {
+export const ImageURL = ({ urls, source, }) => {
     useEffect(() => {
         tiling.renderTiles(source)(urls)
     }, [ JSON.stringify(urls) ])
@@ -179,7 +179,7 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
             fetch(endpoint)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error("Woops")
+                        console.error("Not OK")
                     }
                     return response.json()
                 })

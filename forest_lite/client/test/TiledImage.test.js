@@ -4,10 +4,11 @@ import "@testing-library/jest-dom/extend-expect"
 import { act } from "react-dom/test-utils"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import * as Bokeh from "@bokeh/bokehjs"
-import TiledImage from "../src/TiledImage.js"
+import { ColumnDataSource } from "@bokeh/bokehjs/build/js/lib/models"
+import TiledImage, { ImageURL } from "../src/TiledImage.js"
 import { createStore } from "../src/create-store.js"
 import { set_times, setFigure, setOnlyActive, set_datasets } from "../src/actions.js"
-import { server } from "./server.js"
+import { server, rest } from "./server.js"
 
 
 // Configure mock service worker
@@ -16,7 +17,49 @@ afterAll(() => server.close())
 afterEach(() => server.resetHandlers())
 
 
-test("TiledImage", async () => {
+test("ImageURL", async () => {
+    const urls = ["/url"]
+    const source = new ColumnDataSource({
+        data: {
+            x: [],
+            y: [],
+            dw: [],
+            dh: [],
+            image: [],
+            level: [],
+            units: []
+        }
+    })
+    server.use(
+        rest.get(/url/, async (req, res, ctx) => {
+            return res(
+                ctx.status(200),
+                ctx.json({
+                    data: {
+                        x: [0],
+                        y: [0],
+                        dw: [1],
+                        dh: [1],
+                        image: [[[0, 1], [2, 3]]]
+                    }
+                })
+            )
+        })
+    )
+    await act(async () => {
+        await render(
+            <ImageURL
+                urls={ urls }
+                source={ source } />
+        )
+    })
+    await waitFor(() => {
+        expect(source.data.image.length).toBe(1)
+    })
+})
+
+
+test.skip("TiledImage", async () => {
     const store = createStore()
     const figure = Bokeh.Plotting.figure()
     const datasetId = 0

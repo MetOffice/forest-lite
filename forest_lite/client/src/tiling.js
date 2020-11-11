@@ -12,7 +12,7 @@ export const WEB_MERCATOR_EXTENT = {
 const _cache = {}
 
 // Render tiles
-export const renderTiles = source =>  urls => {
+export const renderTiles = source => urls => {
     const promises = urls.map(url => {
         if (url in _cache) {
             return Promise.resolve(_cache[url])
