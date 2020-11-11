@@ -4,21 +4,21 @@ import { useAuth } from "./context/Auth.js"
 
 
 const LoginStatus = () => {
-    const { token, setToken } = useAuth()
+    const { loggedIn, setToken } = useAuth()
     const onClick = ev => {
         setToken(null)
     }
     let msg
-    if (token == null) {
+    if (loggedIn) {
         msg = (
             <span className="LoginStatus">
-                <i className="fas fa-sign-in-alt" /> Sign in
+                <i className="fas fa-sign-out-alt" /> Sign out
             </span>
         )
     } else {
         msg = (
             <span className="LoginStatus">
-                <i className="fas fa-sign-out-alt" /> Sign out
+                <i className="fas fa-sign-in-alt" /> Sign in
             </span>
         )
     }

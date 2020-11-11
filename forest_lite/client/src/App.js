@@ -18,15 +18,17 @@ const App = (props) => {
     // Simple localStorage authentication via tokens
     const localStorageToken = localStorage.getItem("token")
     const [ token, setAuthToken ] = useState(localStorageToken)
+    const [ loggedIn, setLoggedIn ] = useState(false)
     const setToken = (value) => {
         localStorage.setItem("token", value)
         setAuthToken(value)
+        setLoggedIn(value != null)
     }
 
     const { baseURL } = props
     return (
-        // Pass current token and setToken callback to components
-        <AuthContext.Provider value={{ token, setToken }}>
+        // Pass login state and setToken callback to components
+        <AuthContext.Provider value={{ loggedIn, setToken }}>
             <LoginForm baseURL={ baseURL } />
             <div className="App-title">
                 <Title/>

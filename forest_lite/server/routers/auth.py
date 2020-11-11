@@ -58,6 +58,9 @@ class User(BaseModel):
     disabled: Optional[bool] = None
 
 
+GUEST_USER = User(username="anonymous")
+
+
 class UserInDB(User):
     hashed_password: str
 
@@ -93,6 +96,11 @@ def create_access_token(data: dict,
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
+    """Access current user given request parameters"""
+    if not os.getenv("USE_AUTH", False):
+        return GUEST_USER
+
+    # Flow when using OAuth2 user authentication
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid authentication credentials",

@@ -6,7 +6,7 @@ import "./LoginForm.css"
 const LoginForm = ({ baseURL }) => {
     const [ username, setUsername ] = useState("")
     const [ password, setPassword ] = useState("")
-    const { token, setToken } = useAuth()
+    const { loggedIn, setToken } = useAuth()
 
     const onSubmit = (ev) => {
         ev.preventDefault()
@@ -37,7 +37,7 @@ const LoginForm = ({ baseURL }) => {
         setPassword(ev.target.value)
     }
 
-    if (token != null) {
+    if (loggedIn) {
         return null
     }
 
