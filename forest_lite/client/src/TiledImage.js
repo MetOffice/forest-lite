@@ -6,6 +6,13 @@ import {
     HoverTool
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as R from "ramda"
+import {
+    compose,
+    lensIndex,
+    lensPath,
+    lensProp,
+    view
+} from "ramda"
 import * as tiling from "./tiling.js"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
@@ -74,6 +81,24 @@ const selectTooltips = (datasetId, dataVar) => state => {
 
 
 /**
+ * Select a point
+ */
+export const selectPoint = (datasetName, dataVar) => {
+    return view(lensPath(["navigate", datasetName, dataVar]))
+}
+
+/**
+ * Select dataset name from ID
+ */
+export const selectDatasetName = id => {
+    return view(compose(
+        lensProp("datasets"),
+        lensIndex(id),
+        lensProp("label"),
+    ))
+}
+
+/**
  * Load image(s) from REST endpoints
  */
 export const ImageURL = ({ urls, source, }) => {
@@ -91,6 +116,18 @@ export const getTemplate = (baseURL, datasetId, dataVar, time) => {
     if (dataVar == null) return null
     if (time == null) return null
     return `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
+}
+
+
+/**
+ * Map state to {Z}/{X}/{Y} URL
+ */
+export const getTemplateQuery = (baseURL, datasetId, dataVar, query=null) => {
+    if (dataVar == null) return null
+    if (query == null) return null
+    const url = `${baseURL}/datasets/${datasetId}/${dataVar}/tiles/{Z}/{X}/{Y}`
+    const q = JSON.stringify(query)
+    return `${url}?query=${q}`
 }
 
 
@@ -221,6 +258,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
     }, [])
 
     // Configure REST URL template
+    const datasetName = useSelector(selectDatasetName(datasetId))
     const dataVar = useSelector(dataVarById(datasetId))
     const time = useSelector(state => {
         const { times, time_index } = state
@@ -228,9 +266,10 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
         if (typeof time_index === "undefined") return null
         return times[time_index]
     })
+    const query = useSelector(selectPoint(datasetName, dataVar))
     useEffect(() => {
-        setTemplate(getTemplate(baseURL, datasetId, dataVar, time))
-    }, [ baseURL, datasetId, dataVar, time ])
+        setTemplate(getTemplateQuery(baseURL, datasetId, dataVar, query))
+    }, [ baseURL, datasetId, dataVar, JSON.stringify(query) ])
 
     // Configure tooltips
     const tooltips = useSelector(selectTooltips(datasetId, dataVar))
@@ -282,12 +321,11 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
 
     // Compute URLs
     useEffect(() => {
-        const templateURL = getTemplate(baseURL, datasetId, dataVar, time)
-        const urls = getURLs(templateURL, ranges)
+        const urls = getURLs(template, ranges)
         if (urls != null) {
             setURLs(urls)
         }
-    }, [ baseURL, datasetId, dataVar, time, JSON.stringify(ranges) ])
+    }, [ template, JSON.stringify(ranges) ])
 
     if (source == null) return null
     if (renderer == null) return null

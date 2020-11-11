@@ -5,7 +5,7 @@ import { act } from "react-dom/test-utils"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import * as Bokeh from "@bokeh/bokehjs"
 import { ColumnDataSource } from "@bokeh/bokehjs/build/js/lib/models"
-import TiledImage, { ImageURL } from "../src/TiledImage.js"
+import TiledImage, { ImageURL, selectPoint } from "../src/TiledImage.js"
 import { createStore } from "../src/create-store.js"
 import { set_times, setFigure, setOnlyActive, set_datasets } from "../src/actions.js"
 import { server, rest } from "./server.js"
@@ -122,4 +122,19 @@ test.skip("TiledImage", async () => {
     })
     // Timeout to allow fetch useEffect hooks to resolve
     await waitFor(() => screen.getByText("Dimension: time"))
+})
+
+
+test("selectPoint", () => {
+    const point = {
+        time: "1970-01-01T00:00:00Z",
+        pressure: "1000"
+    }
+    const state = {
+        navigate: {
+            Foo: { Bar: point }
+        }
+    }
+    const actual = selectPoint("Foo", "Bar")(state)
+    expect(actual).toEqual(point)
 })
