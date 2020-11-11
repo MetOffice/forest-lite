@@ -166,13 +166,7 @@ export const DatasetDescription = ({ baseURL, datasetId }) => {
 /**
  * Console log REST URLs
  */
-const URLPrinter = ({ baseURL, datasetId, dataVar, time, ranges }) => {
-    const [ template, setTemplate ] = useState(null)
-
-    useEffect(() => {
-        setTemplate(getTemplate(baseURL, datasetId, dataVar, time))
-    }, [ baseURL, datasetId, dataVar, time ])
-
+const URLPrinter = ({ template, ranges }) => {
     useEffect(() => {
         const urls = getURLs(template, ranges)
         if (urls != null) {
@@ -191,6 +185,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
     const [source, setSource] = useState(null)
     const [renderer, setRenderer] = useState(null)
     const [color_mapper, setColormapper] = useState(null)
+    const [ template, setTemplate ] = useState(null)
     const [urls, setURLs] = useState([])
 
     useEffect(() => {
@@ -225,7 +220,19 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
         setColormapper(color_mapper)
     }, [])
 
+    // Configure REST URL template
     const dataVar = useSelector(dataVarById(datasetId))
+    const time = useSelector(state => {
+        const { times, time_index } = state
+        if (typeof times === "undefined") return null
+        if (typeof time_index === "undefined") return null
+        return times[time_index]
+    })
+    useEffect(() => {
+        setTemplate(getTemplate(baseURL, datasetId, dataVar, time))
+    }, [ baseURL, datasetId, dataVar, time ])
+
+    // Configure tooltips
     const tooltips = useSelector(selectTooltips(datasetId, dataVar))
     useEffect(() => {
         // Set ColorMapper initial settings from server
@@ -246,12 +253,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
 
     // Render component
     const ranges = useSelector(state => state.figure || null)
-    const time = useSelector(state => {
-        const { times, time_index } = state
-        if (typeof times === "undefined") return null
-        if (typeof time_index === "undefined") return null
-        return times[time_index]
-    })
+
     const active = useSelector(state => {
         const { datasets = [] } = state
         let active = false
@@ -293,10 +295,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
 
     return (<>
             <URLPrinter
-                baseURL={ baseURL }
-                datasetId={ datasetId }
-                dataVar={ dataVar }
-                time={ time }
+                template={ template }
                 ranges={ ranges }
                 />
             <AutoLimits source={ source } onChange={ onLimits } />
