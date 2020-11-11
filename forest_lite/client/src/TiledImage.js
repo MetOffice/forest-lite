@@ -124,10 +124,14 @@ export const getTemplate = (baseURL, datasetId, dataVar, time) => {
  */
 export const getTemplateQuery = (baseURL, datasetId, dataVar, query=null) => {
     if (dataVar == null) return null
-    if (query == null) return null
     const url = `${baseURL}/datasets/${datasetId}/${dataVar}/tiles/{Z}/{X}/{Y}`
-    const q = JSON.stringify(query)
-    return `${url}?query=${q}`
+    if (query == null) {
+        // Support 0-dimensional data
+        return url
+    } else {
+        const q = JSON.stringify(query)
+        return `${url}?query=${q}`
+    }
 }
 
 

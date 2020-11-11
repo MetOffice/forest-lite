@@ -11,10 +11,12 @@ from functools import lru_cache
 TILE_SIZE = 256 # 256 # 64  # 128
 
 
-def get_data_tile(pattern, data_var, z, x, y, query):
+def get_data_tile(pattern, data_var, z, x, y, query=None):
+    if query is not None:
+        # Hashable query
+        query = frozenset(query.items())
     path = get_path(pattern)
-    return _data_tile(path, data_var, z, x, y,
-                      frozenset(query.items()))
+    return _data_tile(path, data_var, z, x, y, query)
 
 
 @lru_cache
@@ -30,15 +32,21 @@ def _data_tile(path, data_var, z, x, y, query):
             if key.startswith("latitude"):
                 lats = var[key].values
 
-        idx = dict(query)
-        try:
-            values = nc[data_var].sel(**idx, method="nearest").values
-        except ValueError:
-            idx = { key: int(value) for key, value in idx.items() }
-            values = nc[data_var].isel(**idx).values
+        # Find 2D values array
+        if query is None:
+            array = nc[data_var]
+        else:
+            idx = dict(query)
+            try:
+                array = nc[data_var].sel(**idx, method="nearest")
+            except ValueError:
+                idx = { key: int(value) for key, value in idx.items() }
+                array = nc[data_var].isel(**idx)
+
         units = nc[data_var].units
 
-    assert values.ndim == 2, f"dims: {var.dims}"
+    assert array.ndim == 2, f"dims: {var.dims}"
+    values = array.values
 
     # Mask moisture_content_of_soil_layer (TODO: Generalise)
     if "moisture_content" in data_var:
