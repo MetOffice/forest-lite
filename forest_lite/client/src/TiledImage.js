@@ -120,9 +120,51 @@ export const getURLs = (baseURL, datasetId, dataVar, time, ranges) => {
 
 
 /**
+ * Initialise application navigation state
+ */
+export const InitialTimes = ({ baseURL, datasetId, label }) => {
+    const dispatch = useDispatch()
+    useEffect(() => {
+        if (datasetId === 0) {
+            const endpoint = `${baseURL}/datasets/${label}/times?limit=7`
+            fetch(endpoint)
+                .then(response => {
+                    if (!response.ok) {
+                        console.error("Not OK")
+                    }
+                    return response.json()
+                })
+                .then((data) => {
+                    let action = set_times(data)
+                    dispatch(action)
+                })
+        }
+    }, [])
+    return null
+}
+
+
+/**
+ * Initialise dataset description state
+ */
+export const DatasetDescription = ({ baseURL, datasetId }) => {
+    const dispatch = useDispatch()
+    useEffect(() => {
+        let endpoint = `${baseURL}/datasets/${datasetId}`
+        fetch(endpoint)
+            .then(response => response.json())
+            .then(data => {
+                dispatch(setDatasetDescription(datasetId, data))
+            })
+    }, [])
+    return null
+}
+
+
+/**
  * Tile images from application state
  */
-const TiledImage = ({ figure, datasetId, label, baseURL }) => {
+const TiledImage = ({ figure, datasetId, baseURL }) => {
     const dispatch = useDispatch()
     const [source, setSource] = useState(null)
     const [renderer, setRenderer] = useState(null)
@@ -171,32 +213,6 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
                 dispatch(setDatasetColorbar(datasetId, data))
             })
     }, [color_mapper])
-
-    useEffect(() => {
-        // Initial times
-        if (datasetId === 0) {
-            const endpoint = `${baseURL}/datasets/${label}/times?limit=7`
-            fetch(endpoint)
-                .then(response => {
-                    if (!response.ok) {
-                        console.error("Not OK")
-                    }
-                    return response.json()
-                })
-                .then((data) => {
-                    let action = set_times(data)
-                    dispatch(action)
-                })
-        }
-
-        // Dataset description (TODO: Move to better place)
-        let endpoint = `${baseURL}/datasets/${datasetId}`
-        fetch(endpoint)
-            .then(response => response.json())
-            .then(data => {
-                dispatch(setDatasetDescription(datasetId, data))
-            })
-    }, [])
 
     // Callback listening to source changes
     const onLimits = useCallback(

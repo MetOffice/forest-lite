@@ -1,9 +1,27 @@
 import React from "react"
 import { connect } from "react-redux"
-import TiledImage from "./TiledImage.js"
+import TiledImage, { InitialTimes, DatasetDescription } from "./TiledImage.js"
 import RDT from "./RDT.js"
 import * as R from "ramda"
 
+
+const TileRenderer = ({ baseURL, datasetId, label, figure  }) => {
+    return (
+        <>
+            <InitialTimes
+                baseURL={ baseURL }
+                datasetId={ datasetId }
+                label={ label } />
+            <DatasetDescription
+                baseURL={ baseURL }
+                datasetId={ datasetId } />
+            <TiledImage
+                datasetId={ datasetId }
+                baseURL={ baseURL }
+                figure={ figure } />
+        </>
+    )
+}
 
 class Layers extends React.Component {
     render() {
@@ -14,7 +32,7 @@ class Layers extends React.Component {
             (dataset, datasetId) => {
                 const { label, view } = dataset
                 if (view === "tiled_image") {
-                    return <TiledImage
+                    return <TileRenderer
                                 key={ label }
                                 label={ label }
                                 datasetId={ datasetId }
