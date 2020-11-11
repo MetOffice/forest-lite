@@ -5,6 +5,14 @@ import { rest } from "msw"
 
 
 export const handlers = [
+    rest.get(/base\/datasets\/undefined/, async (req, res, ctx) => {
+        const errorMessage = "Bad endpoint"
+        return res(
+            ctx.status(500),
+            ctx.json({ errorMessage })
+        )
+    }),
+
     rest.get(/base/, async (req, res, ctx) => {
         return res(
             ctx.status(200),

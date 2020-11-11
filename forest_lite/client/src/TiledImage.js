@@ -176,15 +176,16 @@ const TiledImage = ({ figure, datasetId, label, baseURL }) => {
         // Initial times
         if (datasetId === 0) {
             const endpoint = `${baseURL}/datasets/${label}/times?limit=7`
-            console.log(endpoint)
             fetch(endpoint)
-                .then((response) => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Woops")
+                    }
+                    return response.json()
+                })
                 .then((data) => {
                     let action = set_times(data)
                     dispatch(action)
-                })
-                .catch(error => {
-                    throw Error(error)
                 })
         }
 

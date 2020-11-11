@@ -7,17 +7,24 @@ import * as Bokeh from "@bokeh/bokehjs"
 import TiledImage from "../src/TiledImage.js"
 import { createStore } from "../src/create-store.js"
 import { set_times, setFigure, setOnlyActive, set_datasets } from "../src/actions.js"
+import { server } from "./server.js"
 
 
-test("TiledImage", () => {
+// Configure mock service worker
+beforeAll(() => server.listen())
+afterAll(() => server.close())
+afterEach(() => server.resetHandlers())
+
+
+test("TiledImage", async () => {
     const store = createStore()
     const figure = Bokeh.Plotting.figure()
     const datasetId = 0
     const dataset = "Foo"
     const dataVar = "Bar"
     const baseURL = "/base"
-    act(() => {
-        render(
+    await act(async () => {
+        await render(
             <Provider store={ store } >
                 <TiledImage
                     figure={ figure }
@@ -25,6 +32,7 @@ test("TiledImage", () => {
                     baseURL={ baseURL } />
             </Provider>
         )
+
 
         // Dispatch initialisation actions
         const actions = [
@@ -68,4 +76,6 @@ test("TiledImage", () => {
         }
         expect(actual).toEqual(expected)
     })
+    // Timeout to allow fetch useEffect hooks to resolve
+    await waitFor(() => screen.getByText("Dimension: time"))
 })
