@@ -20,7 +20,7 @@ async def get_datasets(settings: Settings = Depends(get_settings),
                        user: User = Depends(get_current_active_user)):
     """Curate datasets by user"""
     # TODO: Select datasets for authenticated users
-    if user:
+    if user.group == "guest":
         return [settings.datasets[0]]
     return settings.datasets
 

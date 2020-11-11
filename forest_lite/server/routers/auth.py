@@ -52,6 +52,7 @@ router = APIRouter()
 
 class User(BaseModel):
     username: str
+    group: str = "guest"
     email: Optional[str] = None
     full_name: Optional[str] = None
     disabled: Optional[bool] = None

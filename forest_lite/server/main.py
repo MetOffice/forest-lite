@@ -8,7 +8,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.responses import FileResponse
-from forest_lite.server.routers import auth, atlas, datasets, palettes, viewport
+from forest_lite.server.routers import atlas, datasets, palettes, viewport
 
 
 app = fastapi.FastAPI()
@@ -16,6 +16,10 @@ app.include_router(atlas.router)
 app.include_router(datasets.router)
 app.include_router(palettes.router)
 app.include_router(viewport.router)
+
+
+# Authorisation
+from forest_lite.server.routers import auth
 app.include_router(auth.router)
 
 
