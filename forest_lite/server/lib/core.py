@@ -11,14 +11,14 @@ from functools import lru_cache
 TILE_SIZE = 256 # 256 # 64  # 128
 
 
-def get_data_tile(pattern, data_var, timestamp_ms, z, x, y):
+def get_data_tile(pattern, data_var, z, x, y, query):
     path = get_path(pattern)
-    return _data_tile(path, data_var, timestamp_ms, z, x, y)
+    return _data_tile(path, data_var, z, x, y,
+                      frozenset(query.items()))
 
 
 @lru_cache
-def _data_tile(path, data_var, timestamp_ms, z, x, y):
-    time = np.datetime64(timestamp_ms, 'ms')
+def _data_tile(path, data_var, z, x, y, query):
     zxy = (z, x, y)
     with xarray.open_dataset(path, engine="h5netcdf") as nc:
 
@@ -30,29 +30,12 @@ def _data_tile(path, data_var, timestamp_ms, z, x, y):
             if key.startswith("latitude"):
                 lats = var[key].values
 
-        # Filter pressure coordinate
-        idx = {}
-        for dim in var.dims:
-            if dim.startswith("time"):
-                # Search time axis
-                pts = np.where(nc.time.values == time)
-                if len(pts[0]) > 0:
-                    i = pts[0][0]
-                else:
-                    # TODO: Replace with Exception
-                    i = -1
-                idx[dim] = i
-            elif dim.startswith("pressure"):
-                # Take first pressure level
-                idx[dim] = 0
-            elif dim.startswith("depth"):
-                # Take first depth level
-                idx[dim] = 0
-            elif dim.startswith("dim"):
-                # TODO: implement correct search algorithm
-                idx[dim] = 0
-
-        values = nc[data_var][idx].values
+        idx = dict(query)
+        try:
+            values = nc[data_var].sel(**idx, method="nearest").values
+        except ValueError:
+            idx = { key: int(value) for key, value in idx.items() }
+            values = nc[data_var].isel(**idx).values
         units = nc[data_var].units
 
     assert values.ndim == 2, f"dims: {var.dims}"
