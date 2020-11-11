@@ -5,7 +5,6 @@ import { rest } from "msw"
 
 
 export const handlers = [
-    // intercept all GET requests
     rest.get(/base/, async (req, res, ctx) => {
         return res(
             ctx.status(200),
@@ -20,9 +19,9 @@ export const handlers = [
 
     rest.get("*", (req, res, ctx) => {
         return res(
-            ctx.status(200),
+            ctx.status(500),
             ctx.json({
-                hello: "World!"
+                errorMessage: "Not sure how to handle this"
             })
         )
     })
