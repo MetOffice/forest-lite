@@ -83,21 +83,23 @@ export const ImageURL = ({ urls, source, }) => {
     return null
 }
 
-export const getURLs = (baseURL, datasetId, dataVar, time, ranges) => {
-    // Construct endpoint
-    const templateURL = `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
 
-    // Only fetch if variable selected
-    if (dataVar == null) {
-        return null
-    }
-    // Validate state
-    if (ranges == null) {
-        return null
-    }
-    if (time == null) {
-        return null
-    }
+/**
+ * Map state to {Z}/{X}/{Y} URL
+ */
+export const getTemplate = (baseURL, datasetId, dataVar, time) => {
+    if (dataVar == null) return null
+    if (time == null) return null
+    return `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
+}
+
+
+/**
+ * Fill in Z, X and Y values
+ */
+export const getURLs = (templateURL, ranges) => {
+    if (templateURL == null) return null
+    if (ranges == null) return null
 
     const { x_range, y_range } = ranges
     if (x_range  == null) return null
@@ -157,6 +159,26 @@ export const DatasetDescription = ({ baseURL, datasetId }) => {
                 dispatch(setDatasetDescription(datasetId, data))
             })
     }, [])
+    return null
+}
+
+
+/**
+ * Console log REST URLs
+ */
+const URLPrinter = ({ baseURL, datasetId, dataVar, time, ranges }) => {
+    const [ template, setTemplate ] = useState(null)
+
+    useEffect(() => {
+        setTemplate(getTemplate(baseURL, datasetId, dataVar, time))
+    }, [ baseURL, datasetId, dataVar, time ])
+
+    useEffect(() => {
+        const urls = getURLs(template, ranges)
+        if (urls != null) {
+            urls.map(url => console.log(url))
+        }
+    }, [ template, JSON.stringify(ranges) ])
     return null
 }
 
@@ -258,7 +280,8 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
 
     // Compute URLs
     useEffect(() => {
-        const urls = getURLs(baseURL, datasetId, dataVar, time, ranges)
+        const templateURL = getTemplate(baseURL, datasetId, dataVar, time)
+        const urls = getURLs(templateURL, ranges)
         if (urls != null) {
             setURLs(urls)
         }
@@ -269,6 +292,13 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
     if (color_mapper == null) return null
 
     return (<>
+            <URLPrinter
+                baseURL={ baseURL }
+                datasetId={ datasetId }
+                dataVar={ dataVar }
+                time={ time }
+                ranges={ ranges }
+                />
             <AutoLimits source={ source } onChange={ onLimits } />
             <HoverToolComponent
                     tooltips={ tooltips }
