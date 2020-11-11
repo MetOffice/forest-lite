@@ -18,7 +18,7 @@ afterEach(() => server.resetHandlers())
 
 
 test("ImageURL", async () => {
-    const urls = ["/url"]
+    const urls = ["/url", "/url"]
     const source = new ColumnDataSource({
         data: {
             x: [],
@@ -54,8 +54,9 @@ test("ImageURL", async () => {
         )
     })
     await waitFor(() => {
-        expect(source.data.image.length).toBe(1)
+        expect(source.data.image.length).toBe(urls.length)
     })
+    expect(source.data.x).toEqual([0, 0])
 })
 
 

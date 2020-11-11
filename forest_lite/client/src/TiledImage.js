@@ -83,7 +83,7 @@ export const ImageURL = ({ urls, source, }) => {
     return null
 }
 
-const getURLs = (baseURL, datasetId, dataVar, time, ranges) => {
+export const getURLs = (baseURL, datasetId, dataVar, time, ranges) => {
     // Construct endpoint
     const templateURL = `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
 
