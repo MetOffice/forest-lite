@@ -5,7 +5,8 @@ import { lensPath, view } from "ramda"
 export const dataVarById = datasetId => state => {
     const { datasets = [] } = state
     if (datasets.length > 0) {
-        const flags = datasets[datasetId].active || {}
+        const dataset = datasets[datasetId] || {}
+        const { active: flags = {} } = dataset
         return R.pipe(
             R.pickBy(R.identity),
             R.keys,

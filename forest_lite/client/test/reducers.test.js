@@ -1,5 +1,6 @@
 const { rootReducer, toggleActiveReducer } = require("../src/reducers.js")
 const {
+    set_datasets,
     set_limits,
     setHoverTool,
     setColorbar,
@@ -247,4 +248,17 @@ describe("setOnlyActive", () => {
         expect(actual.datasets[1]).toEqual(expected.datasets[1])
         expect(actual.datasets[0]).toEqual(expected.datasets[0])
     })
+})
+
+
+test("set_datasets replaces existing datasets", () => {
+    const actions = [
+        set_datasets([ 1, 2 ]),
+        set_datasets([ 1 ]),
+    ]
+    const actual = reduce(rootReducer, {}, actions)
+    const expected = {
+        datasets: [ 1 ]
+    }
+    expect(actual).toEqual(expected)
 })

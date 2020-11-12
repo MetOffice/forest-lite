@@ -31,8 +31,25 @@ fake_users_db = {
     "johndoe": {
         "username": "johndoe",
         "full_name": "John Doe",
+        "group": "highway",
         "email": "johndoe@example.com",
         "hashed_password": get_password_hash("secret"),
+        "disabled": False,
+    },
+    "alice": {
+        "username": "alice",
+        "full_name": "Alice",
+        "group": "wcssp",
+        "email": "alice@example.com",
+        "hashed_password": get_password_hash("secret2"),
+        "disabled": False,
+    },
+    "bob": {
+        "username": "bob",
+        "full_name": "Bob",
+        "group": "guest",
+        "email": "bob@example.com",
+        "hashed_password": get_password_hash("anonymous"),
         "disabled": False,
     }
 }
@@ -97,8 +114,6 @@ def create_access_token(data: dict,
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     """Access current user given request parameters"""
-    if not os.getenv("USE_AUTH", False):
-        return GUEST_USER
 
     # Flow when using OAuth2 user authentication
     credentials_exception = HTTPException(

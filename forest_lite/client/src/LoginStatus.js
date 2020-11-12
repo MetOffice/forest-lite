@@ -4,25 +4,27 @@ import { useAuth } from "./context/Auth.js"
 
 
 const LoginStatus = () => {
-    const { loggedIn, setToken } = useAuth()
+    const { user, setUser } = useAuth()
     const onClick = ev => {
-        setToken(null)
+        setUser(null)
     }
     let msg
-    if (loggedIn) {
-        msg = (
-            <span className="LoginStatus">
-                <i className="fas fa-sign-out-alt" /> Sign out
-            </span>
-        )
+    if (user != null) {
+        return (
+            <div>
+                <span onClick={ onClick }
+                      className="LoginStatus LoginStatus__button">
+                    <i className="fas fa-sign-out-alt" /> Sign out
+                </span>
+            </div>)
     } else {
-        msg = (
-            <span className="LoginStatus">
-                <i className="fas fa-sign-in-alt" /> Sign in
-            </span>
-        )
+        return (
+            <div>
+                <span className="LoginStatus LoginStatus__button">
+                    <i className="fas fa-sign-in-alt" /> Sign in
+                </span>
+            </div>)
     }
-    return <div onClick={ onClick }>{ msg }</div>
 }
 
 

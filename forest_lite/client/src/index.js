@@ -5,7 +5,6 @@ import { Provider } from "react-redux"
 import App from "./App.js"
 import { createStore } from "./create-store.js"
 import {
-    set_datasets,
     set_limits,
     next_time_index,
     fetch_image,

@@ -19,17 +19,6 @@ const FetchDatasets = ({ baseURL }) => {
             .then(data => data.datasets)
             .then(datasets => dispatch(set_datasets(datasets)))
     }, [token])
-    useEffect(() => {
-        // Fetch datasets from server
-        fetch(`${baseURL}/users/me`, {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                'accept': 'application/json'
-            }
-        })
-            .then(response => response.json())
-            .then(console.log)
-    }, [token])
     return null
 }
 

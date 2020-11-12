@@ -18,11 +18,16 @@ router = APIRouter()
 
 async def get_datasets(settings: Settings = Depends(get_settings),
                        user: User = Depends(get_current_active_user)):
-    """Curate datasets by user"""
-    # TODO: Select datasets for authenticated users
-    if user.group == "guest":
-        return [settings.datasets[0]]
-    return settings.datasets
+    """Datasets by user"""
+    return [dataset for dataset in settings.datasets
+            if has_access(dataset, user)]
+
+
+def has_access(dataset, user):
+    """Check user has access to a particular dataset"""
+    if dataset.user_groups is None:
+        return True
+    return user.group in dataset.user_groups
 
 
 @router.get("/datasets")

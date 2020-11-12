@@ -5,6 +5,7 @@ import Title from "./Title.js"
 import ColorbarStack from "./ColorbarStack.js"
 import ColorPaletteFetch from "./ColorPaletteFetch.js"
 import FetchDatasets from "./FetchDatasets.js"
+import FetchUser from "./FetchUser.js"
 import Sidebar from "./Sidebar.js"
 import ViewPort from "./ViewPort.js"
 import ZoomButton from "./ZoomButton.js"
@@ -16,19 +17,18 @@ import { AuthContext } from "./context/Auth.js"
 const App = (props) => {
 
     // Simple localStorage authentication via tokens
+    const [ user, setUser ] = useState(null)
     const localStorageToken = localStorage.getItem("token")
     const [ token, setAuthToken ] = useState(localStorageToken)
-    const [ loggedIn, setLoggedIn ] = useState(false)
     const setToken = (value) => {
         localStorage.setItem("token", value)
         setAuthToken(value)
-        setLoggedIn(value != null)
     }
 
     const { baseURL } = props
     return (
         // Pass login state and setToken callback to components
-        <AuthContext.Provider value={{ loggedIn, setToken }}>
+        <AuthContext.Provider value={{ token, setToken, user, setUser }}>
             <LoginForm baseURL={ baseURL } />
             <div className="App-title">
                 <Title/>
@@ -49,6 +49,7 @@ const App = (props) => {
             </div>
             <ColorPaletteFetch baseURL={ baseURL } />
             <FetchDatasets baseURL={ baseURL } />
+            <FetchUser baseURL={ baseURL } />
         </AuthContext.Provider>
     )
 }

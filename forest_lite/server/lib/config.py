@@ -51,6 +51,7 @@ class Dataset(BaseModel):
     view: str = "tiled_image"
     driver: Driver = Driver()
     palettes: Dict[str, Palette] = {}
+    user_groups: List[str] = None
 
     @validator("palettes", pre=True, each_item=True)
     def support_named_palettes(cls, v):

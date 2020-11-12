@@ -3,11 +3,14 @@
     border-radius: 2px;
     font-family: Helvetica;
     font-size: 0.8em;
-    cursor: pointer;
-    float: right;
 }
 
-.LoginStatus:hover {
+.LoginStatus__button {
+    float: right;
+    cursor: pointer;
+}
+
+.LoginStatus__button:hover {
     color: white;
     background-color: #555;
 }
