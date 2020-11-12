@@ -13,7 +13,7 @@ def test_config_object():
     config = Config.from_dict({
         "datasets": [{"label": "Name"}]
     })
-    assert config.datasets == [Dataset(label="Name")]
+    assert config.datasets == [Dataset(label="Name", uid=0)]
 
 
 def test_config_dataset():

@@ -40,8 +40,6 @@ def test_tile_endpoint(tmpdir):
     actual = response.json()
 
     # Assert response
-    assert actual["dataset_id"] == 0
-    assert actual["timestamp_ms"] == 0
     assert actual["tile"] == [0, 0, 0]
     assert actual["data"]["x"] == [-20037508.342789244]
     assert actual["data"]["y"] == [-20037508.342789255]
