@@ -1,12 +1,17 @@
 import React from "react"
+import { useDispatch, useSelector } from "react-redux"
 import "./LoginStatus.css"
 import { useAuth } from "./context/Auth.js"
+import { setState } from "./actions.js"
 
 
 const LoginStatus = () => {
-    const { user, setUser } = useAuth()
+    const dispatch = useDispatch()
+    const figure = useSelector(state => state.figure || null)
+    const { user, setUser} = useAuth()
     const onClick = ev => {
         setUser(null)
+        dispatch(setState({ figure }))
     }
     let msg
     if (user != null) {
