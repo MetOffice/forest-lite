@@ -259,6 +259,13 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
         setRenderer(renderer)
         setSource(source)
         setColormapper(color_mapper)
+
+        return () => {
+            const index = figure.renderers.indexOf(renderer)
+            if (index != -1) {
+                figure.renderers.splice(index, 1)
+            }
+        }
     }, [])
 
     // Configure REST URL template
@@ -284,7 +291,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
             .then(data => {
                 dispatch(setDatasetColorbar(datasetId, data))
             })
-    }, [color_mapper])
+    }, [color_mapper, datasetId])
 
     // Callback listening to source changes
     const onLimits = useCallback(

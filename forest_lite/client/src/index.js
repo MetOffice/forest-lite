@@ -14,7 +14,7 @@ import {
 
 window.main = function(baseURL) {
     let store = createStore({ log: true })
-    // store.subscribe(() => { console.log(store.getState()) })
+    store.subscribe(() => { console.log(store.getState()) })
 
     // Use React to manage components
     ReactDOM.render(
