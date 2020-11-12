@@ -1,0 +1,58 @@
+.LoginForm {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.7);
+    height: 100vh;
+    width: 100vw;
+    font-family: Helvetica;
+}
+
+.LoginForm__form {
+    position: relative;
+    top: 50%;
+    margin: auto;
+    max-width: max-content;
+    transform: translate(0, -50%);
+    background-color: white;
+    border-radius: 2px;
+    padding: 20px;
+}
+
+.LoginForm__textbox {
+    margin-bottom: 20px;
+}
+
+.LoginForm__p {
+    color: #333;
+}
+
+.LoginForm__label {
+    display: block;
+}
+
+.LoginForm__input {
+    width: 300px;
+}
+
+.LoginForm__button--login {
+    cursor: pointer;
+    background-color: limegreen;
+    border: none;
+    color: white;
+    margin: 20px 0;
+    padding: 12px 20px;
+    float: right;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.LoginForm__button--continue {
+    cursor: pointer;
+    background-color: white;
+    border: 1px solid #ccc;
+    color: #333;
+    margin: 20px 0;
+    padding: 12px;
+}

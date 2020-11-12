@@ -15,7 +15,7 @@ const attrsToDivs = R.pipe(
 )
 
 
-const selectDatasets = ({ datasets = [] }) => datasets
+const selectDatasets = state => state.datasets || []
 
 
 const DatasetsMenu = () => {

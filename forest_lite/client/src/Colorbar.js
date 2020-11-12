@@ -109,9 +109,10 @@ class Colorbar extends React.Component {
 export const mapStateToProps = (state, ownProps) => {
     const { datasetId } = ownProps
     const { datasets = [] } = state
+    const dataset = datasets[datasetId] || {}
     const {
         active: flags = {}
-    } = datasets[datasetId]
+    } = dataset
 
     const dataVar = dataVarById(datasetId)(state)
     const colorbar = colorbarByIdAndVar(datasetId)(dataVar)(state)

@@ -1,0 +1,16 @@
+.LoginStatus {
+    padding: 5px;
+    border-radius: 2px;
+    font-family: Helvetica;
+    font-size: 0.8em;
+}
+
+.LoginStatus__button {
+    float: right;
+    cursor: pointer;
+}
+
+.LoginStatus__button:hover {
+    color: white;
+    background-color: #555;
+}

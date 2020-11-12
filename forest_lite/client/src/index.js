@@ -5,7 +5,6 @@ import { Provider } from "react-redux"
 import App from "./App.js"
 import { createStore } from "./create-store.js"
 import {
-    set_datasets,
     set_limits,
     next_time_index,
     fetch_image,
@@ -23,12 +22,6 @@ window.main = function(baseURL) {
             <App baseURL={ baseURL } />
         </Provider>,
         document.getElementById("root"))
-
-    // Fetch datasets from server
-    fetch(`${baseURL}/datasets`)
-        .then(response => response.json())
-        .then(data => data.datasets)
-        .then(datasets => store.dispatch(set_datasets(datasets)))
 
     //   // RESTful image
     //   let image_source = new Bokeh.ColumnDataSource({

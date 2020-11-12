@@ -133,12 +133,7 @@ export const rootReducer = (state = "", action) => {
         case SET_DATASET_COLORBAR:
             return datasetIdReducer("colorbar")(state, action)
         case SET_DATASETS:
-            let { datasets } = state
-            // TODO: Combine dataset settings
-            if (typeof datasets === "undefined") {
-                datasets = payload
-            }
-            return Object.assign({}, state, {datasets: datasets})
+            return Object.assign({}, state, {datasets: payload})
         case SET_URL:
             return Object.assign({}, state, {url: payload})
         case SET_PALETTE:
