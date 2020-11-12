@@ -52,6 +52,7 @@ class Dataset(BaseModel):
     driver: Driver = Driver()
     palettes: Dict[str, Palette] = {}
     user_groups: List[str] = None
+    uid: int = 0
 
     @validator("palettes", pre=True, each_item=True)
     def support_named_palettes(cls, v):
@@ -64,6 +65,22 @@ class Config(BaseModel):
     viewport: Viewport = Viewport()
     datasets: List[Dataset] = []
 
+    @root_validator(pre=True)
+    def auto_id(cls, values):
+        """Auto-index items"""
+        prop = "datasets"
+        if prop in values:
+            values[prop] = list(auto_id(values[prop]))
+        return values
+
     @classmethod
     def from_dict(cls, settings):
         return cls(**settings)
+
+
+def auto_id(items):
+    for i, item in enumerate(items):
+        if "uid" in dict(item):
+            yield item
+        else:
+            yield dict(item, uid=i)

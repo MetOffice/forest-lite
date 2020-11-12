@@ -37,8 +37,8 @@ async def datasets(response: Response,
     return {"datasets": [{"label": dataset.label,
                           "driver": dataset.driver.name,
                           "view": dataset.view,
-                          "id": i}
-                 for i, dataset in enumerate(_datasets)]}
+                          "id": dataset.uid}
+                 for dataset in _datasets]}
 
 
 # TODO: Deprecate this endpoint
