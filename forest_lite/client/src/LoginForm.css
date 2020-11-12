@@ -20,6 +20,10 @@
     padding: 20px;
 }
 
+.LoginForm--progress {
+    background-color: rgba(0, 0, 0, 0);
+}
+
 .LoginForm__textbox {
     margin-bottom: 20px;
 }

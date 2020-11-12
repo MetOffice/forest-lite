@@ -1,15 +1,21 @@
 import React, { useState } from "react"
 import { useAuth } from "./context/Auth.js"
 import "./LoginForm.css"
+import "./Spinner.css"
 
 
 const LoginForm = ({ baseURL }) => {
+    const [ inProgress, setInProgress ] = useState(false)
     const [ username, setUsername ] = useState("")
     const [ password, setPassword ] = useState("")
     const { user, setToken } = useAuth()
 
     const onSubmit = (ev) => {
         ev.preventDefault()
+
+        setInProgress(true)
+
+        // Send request for token to server
         const body = (
             "username=" + encodeURIComponent(username) + "&" +
             "password=" + encodeURIComponent(password)
@@ -26,6 +32,7 @@ const LoginForm = ({ baseURL }) => {
             .then(json => {
                 const { access_token } = json
                 setToken(access_token)
+                setInProgress(false)
             })
     }
 
@@ -39,6 +46,16 @@ const LoginForm = ({ baseURL }) => {
 
     if (user != null) {
         return null
+    }
+
+    if (inProgress) {
+        return (
+            <div className="LoginForm">
+                <div className="LoginForm__form LoginForm--progress">
+                    <div className="lds-circle"><div></div></div>
+                </div>
+            </div>
+        )
     }
 
     return (
