@@ -3,18 +3,20 @@ import { useDispatch, useSelector } from "react-redux"
 import "./LoginStatus.css"
 import { useAuth } from "./context/Auth.js"
 import { setState } from "./actions.js"
+import { LOGGED_IN, LOGGED_OUT } from "./status.js"
 
 
 const LoginStatus = () => {
     const dispatch = useDispatch()
     const figure = useSelector(state => state.figure || null)
-    const { user, setUser} = useAuth()
+    const { status, setUser, setStatus} = useAuth()
     const onClick = ev => {
+        setStatus(LOGGED_OUT)
         setUser(null)
         dispatch(setState({ figure }))
     }
     let msg
-    if (user != null) {
+    if (status === LOGGED_IN) {
         return (
             <div>
                 <span onClick={ onClick }

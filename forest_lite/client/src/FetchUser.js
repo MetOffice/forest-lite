@@ -1,10 +1,11 @@
 import React, { useEffect } from "react"
 import { useAuth } from "./context/Auth.js"
+import { LOGGED_IN } from "./status.js"
 
 
 // Get user associated with token
 const FetchUser = ({ baseURL }) => {
-    const { token, setUser } = useAuth()
+    const { token, setUser, setStatus } = useAuth()
     useEffect(() => {
         fetch(`${baseURL}/users/me`, {
             headers: {
@@ -18,6 +19,7 @@ const FetchUser = ({ baseURL }) => {
                 return json
             })
             .then(setUser)
+            .then(() => setStatus(LOGGED_IN))
     }, [token])
     return null
 }

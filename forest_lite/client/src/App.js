@@ -12,11 +12,13 @@ import ZoomButton from "./ZoomButton.js"
 import LoginForm from "./LoginForm.js"
 import "./App.css"
 import { AuthContext } from "./context/Auth.js"
+import { LOGGED_OUT } from "./status.js"
 
 
 const App = (props) => {
 
     // Simple localStorage authentication via tokens
+    const [ status, setStatus ] = useState(LOGGED_OUT)
     const [ user, setUser ] = useState(null)
     const localStorageToken = localStorage.getItem("token")
     const [ token, setAuthToken ] = useState(localStorageToken)
@@ -28,7 +30,8 @@ const App = (props) => {
     const { baseURL } = props
     return (
         // Pass login state and setToken callback to components
-        <AuthContext.Provider value={{ token, setToken, user, setUser }}>
+        <AuthContext.Provider value={{ token, setToken, user, setUser,
+                status, setStatus }}>
             <LoginForm baseURL={ baseURL } />
             <div className="App-title">
                 <Title/>

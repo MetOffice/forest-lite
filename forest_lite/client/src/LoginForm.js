@@ -2,18 +2,18 @@ import React, { useState } from "react"
 import { useAuth } from "./context/Auth.js"
 import "./LoginForm.css"
 import "./Spinner.css"
+import { IN_PROGRESS, LOGGED_IN, LOGGED_OUT } from "./status.js"
 
 
 const LoginForm = ({ baseURL }) => {
-    const [ inProgress, setInProgress ] = useState(false)
     const [ username, setUsername ] = useState("")
     const [ password, setPassword ] = useState("")
-    const { user, setToken } = useAuth()
+    const { status, setStatus, setToken } = useAuth()
 
     const onSubmit = (ev) => {
         ev.preventDefault()
 
-        setInProgress(true)
+        setStatus(IN_PROGRESS)
 
         // Send request for token to server
         const body = (
@@ -32,7 +32,6 @@ const LoginForm = ({ baseURL }) => {
             .then(json => {
                 const { access_token } = json
                 setToken(access_token)
-                setInProgress(false)
             })
     }
 
@@ -44,11 +43,11 @@ const LoginForm = ({ baseURL }) => {
         setPassword(ev.target.value)
     }
 
-    if (user != null) {
+    // Render logging in, logged in and logged out
+    if (status === LOGGED_IN) {
         return null
     }
-
-    if (inProgress) {
+    if (status == IN_PROGRESS) {
         return (
             <div className="LoginForm">
                 <div className="LoginForm__form LoginForm--progress">
@@ -57,7 +56,6 @@ const LoginForm = ({ baseURL }) => {
             </div>
         )
     }
-
     return (
 <div className="LoginForm">
     <div className="LoginForm__form">
