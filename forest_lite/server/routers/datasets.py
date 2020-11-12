@@ -82,6 +82,12 @@ def find_datasets(settings, label):
             yield dataset
 
 
+def by_id(datasets, uid):
+    for dataset in datasets:
+        if dataset.uid == uid:
+            return dataset
+
+
 @router.get("/datasets/{dataset_id}/{data_var}/tiles/{Z}/{X}/{Y}")
 async def data_tiles(dataset_id: int,
                      data_var: str,
@@ -91,7 +97,7 @@ async def data_tiles(dataset_id: int,
     """GET data tile from dataset at particular time"""
     if query is not None:
         query = json.loads(query)
-    dataset = settings.datasets[dataset_id]
+    dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
     data = driver.data_tile(data_var, Z, X, Y, query=query)
     obj = {
@@ -109,7 +115,7 @@ async def data_tiles(dataset_id: int,
 @router.get("/datasets/{dataset_id}")
 async def description(dataset_id: int,
                       settings: config.Settings = Depends(config.get_settings)):
-    dataset = settings.datasets[dataset_id]
+    dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
     return driver.description()
 
@@ -118,7 +124,7 @@ async def description(dataset_id: int,
 async def geojson(dataset_id: int,
                   timestamp_ms: int,
                   settings: config.Settings = Depends(config.get_settings)):
-    dataset = settings.datasets[dataset_id]
+    dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
     content = driver.get_geojson(timestamp_ms)
     response = Response(content=content,
@@ -131,7 +137,8 @@ async def geojson(dataset_id: int,
 async def points(dataset_id: int, timestamp_ms: int,
                  settings: config.Settings = Depends(config.get_settings)):
     time = np.datetime64(timestamp_ms, 'ms')
-    dataset_name = settings.datasets[dataset_id].label
+    dataset = by_id(settings.datasets, dataset_id)
+    dataset_name = dataset.label
     path = core.get_path(settings, dataset_name)
     obj = core.get_points(path, time)
     content = serialize_json(obj)
@@ -144,7 +151,7 @@ async def points(dataset_id: int, timestamp_ms: int,
 @router.get("/datasets/{dataset_id}/palette")
 async def palette(dataset_id: int,
                   settings: config.Settings = Depends(config.get_settings)):
-    dataset = settings.datasets[dataset_id]
+    dataset = by_id(settings.datasets, dataset_id)
     return dataset.palettes
 
 
@@ -154,7 +161,7 @@ async def axis(dataset_id: int,
                dim_name: str,
                settings: config.Settings = Depends(config.get_settings)):
     """GET dimension values related to particular data_var"""
-    dataset = settings.datasets[dataset_id]
+    dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
     obj = driver.points(data_var, dim_name)
     content = serialize_json(obj)
