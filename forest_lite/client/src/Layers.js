@@ -1,8 +1,11 @@
 import React from "react"
-import { connect } from "react-redux"
+import { useSelector } from "react-redux"
 import TiledImage, { InitialTimes, DatasetDescription } from "./TiledImage.js"
 import RDT from "./RDT.js"
-import * as R from "ramda"
+import { map } from "ramda"
+
+
+const selectDatasets = ({ datasets=[] }) => datasets
 
 
 const TileRenderer = ({ baseURL, datasetId, label, figure  }) => {
@@ -23,42 +26,32 @@ const TileRenderer = ({ baseURL, datasetId, label, figure  }) => {
     )
 }
 
-class Layers extends React.Component {
-    render() {
-        const { datasets } = this.props
-        if (typeof datasets === "undefined") return null
-        const { baseURL, figure } = this.props
-        const makeComponents = R.addIndex(R.map)(
-            (dataset, datasetId) => {
-                const { label, view } = dataset
-                if (view === "tiled_image") {
-                    return <TileRenderer
-                                key={ label }
-                                label={ label }
-                                datasetId={ datasetId }
-                                baseURL={ baseURL }
-                                figure={ figure } />
-                } else if (view === "rdt") {
-                    return <RDT
-                                key={ label }
-                                baseURL={ baseURL }
-                                figure={ figure } />
-                } else {
-                    return null
-                }
+const Layers = ({ baseURL, figure }) => {
+    const datasets = useSelector(selectDatasets)
+    const makeComponents = map(
+        dataset => {
+            const { label, view, id } = dataset
+            if (view === "tiled_image") {
+                return <TileRenderer
+                            key={ label }
+                            label={ label }
+                            datasetId={ id }
+                            baseURL={ baseURL }
+                            figure={ figure } />
+            } else if (view === "rdt") {
+                return <RDT
+                            key={ label }
+                            baseURL={ baseURL }
+                            figure={ figure } />
+            } else {
+                return null
             }
-        )
-        return (<>
-            { makeComponents(datasets) }
-        </>)
-    }
+        }
+    )
+    return (<>
+        { makeComponents(datasets) }
+    </>)
 }
 
 
-const mapStateToProps = state => {
-    const { datasets } = state
-    return { datasets }
-}
-
-
-export default connect(mapStateToProps)(Layers)
+export default Layers
