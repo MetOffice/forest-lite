@@ -23,10 +23,9 @@ export const colorbarByIdAndVar = datasetId => dataVar => state => {
     const { datasets = [] } = state
     const empty = { palette: [], low: 0, high: 1 }
     if (typeof datasetId === "undefined") return empty
-    if (typeof datasets[datasetId] === "undefined") return empty
 
     // Process application state
-    const { colorbar: colorbars = {} } = datasets[datasetId]
+    const { colorbar: colorbars = {} } = findById(datasets, datasetId)
     const key = dataVar || "default"
     const primary = colorbars["default"] || {}
     const colorbar = colorbars[key] || primary
