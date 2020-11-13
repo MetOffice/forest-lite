@@ -7,6 +7,12 @@ import {
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as R from "ramda"
 import {
+    head,
+    map,
+    filter,
+    prop,
+    propEq,
+    pipe,
     compose,
     lensIndex,
     lensPath,
@@ -91,12 +97,13 @@ export const selectPoint = (datasetName, dataVar) => {
 /**
  * Select dataset name from ID
  */
-export const selectDatasetName = id => {
-    return view(compose(
-        lensProp("datasets"),
-        lensIndex(id),
-        lensProp("label"),
-    ))
+export const selectDatasetName = id => state => {
+    const { datasets =[] } = state
+    return pipe(
+        filter(propEq("id", id)),
+        map(prop("label")),
+        head
+    )(datasets)
 }
 
 /**
