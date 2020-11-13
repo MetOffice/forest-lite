@@ -7,8 +7,9 @@ import * as R from "ramda"
 // Colorbar vertical stack
 const ColorbarStack = () => {
     const datasets = useSelector(state => state.datasets || [])
-    const makeColorbars = R.addIndex(R.map)((dataset, index) => {
-        return <Colorbar key={ index } datasetId={ index } />
+    const makeColorbars = R.map(dataset => {
+        const { id } = dataset
+        return <Colorbar key={ id } datasetId={ id } />
     })
     return <>{ makeColorbars(datasets) }</>
 }

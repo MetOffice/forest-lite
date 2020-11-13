@@ -5,12 +5,13 @@ import * as R from "ramda"
 import { compose, identity, filter, keys } from "ramda"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import "./Colorbar.css"
+import { findById } from "./helpers.js"
 
 
 const ColorbarTitle = ({ colorbar, datasetId }) => {
     const title = useSelector(state => {
         const { datasets = [] } = state
-        const { active = {}, description = {} } = datasets[datasetId]
+        const { active = {}, description = {} } = findById(datasets, datasetId)
         const { data_vars ={} } = description
         const activeVars = compose(keys, filter(identity))(active)
         if (activeVars.length > 0) {
@@ -109,7 +110,7 @@ class Colorbar extends React.Component {
 export const mapStateToProps = (state, ownProps) => {
     const { datasetId } = ownProps
     const { datasets = [] } = state
-    const dataset = datasets[datasetId] || {}
+    const dataset = findById(datasets, datasetId)
     const {
         active: flags = {}
     } = dataset

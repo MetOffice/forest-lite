@@ -7,6 +7,12 @@ import {
 } from "@bokeh/bokehjs/build/js/lib/models"
 import * as R from "ramda"
 import {
+    head,
+    map,
+    filter,
+    prop,
+    propEq,
+    pipe,
     compose,
     lensIndex,
     lensPath,
@@ -17,6 +23,7 @@ import * as tiling from "./tiling.js"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 import AutoLimits from "./AutoLimits.js"
+import { findById } from "./helpers.js"
 
 
 /**
@@ -67,7 +74,7 @@ const selectTooltips = (datasetId, dataVar) => state => {
     // Parse additional tooltips from state
     const { datasets=[] } = state
     if (datasets.length > 0) {
-        const { description } = datasets[datasetId]
+        const { description } = findById(datasets, datasetId)
         if (typeof description != "undefined") {
             const { data_vars={} } = description
             if (typeof data_vars[dataVar] != "undefined") {
@@ -90,12 +97,13 @@ export const selectPoint = (datasetName, dataVar) => {
 /**
  * Select dataset name from ID
  */
-export const selectDatasetName = id => {
-    return view(compose(
-        lensProp("datasets"),
-        lensIndex(id),
-        lensProp("label"),
-    ))
+export const selectDatasetName = id => state => {
+    const { datasets =[] } = state
+    return pipe(
+        filter(propEq("id", id)),
+        map(prop("label")),
+        head
+    )(datasets)
 }
 
 /**
@@ -308,7 +316,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
         const { datasets = [] } = state
         let active = false
         if (datasets.length > 0) {
-            const flags = datasets[datasetId].active || {}
+            const flags = findById(datasets, datasetId).active || {}
             active = R.any(R.identity, R.values(flags))
         }
         return active
