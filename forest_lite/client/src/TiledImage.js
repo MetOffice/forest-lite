@@ -17,6 +17,7 @@ import * as tiling from "./tiling.js"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 import AutoLimits from "./AutoLimits.js"
+import { findById } from "./helpers.js"
 
 
 /**
@@ -67,7 +68,7 @@ const selectTooltips = (datasetId, dataVar) => state => {
     // Parse additional tooltips from state
     const { datasets=[] } = state
     if (datasets.length > 0) {
-        const { description } = datasets[datasetId]
+        const { description } = findById(datasets, datasetId)
         if (typeof description != "undefined") {
             const { data_vars={} } = description
             if (typeof data_vars[dataVar] != "undefined") {
@@ -308,7 +309,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
         const { datasets = [] } = state
         let active = false
         if (datasets.length > 0) {
-            const flags = datasets[datasetId].active || {}
+            const flags = findById(datasets, datasetId).active || {}
             active = R.any(R.identity, R.values(flags))
         }
         return active
