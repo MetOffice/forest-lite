@@ -24,7 +24,12 @@ export const PREVIOUS_TIME_INDEX = 'PREVIOUS_TIME_INDEX'
 export const FETCH_IMAGE = 'FETCH_IMAGE'
 export const FETCH_IMAGE_SUCCESS = 'FETCH_IMAGE_SUCCESS'
 export const SET_FLAG = "SET_FLAG"
-export const UPDATE_NAVIGATE = "UPDATE_NAVIGATE"
 export const TOGGLE_FLAG = "TOGGLE_FLAG"
 export const ZOOM_IN = "ZOOM_IN"
 export const ZOOM_OUT = "ZOOM_OUT"
+
+// Navigation action types
+export const UPDATE_NAVIGATE = "UPDATE_NAVIGATE"
+export const GOTO_ITEM = 'GOTO_ITEM'
+export const NEXT_ITEM = 'NEXT_ITEM'
+export const SET_ITEMS = 'SET_ITEMS'

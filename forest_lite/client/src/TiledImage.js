@@ -9,6 +9,7 @@ import * as R from "ramda"
 import {
     head,
     map,
+    mapObjIndexed,
     filter,
     prop,
     propEq,
@@ -91,7 +92,10 @@ const selectTooltips = (datasetId, dataVar) => state => {
  * Select a point
  */
 export const selectPoint = (datasetName, dataVar) => {
-    return view(lensPath(["navigate", datasetName, dataVar]))
+    return pipe(
+        view(lensPath(["navigate", datasetName, dataVar])),
+        mapObjIndexed(prop("current"))
+    )
 }
 
 /**

@@ -8,7 +8,10 @@ const {
     setFigure,
     setActive,
     setOnlyActive,
-    toggleActive
+    toggleActive,
+    nextItem,
+    setItems,
+    goToItem
 } = require("../src/actions.js")
 const { reduce } = require("ramda")
 
@@ -259,6 +262,133 @@ test("set_datasets replaces existing datasets", () => {
     const actual = reduce(rootReducer, {}, actions)
     const expected = {
         datasets: [ 1 ]
+    }
+    expect(actual).toEqual(expected)
+})
+
+
+test("nextItem", () => {
+    const state = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    Qux: {
+                        before: [],
+                        current: 0,
+                        after: [1, 2, 3]
+                    }
+                }
+            }
+        }
+    }
+    const actions = [
+        nextItem([ "navigate", "Foo", "Bar", "Qux" ]),
+    ]
+    const actual = reduce(rootReducer, state, actions)
+    const expected = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    Qux: {
+                        before: [0],
+                        current: 1,
+                        after: [2, 3]
+                    }
+                }
+            }
+        }
+    }
+    expect(actual).toEqual(expected)
+})
+
+
+test("setItems", () => {
+    const state = {}
+    const items = [1, 2, 3]
+    const action = setItems([ "navigate", "Foo", "Bar", "Qux" ], items)
+    const actual = rootReducer(state, action)
+    const expected = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    Qux: {
+                        before: [],
+                        current: 1,
+                        after: [2, 3]
+                    }
+                }
+            }
+        }
+    }
+    expect(actual).toEqual(expected)
+})
+
+
+test("goToItem", () => {
+    const state = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    Qux: {
+                        before: [],
+                        current: "A",
+                        after: ["B", "C"]
+                    }
+                }
+            }
+        }
+    }
+    const actions = [
+        goToItem([ "navigate", "Foo", "Bar", "Qux" ], "C"),
+    ]
+    const actual = reduce(rootReducer, state, actions)
+    const expected = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    Qux: {
+                        before: ["A", "B"],
+                        current: "C",
+                        after: []
+                    }
+                }
+            }
+        }
+    }
+    expect(actual).toEqual(expected)
+})
+
+
+test("goToItem support ints", () => {
+    const state = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    Qux: {
+                        before: [],
+                        current: 0,
+                        after: [1, 2]
+                    }
+                }
+            }
+        }
+    }
+    const actions = [
+        goToItem([ "navigate", "Foo", "Bar", "Qux" ], "2"),
+    ]
+    const actual = reduce(rootReducer, state, actions)
+    const expected = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    Qux: {
+                        before: [0, 1],
+                        current: 2,
+                        after: []
+                    }
+                }
+            }
+        }
     }
     expect(actual).toEqual(expected)
 })

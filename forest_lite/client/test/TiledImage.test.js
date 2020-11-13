@@ -123,18 +123,3 @@ test.skip("TiledImage", async () => {
     // Timeout to allow fetch useEffect hooks to resolve
     await waitFor(() => screen.getByText("Dimension: time"))
 })
-
-
-test("selectPoint", () => {
-    const point = {
-        time: "1970-01-01T00:00:00Z",
-        pressure: "1000"
-    }
-    const state = {
-        navigate: {
-            Foo: { Bar: point }
-        }
-    }
-    const actual = selectPoint("Foo", "Bar")(state)
-    expect(actual).toEqual(point)
-})
