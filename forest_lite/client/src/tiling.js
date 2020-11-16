@@ -9,36 +9,41 @@ export const WEB_MERCATOR_EXTENT = {
 }
 
 
-const _cache = {}
+// Memoize Futures
+function memoize(method) {
+    let cache = {}
+    return async function() {
+        let args = JSON.stringify(arguments)
+        cache[args] = cache[args] || method.apply(this, arguments)
+        return cache[args]
+    }
+}
 
-// Render tiles
+
+const fetchTile = memoize(async url => {
+    return fetch(url)
+        .then(response => response.json())
+        .then(data => data.data)
+})
+
+
 export const renderTiles = source => urls => {
-    const promises = urls.map(url => {
-        if (url in _cache) {
-            return Promise.resolve(_cache[url])
-        } else {
-            return fetch(url)
-                .then(response => response.json())
-                .then(data => data.data)
-                .then(data => {
-                    _cache[url] = data
-                    return data
-                })
-        }
-    })
-    return Promise.all(promises)
-        .then(images => images.reduce(imageReducer, {
-            x: [],
-            y: [],
-            dw: [],
-            dh: [],
-            image: []
-        }))
+    let emptyImage = {
+        x: [],
+        y: [],
+        dw: [],
+        dh: [],
+        image: []
+    }
+    let promises = urls.map(fetchTile)
+    Promise.all(promises)
+        .then(tiles => tiles.reduce(imageReducer, emptyImage))
         .then(data => {
             source.data = data
             source.change.emit()
         })
 }
+
 
 // Interpolate URL from tile parameters
 export const getURL = (url, x, y, z) => {
