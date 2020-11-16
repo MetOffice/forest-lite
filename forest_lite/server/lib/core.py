@@ -76,7 +76,8 @@ def _tile(tilable, z, x, y):
                             values, zxy,
                             tile_size=TILE_SIZE)
     data.update({
-        "units": [units]
+        "units": [units],
+        "tile_key": [[x, y, z]]
     })
     return data
 
