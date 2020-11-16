@@ -12,5 +12,10 @@ setuptools.setup(
         "console_scripts": [
             "forest_lite=forest_lite.cli:app"
         ]
-    }
+    },
+    package_data={
+        "forest_lite.client": [
+            "static/*",
+        ]
+    },
 )
