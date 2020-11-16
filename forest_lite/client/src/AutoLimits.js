@@ -12,16 +12,28 @@ import {
 } from "ramda"
 
 
+// Approx. 7ms where ramda approach is ~70ms
+const fastMax = x => {
+    if (x.length === 0) return undefined
+    return x.reduce((p, v) => {
+        return ( p > v ? p : v )
+    })
+}
+const fastMin = x => {
+    if (x.length === 0) return undefined
+    return x.reduce((p, v) => {
+        return ( p < v ? p : v )
+    })
+}
+
 const AutoLimits = ({ source, onChange }) => {
     useEffect(() => {
         const cb = () => {
-            const arrayMax = x => reduce(max, head(x), tail(x))
-            const arrayMin = x => reduce(min, head(x), tail(x))
             const removeNaN = filter(compose(not, isNaN))
             const values = removeNaN(flatten(source.data.image))
             onChange({
-                high: arrayMax(values),
-                low: arrayMin(values),
+                high: fastMax(values),
+                low: fastMin(values),
             })
         }
 
