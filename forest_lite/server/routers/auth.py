@@ -26,33 +26,34 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-# Fake users database
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "group": "highway",
-        "email": "johndoe@example.com",
-        "hashed_password": get_password_hash("secret"),
-        "disabled": False,
-    },
-    "alice": {
-        "username": "alice",
-        "full_name": "Alice",
-        "group": "wcssp",
-        "email": "alice@example.com",
-        "hashed_password": get_password_hash("secret2"),
-        "disabled": False,
-    },
-    "bob": {
-        "username": "bob",
-        "full_name": "Bob",
-        "group": "guest",
-        "email": "bob@example.com",
-        "hashed_password": get_password_hash("anonymous"),
-        "disabled": False,
+def get_users_db():
+    # Fake users database
+    return {
+        "johndoe": {
+            "username": "johndoe",
+            "full_name": "John Doe",
+            "group": "highway",
+            "email": "johndoe@example.com",
+            "hashed_password": get_password_hash("secret"),
+            "disabled": False,
+        },
+        "alice": {
+            "username": "alice",
+            "full_name": "Alice",
+            "group": "wcssp",
+            "email": "alice@example.com",
+            "hashed_password": get_password_hash("secret2"),
+            "disabled": False,
+        },
+        "bob": {
+            "username": "bob",
+            "full_name": "Bob",
+            "group": "guest",
+            "email": "bob@example.com",
+            "hashed_password": get_password_hash("anonymous"),
+            "disabled": False,
+        }
     }
-}
 
 
 class Token(BaseModel):
@@ -112,7 +113,8 @@ def create_access_token(data: dict,
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme),
+                           users_db = Depends(get_users_db)):
     """Access current user given request parameters"""
 
     # Flow when using OAuth2 user authentication
@@ -131,7 +133,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
 
-    user = get_user(fake_users_db, username=token_data.username)
+    user = get_user(users_db, username=token_data.username)
     if not user:
         raise credentials_exception
     return user
@@ -144,8 +146,9 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 
 
 @router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(fake_users_db,
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
+                                 users_db = Depends(get_users_db)):
+    user = authenticate_user(users_db,
                              form_data.username,
                              form_data.password)
     if not user:
