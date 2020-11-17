@@ -19,6 +19,22 @@ export const moveForward = zipper => {
         after: data.after.slice(1)
     }
 }
+export const moveBackward = zipper => {
+    let { before, current, after } = zipper
+    if (before.length === 0) {
+        let items = toList(zipper)
+        return {
+            before: items.slice(0, -1),
+            current: items.slice(-1).pop(),
+            after: []
+        }
+    }
+    return {
+        before: before.slice(0, -1),
+        current: before.slice(-1).pop(),
+        after: [ current ].concat(after)
+    }
+}
 export const fromList = items => {
     return {
         before: [],

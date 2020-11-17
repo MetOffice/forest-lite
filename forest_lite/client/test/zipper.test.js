@@ -1,4 +1,10 @@
-import { fromList, moveForward, toList, goToIndex } from "../src/zipper.js"
+import {
+    fromList,
+    moveBackward,
+    moveForward,
+    toList,
+    goToIndex,
+} from "../src/zipper.js"
 
 
 describe("Zipper", () => {
@@ -6,6 +12,32 @@ describe("Zipper", () => {
         let zip = fromList([1, 2, 3])
         expect(zip).toEqual({
             before: [], current: 1, after: [2, 3]
+        })
+    })
+
+    test("backward", () => {
+        let zip = fromList([1, 2, 3])
+        zip = moveBackward(zip)
+        expect(zip).toEqual({
+            before: [1, 2], current: 3, after: []
+        })
+    })
+
+    test("forward then backward", () => {
+        let zip = fromList([1, 2, 3])
+        zip = moveForward(zip)
+        zip = moveBackward(zip)
+        expect(zip).toEqual({
+            before: [], current: 1, after: [2, 3]
+        })
+    })
+
+    test("backward multiple times", () => {
+        let zip = fromList([1, 2, 3])
+        zip = moveBackward(zip)
+        zip = moveBackward(zip)
+        expect(zip).toEqual({
+            before: [1], current: 2, after: [3]
         })
     })
 

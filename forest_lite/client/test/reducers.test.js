@@ -10,6 +10,7 @@ const {
     setOnlyActive,
     toggleActive,
     nextItem,
+    previousItem,
     setItems,
     goToItem
 } = require("../src/actions.js")
@@ -385,6 +386,40 @@ test("goToItem support ints", () => {
                         before: [0, 1],
                         current: 2,
                         after: []
+                    }
+                }
+            }
+        }
+    }
+    expect(actual).toEqual(expected)
+})
+
+test("previousItem", () => {
+    const state = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    Qux: {
+                        before: [0],
+                        current: 1,
+                        after: [2, 3]
+                    }
+                }
+            }
+        }
+    }
+    const actions = [
+        previousItem([ "navigate", "Foo", "Bar", "Qux" ]),
+    ]
+    const actual = reduce(rootReducer, state, actions)
+    const expected = {
+        navigate: {
+            Foo: {
+                Bar: {
+                    Qux: {
+                        before: [],
+                        current: 0,
+                        after: [1, 2, 3]
                     }
                 }
             }

@@ -1,5 +1,5 @@
-import { NEXT_TIME_INDEX } from "./action-types.js"
-import { nextItem } from "./actions.js"
+import { NEXT_TIME_INDEX, PREVIOUS_TIME_INDEX } from "./action-types.js"
+import { nextItem, previousItem } from "./actions.js"
 import {
     compose,
     defaultTo,
@@ -43,14 +43,18 @@ export const navMiddleware = store => next => action => {
     if (navigate == null) return next(action)
 
     const { type, payload } = action
+
+    // TODO: Switch to an easier to parse data-structure
+    const state = store.getState()
+    const [ name, dataVar ] = selectNameVar(state)
+    const dim = selectTimeDim(state, name, dataVar)
+    const path = ["navigate", name, dataVar, dim]
+
     switch (type) {
         case NEXT_TIME_INDEX:
-            const state = store.getState()
-            const [ name, dataVar ] = selectNameVar(state)
-            const dim = selectTimeDim(state, name, dataVar)
-            const path = ["navigate", name, dataVar, dim]
-            console.log(path)
             return next(nextItem(path))
+        case PREVIOUS_TIME_INDEX:
+            return next(previousItem(path))
         default:
             return next(action)
     }

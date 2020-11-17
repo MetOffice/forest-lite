@@ -26,6 +26,7 @@ import {
     UPDATE_NAVIGATE,
     GOTO_ITEM,
     NEXT_ITEM,
+    PREVIOUS_ITEM,
     SET_ITEMS,
     FETCH_IMAGE,
     FETCH_IMAGE_SUCCESS
@@ -45,7 +46,7 @@ import {
     mapObjIndexed,
     not
 } from "ramda"
-import { goTo, moveForward, fromList } from "./zipper.js"
+import { goTo, moveBackward, moveForward, fromList } from "./zipper.js"
 
 
 const activeReducer = (state, action) => {
@@ -169,6 +170,7 @@ export const rootReducer = (state = "", action) => {
         case UPDATE_NAVIGATE:
         case GOTO_ITEM:
         case NEXT_ITEM:
+        case PREVIOUS_ITEM:
         case SET_ITEMS:
             return navigateReducer(state, action)
         default:
@@ -216,6 +218,8 @@ const navigateReducer = (state, action) => {
             return over(lensPath(path), goTo(item), state)
         case NEXT_ITEM:
             return over(lensPath(path), moveForward, state)
+        case PREVIOUS_ITEM:
+            return over(lensPath(path), moveBackward, state)
         case SET_ITEMS:
             return set(lensPath(path), fromList(items), state)
         default:
