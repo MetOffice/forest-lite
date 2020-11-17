@@ -45,6 +45,8 @@ def view(file_name: str, driver: str = "eida50"):
 
 
 @app.command()
-def database(user_name: str, password: str, db_file: str):
+def database(user_name: str, password: str, db_file: str,
+             user_group: str = "anonymous"):
     print(f"save: {user_name} to {db_file}")
-    user_db.save_user(user_name, password, db_file)
+    user_db.save_user(user_name, password, db_file,
+                      user_group=user_group)
