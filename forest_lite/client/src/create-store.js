@@ -1,10 +1,10 @@
 import * as Redux from "redux"
 import { rootReducer } from "./reducers.js"
-import { animationMiddleware } from "./animation-middleware.js"
 import { colorPaletteMiddleware } from "./colorpalette-middleware.js"
 import { timeMiddleware } from "./time-middleware.js"
 import { toolMiddleware } from "./middlewares.js"
 import { zoomMiddleware } from "./zoom-middleware.js"
+import { navMiddleware } from "./nav-middleware.js"
 import {
     SET_DATASETS,
 } from "./action-types.js"
@@ -41,11 +41,11 @@ export const createStore = ({ log=false } = {}) => {
     }
     middlewares = middlewares.concat([
             toolMiddleware,
-            animationMiddleware,
             colorPaletteMiddleware,
             timeMiddleware,
             datasetsMiddleware,
-            zoomMiddleware
+            zoomMiddleware,
+            navMiddleware
     ])
     return Redux.createStore(rootReducer, Redux.applyMiddleware(...middlewares))
 }

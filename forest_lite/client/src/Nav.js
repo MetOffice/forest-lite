@@ -4,7 +4,7 @@ import moment from "moment-timezone"
 import { uniq, view, lensPath } from "ramda"
 import Select from "./Select.js"
 import "./Nav.css"
-import { updateNavigate } from "./actions.js"
+import { setItems, goToItem } from "./actions.js"
 
 
 /**
@@ -94,7 +94,6 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar, point={} }) 
             }
         }).filter(request => request.url != null)
 
-
         // Fetch dimensions
         const promises = requests.map(request => {
             return fetch(request.url)
@@ -121,13 +120,26 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar, point={} }) 
                 })
         })
 
-
         // Gather dimension data
         Promise.all(promises)
                .then(setAxes)
 
     }, [ datasetName, dataVar, JSON.stringify(dimensions) ])
 
+    // Configure application state
+    useEffect(() => {
+        axes.map(axis => {
+            const path = [
+                "navigate",
+                datasetName,
+                dataVar,
+                axis.dimension
+            ]
+            dispatch(setItems(path, axis.values))
+        })
+    }, [ datasetName, dataVar, JSON.stringify(axes) ])
+
+    // Render select menus
     const selects = axes.map(axis => {
         let label
         if (axis.units === "") {
@@ -136,16 +148,15 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar, point={} }) 
             label = `Dimension: ${axis.dimension} [${axis.units}]`
         }
         const callback = (value) => {
-            // TODO: Implement change to application state from here
-            const action = updateNavigate({
+            const path = [
+                "navigate",
                 datasetName,
                 dataVar,
-                dimension: axis.dimension,
-                value
-            })
-            dispatch(action)
+                axis.dimension
+            ]
+            dispatch(goToItem(path, value))
         }
-        const value = point[axis.dimension] || null
+        const { current: value = null } = point[axis.dimension] || {}
         return <Select
             key={ axis.dimension }
             label={ label }

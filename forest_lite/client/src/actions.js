@@ -20,6 +20,9 @@ import {
     SET_TIMES,
     SET_TIME_INDEX,
     NEXT_TIME_INDEX,
+    GOTO_ITEM,
+    NEXT_ITEM,
+    SET_ITEMS,
     PREVIOUS_TIME_INDEX,
     FETCH_IMAGE,
     FETCH_IMAGE_SUCCESS,
@@ -68,6 +71,7 @@ export const toggleFlag = (prop, initial=false) => ({
     payload: {prop, initial}
 })
 
+
 // Dataset meta-data
 export const setDatasetDescription = (datasetId, data) => {
     return { type: SET_DATASET_DESCRIPTION, payload: { datasetId, data } }
@@ -78,7 +82,20 @@ export const setDatasetColorbar = (datasetId, data) => {
     return { type: SET_DATASET_COLORBAR, payload: { datasetId, data } }
 }
 
-// Update navigate
+// Navigation actions
+export const nextItem = path => ({ type: NEXT_ITEM, payload: { path } })
+export const setItems = (path, items) => {
+    return {
+        type: SET_ITEMS,
+        payload: { path, items }
+    }
+}
+export const goToItem = (path, item) => {
+    return {
+        type: GOTO_ITEM,
+        payload: { path, item }
+    }
+}
 export const updateNavigate = payload => ({ type: UPDATE_NAVIGATE, payload })
 
 // Zoom control actions

@@ -24,6 +24,9 @@ import {
     SET_TIMES,
     SET_TIME_INDEX,
     UPDATE_NAVIGATE,
+    GOTO_ITEM,
+    NEXT_ITEM,
+    SET_ITEMS,
     FETCH_IMAGE,
     FETCH_IMAGE_SUCCESS
 } from "./action-types.js"
@@ -42,6 +45,7 @@ import {
     mapObjIndexed,
     not
 } from "ramda"
+import { goTo, moveForward, fromList } from "./zipper.js"
 
 
 const activeReducer = (state, action) => {
@@ -163,6 +167,9 @@ export const rootReducer = (state = "", action) => {
         case FETCH_IMAGE_SUCCESS:
             return Object.assign({}, state, {is_fetching: false})
         case UPDATE_NAVIGATE:
+        case GOTO_ITEM:
+        case NEXT_ITEM:
+        case SET_ITEMS:
             return navigateReducer(state, action)
         default:
             return state
@@ -199,11 +206,18 @@ const setLimitsReducer = (state, action) => {
  */
 const navigateReducer = (state, action) => {
     const { type, payload } = action
+    let { path, items, item } = payload
     switch (type) {
         case UPDATE_NAVIGATE:
             const { datasetName, dataVar, dimension, value } = payload
-            const path = ["navigate", datasetName, dataVar, dimension]
+            path = ["navigate", datasetName, dataVar, dimension]
             return set(lensPath(path), value, state)
+        case GOTO_ITEM:
+            return over(lensPath(path), goTo(item), state)
+        case NEXT_ITEM:
+            return over(lensPath(path), moveForward, state)
+        case SET_ITEMS:
+            return set(lensPath(path), fromList(items), state)
         default:
             return state
     }

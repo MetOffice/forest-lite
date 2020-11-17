@@ -120,7 +120,11 @@ test("NavPanel", async () => {
         navigate: {
             Foo: {
                 Bar: {
-                    time: "1970-01-01T00:00:00Z"
+                    time: {
+                        before: [],
+                        current: "1970-01-01T00:00:00Z",
+                        after: []
+                    }
                 }
             }
         }
