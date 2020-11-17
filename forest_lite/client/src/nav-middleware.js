@@ -34,7 +34,8 @@ const isTime = x => x.startsWith("time")
 
 const selectTimeDim = (state, datasetName, dataVar) => {
     const path = ["navigate", datasetName, dataVar]
-    const dims = Object.keys(view(lensPath(path), state))
+    const obj = view(lensPath(path), state) || {}
+    const dims = Object.keys(obj)
     return head(filter(isTime, dims))
 }
 
@@ -48,6 +49,10 @@ export const navMiddleware = store => next => action => {
     const state = store.getState()
     const [ name, dataVar ] = selectNameVar(state)
     const dim = selectTimeDim(state, name, dataVar)
+    if (dim === undefined) {
+        // Exit early
+        return next(action)
+    }
     const path = ["navigate", name, dataVar, dim]
 
     switch (type) {

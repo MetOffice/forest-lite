@@ -39,15 +39,16 @@ export const renderTiles = source => urls => {
     Promise.all(promises)
         .then(tiles => tiles.reduce(imageReducer, emptyImage))
         .then(data => {
-            // Check if image positions can be re-used
-            if (JSON.stringify(data.tile_key) === JSON.stringify(source.data.tile_key)) {
-                for (let i=0; i<data.image.length; i++) {
-                    source.data.image[i] = data.image[i]
-                }
-            } else {
-                // Pan/zoom cases
-                source.data = data
-            }
+            // // Check if image positions can be re-used
+            // if (JSON.stringify(data.tile_key) === JSON.stringify(source.data.tile_key)) {
+            //     for (let i=0; i<data.image.length; i++) {
+            //         source.data.image[i] = data.image[i]
+            //     }
+            // } else {
+            //     // Pan/zoom cases
+            //     source.data = data
+            // }
+            source.data = data
             source.change.emit()
         })
 }
