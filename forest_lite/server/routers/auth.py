@@ -6,8 +6,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel
-from passlib.context import CryptContext
 from typing import Optional
+from forest_lite.server.user_db import verify_password, get_users_db
 
 
 # to get a string like this run:
@@ -19,40 +19,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Security
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated=["auto"])
-
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-
-# Fake users database
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "group": "highway",
-        "email": "johndoe@example.com",
-        "hashed_password": get_password_hash("secret"),
-        "disabled": False,
-    },
-    "alice": {
-        "username": "alice",
-        "full_name": "Alice",
-        "group": "wcssp",
-        "email": "alice@example.com",
-        "hashed_password": get_password_hash("secret2"),
-        "disabled": False,
-    },
-    "bob": {
-        "username": "bob",
-        "full_name": "Bob",
-        "group": "guest",
-        "email": "bob@example.com",
-        "hashed_password": get_password_hash("anonymous"),
-        "disabled": False,
-    }
-}
 
 
 class Token(BaseModel):
@@ -75,15 +41,8 @@ class User(BaseModel):
     disabled: Optional[bool] = None
 
 
-GUEST_USER = User(username="anonymous")
-
-
 class UserInDB(User):
     hashed_password: str
-
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_user(db, username: str):
@@ -112,7 +71,8 @@ def create_access_token(data: dict,
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme),
+                           users_db = Depends(get_users_db)):
     """Access current user given request parameters"""
 
     # Flow when using OAuth2 user authentication
@@ -131,7 +91,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
 
-    user = get_user(fake_users_db, username=token_data.username)
+    user = get_user(users_db, username=token_data.username)
     if not user:
         raise credentials_exception
     return user
@@ -144,8 +104,9 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 
 
 @router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(fake_users_db,
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
+                                 users_db = Depends(get_users_db)):
+    user = authenticate_user(users_db,
                              form_data.username,
                              form_data.password)
     if not user:
