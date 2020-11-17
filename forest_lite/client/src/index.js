@@ -11,8 +11,6 @@ import {
     fetch_image_success
 } from "./actions.js"
 
-import * as Zipper from "./zipper.js"
-window.Zipper = Zipper
 
 window.main = function(baseURL) {
     let store = createStore({ log: true })
