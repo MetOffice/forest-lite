@@ -32,4 +32,5 @@ export const ZOOM_OUT = "ZOOM_OUT"
 export const UPDATE_NAVIGATE = "UPDATE_NAVIGATE"
 export const GOTO_ITEM = 'GOTO_ITEM'
 export const NEXT_ITEM = 'NEXT_ITEM'
+export const PREVIOUS_ITEM = 'PREVIOUS_ITEM'
 export const SET_ITEMS = 'SET_ITEMS'

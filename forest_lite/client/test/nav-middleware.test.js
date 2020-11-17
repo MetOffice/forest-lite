@@ -8,7 +8,8 @@ import { createStore } from "../src/create-store.js"
 import * as Zipper from "../src/zipper.js"
 
 
-test("dispatch next time index action", () => {
+// TODO: Remove this test and animation middleware
+test.skip("dispatch next time index action", () => {
     const store = createStore()
     const actions = [
         set_times([ 1, 2, 3 ]),

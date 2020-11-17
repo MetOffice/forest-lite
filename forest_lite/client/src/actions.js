@@ -22,6 +22,7 @@ import {
     NEXT_TIME_INDEX,
     GOTO_ITEM,
     NEXT_ITEM,
+    PREVIOUS_ITEM,
     SET_ITEMS,
     PREVIOUS_TIME_INDEX,
     FETCH_IMAGE,
@@ -84,6 +85,7 @@ export const setDatasetColorbar = (datasetId, data) => {
 
 // Navigation actions
 export const nextItem = path => ({ type: NEXT_ITEM, payload: { path } })
+export const previousItem = path => ({ type: PREVIOUS_ITEM, payload: { path } })
 export const setItems = (path, items) => {
     return {
         type: SET_ITEMS,
