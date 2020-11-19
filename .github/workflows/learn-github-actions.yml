@@ -8,3 +8,13 @@ jobs:
       - uses: actions/setup-node@v1
       - run: npm install -g bats
       - run: bats -v
+  build-assets:
+    runs-on: ubuntu-latest
+    env:
+      working-directory: forest_lite/client
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - name: list directory
+        run: ls -l
+        working-directory: ${{env.working-directory}}
