@@ -25,4 +25,4 @@ jobs:
           git remote rm origin
           git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
       - name: mkdocs gh-deploy
-        run: mkdocs gh-deploy
+        run: mkdocs gh-deploy --force
