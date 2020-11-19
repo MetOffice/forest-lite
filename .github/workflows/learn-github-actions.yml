@@ -8,8 +8,9 @@ jobs:
       - uses: actions/setup-node@v1
       - run: npm install -g bats
       - run: bats -v
-  build-assets:
+  test-client:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       working-directory: forest_lite/client
     steps:
@@ -21,5 +22,6 @@ jobs:
       - name: npm run build
         run: npm run build
         working-directory: ${{env.working-directory}}
-      - name: create pull request
-        uses: peter-evans/create-pull-request@v3
+      - name: npm test
+        run: npm test
+        working-directory: ${{env.working-directory}}
