@@ -1,8 +1,7 @@
-name: docs
+name: push-master
 on:
-  - push
-    #  push:
-    #    branches: main
+  push:
+    branches: main
 jobs:
   mkdocs:
     runs-on: ubuntu-latest
