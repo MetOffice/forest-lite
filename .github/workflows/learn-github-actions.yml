@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
-      - name: list directory
-        run: ls -l
+      - name: npm install
+        run: npm install
+        working-directory: ${{env.working-directory}}
+      - name: npm run build
+        run: npm run build
         working-directory: ${{env.working-directory}}
