@@ -1,7 +1,7 @@
 name: push-master
 on:
   push:
-    branches: main
+    branches: master
 jobs:
   mkdocs:
     runs-on: ubuntu-latest
