@@ -18,16 +18,20 @@ class Driver:
 
 ## Simplest possible interface
 
+A simpler design is to template the methods that are used
+by the application machinery and allow users to extend them
+as they see fit. To discourage deeply nested inheritance
+and fragile driver state a decorator syntax has been chosen.
 
 ```python
-from forest_lite import api
+from forest_lite.server.drivers.base import BaseDriver
 
 
-driver_name = "my_driver"  # Key to map request to settings
+driver = BaseDriver()
 
 
-@api.tile(driver_name)
-def my_custom_func(driver_settings, datavar, x, y, z, query=None):
+@driver.override("tilable")
+def my_custom_func(driver_settings, datavar, query=None):
     """A function that replies to a tile endpoint"""
     pass
 ```
