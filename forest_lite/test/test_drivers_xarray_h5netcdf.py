@@ -1,5 +1,5 @@
 from forest_lite.test.helpers import sample_h5netcdf_dim0
-from forest_lite.server.drivers import eida50
+from forest_lite.server.drivers import xarray_h5netcdf
 import pytest
 
 
