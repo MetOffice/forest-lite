@@ -7,7 +7,6 @@ import glob
 import re
 import string
 from functools import lru_cache
-from forest_lite.server.inject import Use
 from forest_lite.server.drivers.base import BaseDriver
 from forest_lite.server.drivers.types import Description, Points, PointsAttrs
 from pydantic import BaseModel
@@ -21,17 +20,13 @@ class Settings(BaseModel):
 driver = BaseDriver()
 
 
-def get_file_names():
+def get_file_names(pattern):
     """Search disk for Nearcast files"""
-    pattern = Settings(**driver.settings).pattern
     wildcard = string.Template(pattern).substitute(**os.environ)
     return sorted(glob.glob(wildcard))
 
 
-def get_times():
-    return sorted(parse_date(path) for path in get_file_names())
-
-
+# TODO: Add file name date information into a dimension
 def parse_date(path):
     """Parse datetime from file name"""
     groups = re.search("[0-9]{8}_[0-9]{4}", os.path.basename(path))
@@ -40,12 +35,14 @@ def parse_date(path):
 
 
 @driver.override("get_times")
-def nearcast_times(limits=None, times=Use(get_times)):
-    return times[-limits:]
+def nearcast_times(limits=None):
+    # TODO: Deprecate this endpoint
+    return []
 
 
 @driver.override("description")
-def nearcast_description(file_names=Use(get_file_names)):
+def nearcast_description(settings):
+    file_names = get_file_names(settings["pattern"])
     items = get_data_vars(sorted(file_names)[-1])
     return Description(**{
         "attrs": {
@@ -78,8 +75,8 @@ def get_data_vars(path):
 
 
 @driver.override("points")
-def nearcast_points(data_var, dim_name,
-                    file_names=Use(get_file_names)):
+def nearcast_points(settings, data_var, dim_name):
+    file_names = get_file_names(settings["pattern"])
     path = sorted(file_names)[-1]
     if dim_name == "level":
         data = sorted(set(get_first_fixed_surface(path, data_var)))
@@ -96,7 +93,9 @@ def nearcast_points(data_var, dim_name,
 
 
 @driver.override("tilable")
-def nearcast_tilable(data_var, timestamp_ms, file_names=Use(get_file_names)):
+def nearcast_tilable(settings, data_var, query=None):
+    file_names = get_file_names(settings["pattern"])
+    timestamp_ms = 0  # TODO: Fix this
     path = sorted(file_names)[-1]
     return get_grib2_data(path, timestamp_ms, data_var)
 

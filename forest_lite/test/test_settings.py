@@ -1,3 +1,4 @@
+import pytest
 import yaml
 from fastapi.testclient import TestClient
 from forest_lite.server import main, config
@@ -12,6 +13,7 @@ def get_settings(data):
     return wrapper
 
 
+@pytest.mark.skip("auth module hard-coded")
 def test_datasets_endpoint():
 
     # Prepare fake config
