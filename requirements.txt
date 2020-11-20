@@ -6,3 +6,4 @@ h5netcdf
 datashader
 cartopy_offlinedata
 typer
+pyproj>=2.6

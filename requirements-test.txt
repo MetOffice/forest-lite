@@ -1,0 +1,4 @@
+pytest
+pygrib
+passlib
+python-jose
