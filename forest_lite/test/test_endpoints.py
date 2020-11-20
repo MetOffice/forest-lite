@@ -15,7 +15,7 @@ def sample_config(netcdf_path):
             {
                 "label": "dataset-0",
                 "driver": {
-                    "name": "eida50",
+                    "name": "xarray_h5netcdf",
                     "settings": {
                         "pattern": netcdf_path
                     }
@@ -68,7 +68,7 @@ def test_dataset_data_vars(tmpdir):
             {
                 "label": "Label",
                 "driver": {
-                    "name": "eida50",
+                    "name": "xarray_h5netcdf",
                     "settings": {
                         "pattern": netcdf_path,
                         "data_vars": ["air_temperature"]
