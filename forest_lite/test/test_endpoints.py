@@ -1,4 +1,5 @@
 import pytest
+import json
 from fastapi.testclient import TestClient
 import h5netcdf
 from forest_lite.server import main, config
@@ -36,7 +37,8 @@ def test_tile_endpoint(tmpdir):
     # System under test
     settings = config.Settings(**data)
     main.app.dependency_overrides[config.get_settings] = lambda: settings
-    response = client.get("/datasets/0/data/times/0/tiles/0/0/0")
+    query = json.dumps({"time": "1970-01-01T00:00:00Z"})
+    response = client.get(f"/datasets/0/data/tiles/0/0/0?query={query}")
     actual = response.json()
 
     # Assert response
