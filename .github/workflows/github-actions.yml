@@ -38,5 +38,5 @@ jobs:
           pip install -e .
           echo $?
       - name: pytest
-        run: pytest
+        run: $CONDA/bin/pytest
         working-directory: ${{env.working-directory}}
