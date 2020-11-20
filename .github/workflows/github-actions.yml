@@ -34,6 +34,7 @@ jobs:
           python-version: ${{env.python-version}}
       - name: conda install
         run: |
+          conda init bash
           conda activate base
           conda install -c conda-forge --file requirements.txt --file requirements-test.txt
           pip install -e .
