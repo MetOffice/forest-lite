@@ -7,7 +7,6 @@ import glob
 import re
 import string
 from functools import lru_cache
-from forest_lite.server.inject import Use
 from forest_lite.server.drivers.base import BaseDriver
 from forest_lite.server.drivers.types import Description, Points, PointsAttrs
 from pydantic import BaseModel
@@ -27,10 +26,7 @@ def get_file_names(pattern):
     return sorted(glob.glob(wildcard))
 
 
-def get_times():
-    return sorted(parse_date(path) for path in get_file_names())
-
-
+# TODO: Add file name date information into a dimension
 def parse_date(path):
     """Parse datetime from file name"""
     groups = re.search("[0-9]{8}_[0-9]{4}", os.path.basename(path))
@@ -39,8 +35,9 @@ def parse_date(path):
 
 
 @driver.override("get_times")
-def nearcast_times(limits=None, times=Use(get_times)):
-    return times[-limits:]
+def nearcast_times(limits=None):
+    # TODO: Deprecate this endpoint
+    return []
 
 
 @driver.override("description")
