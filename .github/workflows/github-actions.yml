@@ -21,3 +21,28 @@ jobs:
       - name: npm test
         run: npm test
         working-directory: ${{env.working-directory}}
+  test-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      python-version: 3.8
+      working-directory: forest_lite/server/test
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{env.python-version}}
+      - uses: s-weigand/setup-conda@v1
+        with:
+          update-conda: true
+          activate-conda: true
+          python-version: ${{ env.python-version }}
+          conda-channels: anaconda, conda-forge
+      - name: conda install
+        run: |
+          conda install --file requirements.txt
+          pip install -e .
+          echo $?
+      - name: pytest
+        run: pytest
+        working-directory: ${{env.working-directory}}
