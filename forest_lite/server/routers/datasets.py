@@ -99,7 +99,8 @@ async def data_tiles(dataset_id: int,
         query = json.loads(query)
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
-    data = driver.data_tile(data_var, Z, X, Y, query=query)
+    settings = dataset.driver.settings
+    data = driver.data_tile(settings, data_var, Z, X, Y, query=query)
     obj = {
         "dataset_id": dataset_id,
         "tile": [X, Y, Z],
@@ -117,7 +118,7 @@ async def description(dataset_id: int,
                       settings: config.Settings = Depends(config.get_settings)):
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
-    return driver.description()
+    return driver.description(dataset.driver.settings)
 
 
 @router.get("/datasets/{dataset_id}/times/{timestamp_ms}/geojson")
@@ -163,7 +164,8 @@ async def axis(dataset_id: int,
     """GET dimension values related to particular data_var"""
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
-    obj = driver.points(data_var, dim_name)
+    settings = dataset.driver.settings
+    obj = driver.points(settings, data_var, dim_name)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")

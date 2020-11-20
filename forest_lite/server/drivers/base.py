@@ -12,13 +12,11 @@ class BaseDriver(Injectable):
         """Coordinate/Dimension meta-data and values"""
         return []
 
-    def data_tile(self, settings, data_var, timestamp_ms, z, x, y):
-        tilable = self.tilable(settings=settings,
-                               data_var=data_var,
-                               timestamp_ms=timestamp_ms)
+    def data_tile(self, settings, data_var, z, x, y, query=None):
+        tilable = self.tilable(settings, data_var, query=query)
         return core._tile(tilable, z, x, y)
 
-    def tilable(self, settings, timestamp_ms, data_var):
+    def tilable(self, settings, data_var, query=None):
         return {
             "longitude": [],
             "latitude": [],

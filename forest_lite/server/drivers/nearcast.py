@@ -96,8 +96,9 @@ def nearcast_points(settings, data_var, dim_name):
 
 
 @driver.override("tilable")
-def nearcast_tilable(settings, data_var, timestamp_ms):
+def nearcast_tilable(settings, data_var, query=None):
     file_names = get_file_names(settings["pattern"])
+    timestamp_ms = 0  # TODO: Fix this
     path = sorted(file_names)[-1]
     return get_grib2_data(path, timestamp_ms, data_var)
 
