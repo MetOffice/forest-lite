@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 10
     env:
       python-version: 3.8
-      working-directory: forest_lite/server/test
+      working-directory: forest_lite/test
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -38,5 +38,5 @@ jobs:
           pip install -e .
           echo $?
       - name: pytest
-        run: $CONDA/bin/pytest
+        run: pytest
         working-directory: ${{env.working-directory}}
