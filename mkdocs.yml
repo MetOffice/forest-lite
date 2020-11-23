@@ -2,6 +2,7 @@ site_name: FOREST Lite
 repo_url: https://github.com/MetOffice/forest-lite
 nav:
   - FOREST Lite: index.md
+  - beginner.md
   - design.md
 theme:
   name: material
