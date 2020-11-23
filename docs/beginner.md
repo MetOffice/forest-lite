@@ -17,10 +17,13 @@ on EC2 behind an NGINX load balancer to deploy FOREST-Lite.
 ENV CONFIG_FILE=/path/to/config.yaml
 ENV DB_FILE=/path/to/config-users.yaml
 ENV BASE_URL=.
-ENV NEARCAST_DIR=/path/to/nearcast
 ENV SECRET_KEY=fake_key
 CMD python /path/to/server/main.py --port=8080
 ```
+
+A script could be written to wrap the complexity for new starters
+and to inform the command line interface of reasonable defaults
+and pain points.
 
 User database
 -------------
