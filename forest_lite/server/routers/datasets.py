@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Response, Depends
 from forest_lite.server import drivers
 from forest_lite.server.lib import core
@@ -16,11 +17,32 @@ from forest_lite.server.routers.auth import (
 router = APIRouter()
 
 
+def get_auth_flag():
+    return os.getenv("AUTH", "false").lower() in ["true", "on"]
+
+
+def user_auth(get_user_method):
+    if get_auth_flag():
+        return get_user_method
+    else:
+        def no_op():
+            pass
+
+        return no_op
+
+
+get_user = user_auth(get_current_active_user)
+
+
 async def get_datasets(settings: Settings = Depends(get_settings),
-                       user: User = Depends(get_current_active_user)):
+                       user: User = Depends(get_user),
+                       auth_active: bool = Depends(get_auth_flag)):
     """Datasets by user"""
-    return [dataset for dataset in settings.datasets
-            if has_access(dataset, user)]
+    if auth_active:
+        return [dataset for dataset in settings.datasets
+                if has_access(dataset, user)]
+    else:
+        return settings.datasets
 
 
 def has_access(dataset, user):
