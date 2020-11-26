@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/MetOffice/forest-lite/master/logo_transparent_cropped.png"
+<img src="https://raw.githubusercontent.com/MetOffice/forest-lite/master/logo.svg"
         width="350px" align="center" alt="FOREST-lite">
 </p>
 
