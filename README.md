@@ -4,7 +4,7 @@
         width="350px" align="center" alt="FOREST-lite">
 </p>
 
-# Introduction
+# FOREST Lite
 
 Minimal implementation of FOREST. It uses [FastAPI](https://fastapi.tiangolo.com/) to expose data via
 a REST API. The client application uses [Redux](https://redux.js.org/) and [React](https://reactjs.org/) to manage
