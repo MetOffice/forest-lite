@@ -45,7 +45,7 @@ const App = ({ baseURL }) => {
                 <div className="App-navbar">
                     <ul>
                         <li><Link to="/">
-                                <Logo width={ "1em" } mode={ "dark" } />
+                                <Logo width={ "1em" } mode={ "icon" } />
                             </Link></li>
                         <li><Link to="/about">About</Link></li>
                         <li><Link to="/login"><LoginStatus /></Link></li>
