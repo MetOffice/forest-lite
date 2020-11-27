@@ -3,6 +3,7 @@ import { useAuth } from "./context/Auth.js"
 import "./LoginForm.css"
 import "./Spinner.css"
 import { IN_PROGRESS, LOGGED_IN, LOGGED_OUT } from "./status.js"
+import { Link } from "react-router-dom"
 
 
 const LoginForm = ({ baseURL }) => {
@@ -45,7 +46,13 @@ const LoginForm = ({ baseURL }) => {
 
     // Render logging in, logged in and logged out
     if (status === LOGGED_IN) {
-        return null
+        return (
+            <div className="LoginForm">
+                <div>
+                    <h2>Logged in successfully!</h2>
+                    <Link className="LoginForm__button--success" to="/">Go to App!</Link>
+                </div>
+            </div>)
     }
     if (status == IN_PROGRESS) {
         return (
