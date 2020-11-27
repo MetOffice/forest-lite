@@ -1,0 +1,20 @@
+.About__container {
+    width: 760px;
+    margin: auto;
+    font-family: Helvetica;
+    color: #333;
+
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 100px 1fr;
+    grid-gap: 1em;
+}
+
+.About__text {
+    grid-column-start: 2;
+}
+
+.About__logo {
+    grid-column-start: 1;
+    grid-row-start: 1;
+}

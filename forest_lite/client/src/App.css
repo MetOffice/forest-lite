@@ -7,9 +7,46 @@ body {
     display: none;
 }
 
-#root {
+.App-window {
     display: grid;
     height: 100vh;
+    width: 100vw;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "navbar"
+      "content"
+}
+
+.App-navbar {
+    grid-area: navbar;
+    background-color: #333;
+    font-family: Helvetica;
+    color: white;
+}
+
+.App-navbar ul {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    list-style-type: none;
+    margin: 0;
+}
+.App-navbar li {
+}
+.App-navbar li:hover {
+    background-color: #444;
+}
+.App-navbar a {
+    display: block;
+    padding: 1em;
+    color: white;
+    text-decoration: none;
+}
+
+.App-container {
+    display: grid;
+    grid-area: content;
     grid-template-columns: auto 1fr;
     grid-template-rows: auto auto 1fr auto auto auto;
     grid-template-areas:
@@ -22,9 +59,8 @@ body {
 }
 
 @media screen and (min-width: 960px) {
-    #root {
+    .App-container {
         display: grid;
-        height: 100vh;
         grid-template:
           ". . . . . . . ." 0
           ". colorbar colorbar . title . sidebar ." auto

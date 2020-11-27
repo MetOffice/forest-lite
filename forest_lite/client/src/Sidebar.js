@@ -5,7 +5,6 @@ import "./Sidebar.css"
 import Tab from "./Tab.js"
 import Nav from "./Nav.js"
 import DatasetsMenu from "./DatasetsMenu.js"
-import LoginStatus from "./LoginStatus.js"
 
 
 class Label extends React.Component {
@@ -27,7 +26,6 @@ const Sidebar = ({ baseURL }) => {
         setTabName(tabName)
     }
     return (<div className="layer-menu-container">
-            <LoginStatus />
             <div className="tab__header">
                 <TabChoice active={ tabName === "datasets" }
                            onClick={ showTab("datasets") }>
