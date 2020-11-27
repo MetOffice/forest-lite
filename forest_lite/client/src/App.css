@@ -28,9 +28,13 @@ body {
 .App-navbar ul {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: flex-end;
     list-style-type: none;
     margin: 0;
+    padding: 0;
+}
+.App-navbar--left {
+    margin-right: auto;
 }
 .App-navbar li {
 }
