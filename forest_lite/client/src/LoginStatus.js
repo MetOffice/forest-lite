@@ -18,19 +18,15 @@ const LoginStatus = () => {
     let msg
     if (status === LOGGED_IN) {
         return (
-            <div>
                 <span onClick={ onClick }
                       className="LoginStatus LoginStatus__button">
                     <i className="fas fa-sign-out-alt" /> Sign out
-                </span>
-            </div>)
+                </span>)
     } else {
         return (
-            <div>
                 <span className="LoginStatus LoginStatus__button">
                     <i className="fas fa-sign-in-alt" /> Sign in
-                </span>
-            </div>)
+                </span>)
     }
 }
 
