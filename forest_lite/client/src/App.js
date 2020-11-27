@@ -44,7 +44,7 @@ const App = ({ baseURL }) => {
             <div className="App-window">
                 <div className="App-navbar">
                     <ul>
-                        <li><Link to="/">
+                        <li className="App-navbar--left"><Link to="/">
                                 <Logo width={ "1em" } mode={ "icon" } />
                             </Link></li>
                         <li><Link to="/about">About</Link></li>
