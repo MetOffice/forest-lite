@@ -20,7 +20,7 @@ import { Logo } from "./Logo.js"
 
 // React router
 import {
-    BrowserRouter as Router,
+    HashRouter as Router,
     Switch,
     Route,
     Link
