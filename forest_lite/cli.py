@@ -7,14 +7,14 @@ from forest_lite.server import config, user_db
 app = typer.Typer()
 
 
-def get_settings(file_name, driver_name):
+def get_settings(file_name, driver_name, palette):
     def fn():
         return config.Settings(datasets=[
             {
                 "label": file_name,
                 "palettes": {
                     "default": {
-                        "name": "Greys",
+                        "name": palette,
                         "number": 256,
                         "reverse": True,
                         "low": 200,
@@ -33,7 +33,8 @@ def get_settings(file_name, driver_name):
 
 
 @app.command()
-def view(file_name: str, driver: str = "eida50", open_tab: bool = True):
+def view(file_name: str, driver: str = "eida50", open_tab: bool = True,
+         palette: str = "Viridis"):
     """
     FOREST Lite viewer
 
@@ -47,7 +48,7 @@ def view(file_name: str, driver: str = "eida50", open_tab: bool = True):
         thread = threading.Thread(target=webbrowser.open, args=(url,))
         thread.start()
 
-    callback = get_settings(file_name, driver)
+    callback = get_settings(file_name, driver, palette)
     _main.app.dependency_overrides[config.get_settings] = callback
     uvicorn.run(_main.app, port=1234)
 
