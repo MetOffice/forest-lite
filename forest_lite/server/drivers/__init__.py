@@ -1,20 +1,20 @@
 from importlib import import_module
+from forest_lite.server.drivers.base import BaseDriver
 
 
 def from_spec(spec):
+    return find_driver(spec.name)
+
+
+def find_driver(name: str):
+    """Find driver instance"""
     try:
-        module = import_module(f"forest_lite.server.drivers.{spec.name}")
+        module = import_module(f"forest_lite.server.drivers.{name}")
+        return module.driver
     except ModuleNotFoundError as e:
-        if spec.name in e.msg:
-            mod_name, obj_name = spec.name.split(":")
+        if name in e.msg:
+            mod_name, obj_name = name.split(":")
             module = import_module(mod_name)
             return getattr(module, obj_name)
         else:
             raise e
-    try:
-        return module.Driver(spec.name, spec.settings)
-    except AttributeError:
-        # TODO: Mechanism to configure driver(s)
-        driver = module.driver
-        driver.settings = spec.settings
-        return driver
