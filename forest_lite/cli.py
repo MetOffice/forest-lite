@@ -33,12 +33,20 @@ def get_settings(file_name, driver_name):
 
 
 @app.command()
-def view(file_name: str, driver: str = "eida50"):
+def view(file_name: str, driver: str = "eida50", open_tab: bool = True):
     """
     FOREST Lite viewer
 
     A simplified interface to the FOREST Lite server tool
     """
+    if open_tab:
+        import threading
+        import webbrowser
+        url = "http://localhost:1234"
+        print(f"opening browser: {url}")
+        thread = threading.Thread(target=webbrowser.open, args=(url,))
+        thread.start()
+
     callback = get_settings(file_name, driver)
     _main.app.dependency_overrides[config.get_settings] = callback
     uvicorn.run(_main.app, port=1234)
