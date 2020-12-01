@@ -5,7 +5,7 @@ from iris.analysis.cartography import unrotate_pole
 from functools import lru_cache
 from forest_lite.server.util import get_file_names
 from forest_lite.server.drivers import BaseDriver
-from forest_lite.server.drivers.types import Description
+from forest_lite.server.drivers.types import Description, DataVar
 
 
 driver = BaseDriver()
@@ -51,19 +51,12 @@ def get_cubes(path):
 @driver.override("description")
 def description(settings):
     file_names = get_file_names(settings["pattern"])
-    data_vars = [{
-        "name": "relative_humidity",
-        "units": "%"
-    }]
-    return Description(**{
-        "attrs": {},
-        "data_vars": {
-            data_var["name"]: {
-                "dims": [],
-                "attrs": {
-                    "long_name": data_var["name"],
-                    "units": data_var["units"],
-                }
-            } for data_var in data_vars
-        }
-    })
+    cubes = get_cubes(file_names[0])
+    return Description(attrs={}, data_vars=data_vars(cubes))
+
+
+def data_vars(cubes):
+    return {cube.name(): DataVar(dims=[], attrs={
+                                        "long_name": cube.name(),
+                                        "units": str(cube.units)
+                                    }) for cube in cubes}
