@@ -11,6 +11,18 @@ from forest_lite.server.drivers.types import Description, DataVar
 driver = BaseDriver()
 
 
+@driver.override("points")
+def points(settings, data_var, dim_name):
+    file_names = get_file_names(settings["pattern"])
+    cubes = get_cubes(file_names[0], data_var)
+    cube = cubes[0]
+    points = [cell.point for cell in cube.coord(dim_name).cells()]
+    if "time" in dim_name:
+        return [point.isoformat() for point in points]
+    else:
+        return points
+
+
 @driver.override("tilable")
 def tilable(settings, data_var, query=None):
     file_names = get_file_names(settings["pattern"])

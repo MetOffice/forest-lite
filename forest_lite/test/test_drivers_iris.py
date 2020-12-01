@@ -1,3 +1,4 @@
+import datetime as dt
 import os
 import iris
 import pytest
@@ -26,6 +27,18 @@ def cubes(sample_file):
 ])
 def test_find_driver(name):
     assert isinstance(find_driver(name), BaseDriver)
+
+
+def test_driver_points(sample_file):
+    driver = find_driver("iris")
+    settings = {"pattern": sample_file}
+    data_var = "relative_humidity"
+    dim_name = "time"
+    actual = driver.points(settings, data_var, dim_name)
+    expected = [dt.datetime(2020, 4, 17, 3),
+                dt.datetime(2020, 4, 17, 4),
+                dt.datetime(2020, 4, 17, 5)]
+    assert actual == expected
 
 
 def test_iris_descriptions(sample_file):
@@ -82,4 +95,11 @@ def test_cube_dims(cubes):
                 "grid_longitude",
                 "forecast_reference_time",
                 "forecast_period"]
+    assert actual == expected
+
+
+def test_cube_coords_points(cubes):
+    times = [cell.point for cell in cubes[0].coord("time").cells()]
+    actual = [time.strftime("%Y%m%dT%H%MZ") for time in times]
+    expected = ["20200417T0300Z", "20200417T0400Z", "20200417T0500Z"]
     assert actual == expected
