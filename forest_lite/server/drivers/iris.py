@@ -14,13 +14,16 @@ driver = BaseDriver()
 @driver.override("tilable")
 def tilable(settings, data_var, query=None):
     file_names = get_file_names(settings["pattern"])
-    cubes = get_cubes(file_names[0])
+    cubes = get_cubes(file_names[0], data_var)
     cube = cubes[0]
     lats = cube.coord("grid_latitude")[:].points
     lons = cube.coord("grid_longitude")[:].points.copy()
 
-    values = cube[0, -1].data.copy()
-    print(lons.shape, lats.shape)
+    print(cube.shape)
+    if cube.ndim == 3:
+        values = cube[0].data.copy()
+    else:
+        values = cube[0, -1].data.copy()
 
     # UKV Rotated pole support
     rotated_lons, rotated_lats = np.meshgrid(lons, lats)
@@ -39,13 +42,11 @@ def tilable(settings, data_var, query=None):
         "latitude": lats,
         "longitude": lons,
         "values": values,
-        "units": "%"
+        "units": str(cube.units)
     }
 
 
-@lru_cache
-def get_cubes(path):
-    return iris.load(path)
+get_cubes = lru_cache(iris.load)
 
 
 @driver.override("description")
