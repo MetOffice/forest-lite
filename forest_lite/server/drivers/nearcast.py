@@ -3,10 +3,9 @@ Nearcast driver
 """
 import datetime as dt
 import os
-import glob
 import re
-import string
 from functools import lru_cache
+from forest_lite.server.util import get_file_names
 from forest_lite.server.drivers.base import BaseDriver
 from forest_lite.server.drivers.types import Description, Points, PointsAttrs
 from pydantic import BaseModel
@@ -18,12 +17,6 @@ class Settings(BaseModel):
 
 
 driver = BaseDriver()
-
-
-def get_file_names(pattern):
-    """Search disk for Nearcast files"""
-    wildcard = string.Template(pattern).substitute(**os.environ)
-    return sorted(glob.glob(wildcard))
 
 
 # TODO: Add file name date information into a dimension

@@ -20,11 +20,11 @@ class DataVarAttrs(BaseModel):
     long_name: str = ""
 
 
-class Datavar(BaseModel):
+class DataVar(BaseModel):
     dims: List[str] = []
     attrs: DataVarAttrs
 
 
 class Description(BaseModel):
     attrs: Dict[str, str]
-    data_vars: Dict[str, Datavar]
+    data_vars: Dict[str, DataVar]
