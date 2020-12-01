@@ -5,7 +5,12 @@ from iris.analysis.cartography import unrotate_pole
 from functools import lru_cache
 from forest_lite.server.util import get_file_names
 from forest_lite.server.drivers import BaseDriver
-from forest_lite.server.drivers.types import Description, DataVar
+from forest_lite.server.drivers.types import (
+    Description,
+    DataVar,
+    Points,
+    PointsAttrs
+)
 
 
 driver = BaseDriver()
@@ -18,9 +23,15 @@ def points(settings, data_var, dim_name):
     cube = cubes[0]
     points = [cell.point for cell in cube.coord(dim_name).cells()]
     if "time" in dim_name:
-        return [point.isoformat() for point in points]
+        data = [point.isoformat() for point in points]
     else:
-        return points
+        data = points
+    return Points(
+        data_var=data_var,
+        dim_name=dim_name,
+        data=data,
+        attrs=PointsAttrs(standard_name=dim_name)
+    ).dict()
 
 
 @driver.override("tilable")
