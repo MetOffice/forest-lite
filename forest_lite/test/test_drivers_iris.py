@@ -35,10 +35,10 @@ def test_driver_points(sample_file):
     data_var = "relative_humidity"
     dim_name = "time"
     actual = driver.points(settings, data_var, dim_name)
-    expected = [dt.datetime(2020, 4, 17, 3),
-                dt.datetime(2020, 4, 17, 4),
-                dt.datetime(2020, 4, 17, 5)]
-    assert actual == expected
+    expected = ["2020-04-17T03:00:00",
+                "2020-04-17T04:00:00",
+                "2020-04-17T05:00:00"]
+    assert actual["data"] == expected
 
 
 def test_iris_descriptions(sample_file):
