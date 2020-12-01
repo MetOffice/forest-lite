@@ -43,10 +43,13 @@ def tilable(settings, data_var, query=None):
     lons = cube.coord("grid_longitude")[:].points.copy()
 
     print(cube.shape)
-    if cube.ndim == 3:
-        values = cube[0].data.copy()
-    else:
-        values = cube[0, -1].data.copy()
+
+    # Constrain cube
+    dims = {key: value for key, value in query.items()
+            if key not in ["grid_latitude", "grid_longitude"]}
+    print(dims)
+    cube_slice = cube.extract(iris.Constraint(**dims))
+    values = cube_slice.data.copy()
 
     # UKV Rotated pole support
     rotated_lons, rotated_lats = np.meshgrid(lons, lats)
