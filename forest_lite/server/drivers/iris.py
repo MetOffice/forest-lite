@@ -57,7 +57,12 @@ def description(settings):
 
 
 def data_vars(cubes):
-    return {cube.name(): DataVar(dims=[], attrs={
+    return {cube.name(): DataVar(dims=dim_names(cube),
+                                 attrs={
                                         "long_name": cube.name(),
                                         "units": str(cube.units)
                                     }) for cube in cubes}
+
+
+def dim_names(cube):
+    return [coord.name() for coord in cube.coords()]

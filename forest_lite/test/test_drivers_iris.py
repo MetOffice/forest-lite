@@ -33,9 +33,15 @@ def test_iris_descriptions(sample_file):
     settings = {"pattern": sample_file}
     data_var = "relative_humidity"
     units = "%"
+    dims = ["time",
+            "pressure",
+            "grid_latitude",
+            "grid_longitude",
+            "forecast_reference_time",
+            "forecast_period"]
     actual = driver.description(settings)
     assert actual.attrs == {}
-    assert actual.data_vars[data_var].dims == []
+    assert actual.data_vars[data_var].dims == dims
     assert actual.data_vars[data_var].attrs.long_name == data_var
     assert actual.data_vars[data_var].attrs.units == units
 
@@ -43,7 +49,13 @@ def test_iris_descriptions(sample_file):
 def test_data_vars(cubes):
     actual = data_vars(cubes)
     name = "relative_humidity"
-    expected = {name: DataVar(dims=[], attrs={
+    dims = ["time",
+            "pressure",
+            "grid_latitude",
+            "grid_longitude",
+            "forecast_reference_time",
+            "forecast_period"]
+    expected = {name: DataVar(dims=dims, attrs={
         "long_name": "relative_humidity",
         "units": "%"
     })}
@@ -60,3 +72,14 @@ def test_cube_attributes(cubes):
 
 def test_cube_units(cubes):
     assert str(cubes[0].units) == "%"
+
+
+def test_cube_dims(cubes):
+    actual = [coord.name() for coord in cubes[0].coords()]
+    expected = ["time",
+                "pressure",
+                "grid_latitude",
+                "grid_longitude",
+                "forecast_reference_time",
+                "forecast_period"]
+    assert actual == expected
