@@ -3,7 +3,7 @@ import os
 import iris
 import pytest
 from forest_lite.server.drivers import find_driver, BaseDriver
-from forest_lite.server.drivers.iris import data_vars
+from forest_lite.server.drivers.iris import data_vars, fromisoformat
 from forest_lite.server.drivers.types import DataVar
 
 
@@ -39,6 +39,31 @@ def test_driver_points(sample_file):
                 "2020-04-17T04:00:00",
                 "2020-04-17T05:00:00"]
     assert actual["data"] == expected
+
+
+@pytest.mark.parametrize("time", [
+    "2020-04-17T03:00:00",
+    "2020-04-17T03:00:00Z"
+])
+def test_driver_tilable(sample_file, time):
+    driver = find_driver("iris")
+    settings = {"pattern": sample_file}
+    data_var = "relative_humidity"
+    query = {
+        "time": time,
+        "forecast_reference_time": time,
+        "forecast_period": 0
+    }
+    actual = driver.tilable(settings, data_var, query=query)
+    assert actual["values"].shape == (13, 8, 9)
+
+
+@pytest.mark.parametrize("time", [
+    "2020-04-17T03:00:00",
+    "2020-04-17T03:00:00Z"
+])
+def test_fromisoformat(time):
+    assert fromisoformat(time) == dt.datetime(2020, 4, 17, 3)
 
 
 def test_iris_descriptions(sample_file):
@@ -103,3 +128,11 @@ def test_cube_coords_points(cubes):
     actual = [time.strftime("%Y%m%dT%H%MZ") for time in times]
     expected = ["20200417T0300Z", "20200417T0400Z", "20200417T0500Z"]
     assert actual == expected
+
+
+def test_cube_extract_time(cubes):
+    time = dt.datetime(2020, 4, 17, 3)
+    cube = cubes[0]
+    actual = cube.extract(iris.Constraint(time=time))
+    assert cube.shape == (3, 13, 8, 9)
+    assert actual.shape == (13, 8, 9)

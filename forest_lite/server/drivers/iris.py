@@ -1,4 +1,5 @@
 """Support for iris loaded data"""
+import datetime as dt
 import numpy as np
 import iris
 from iris.analysis.cartography import unrotate_pole
@@ -47,8 +48,16 @@ def tilable(settings, data_var, query=None):
     # Constrain cube
     dims = {key: value for key, value in query.items()
             if key not in ["grid_latitude", "grid_longitude"]}
-    print(dims)
-    cube_slice = cube.extract(iris.Constraint(**dims))
+    kwargs = {}
+    for key, value in query.items():
+        if key in ["grid_latitude", "grid_longitude"]:
+            continue
+        if "time" in key:
+            kwargs[key] = fromisoformat(value)
+        else:
+            kwargs[key] = float(value)
+
+    cube_slice = cube.extract(iris.Constraint(**kwargs))
     values = cube_slice.data.copy()
 
     # UKV Rotated pole support
@@ -70,6 +79,17 @@ def tilable(settings, data_var, query=None):
         "values": values,
         "units": str(cube.units)
     }
+
+
+def fromisoformat(text):
+    for fmt in [
+         "%Y-%m-%dT%H:%M:%S",
+         "%Y-%m-%dT%H:%M:%SZ"]:
+        try:
+            return dt.datetime.strptime(text, fmt)
+        except ValueError as e:
+            continue
+    raise e
 
 
 get_cubes = lru_cache(iris.load)
