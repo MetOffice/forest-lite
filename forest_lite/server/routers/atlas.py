@@ -7,8 +7,8 @@ router = APIRouter()
 
 
 @router.get("/atlas/{feature}")
-async def atlas_feature(feature: str):
-    obj = load_feature(feature)
+async def atlas_feature(feature: str, scale: str = "100m"):
+    obj = load_feature(feature, scale)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")

@@ -1,14 +1,14 @@
 """Map features lakes, borders etc."""
 import forest.data
 import cartopy.feature
-from forest.data import xs_ys, iterlines
+from forest.data import xs_ys, cut, iterlines
 
 
-def load_feature(feature):
+def load_feature(feature, scale):
     if feature.lower() == "borders":
         return borders()
     elif feature.lower() == "coastlines":
-        return coastlines()
+        return coastlines(scale)
     elif feature.lower() == "lakes":
         # Lake Victoria
         extent = (-10, 50, -20, 10)
@@ -28,9 +28,13 @@ def borders():
             '50m').geometries()))
 
 
-def coastlines():
+def coastlines(scale="110m"):
     """Continent and island coastlines"""
-    return forest.data.load_coastlines()
+    return xs_ys(cut(iterlines(
+        cartopy.feature.NaturalEarthFeature(
+            'physical',
+            'coastline',
+            scale).geometries()), 180))
 
 
 def lakes(extent):
