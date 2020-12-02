@@ -1,6 +1,6 @@
 import React from "react"
 import { Provider } from "react-redux"
-import { selectDatasets, selectActive } from "../src/Nav.js"
+import { selectDatasets, selectActive, isLonLatDim } from "../src/Nav.js"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
 import { act } from "react-dom/test-utils"
@@ -187,4 +187,19 @@ test.skip("NavPanel renders application state", async () => {
 
     // Check select values are set correctly
     expect(screen.getByDisplayValue(/1970/i)).toBeInTheDocument()
+})
+
+
+test.each`
+  dimName | expected
+  ${ "time" } | ${ false }
+  ${ "pressure" } | ${ false }
+  ${ "longitude" } | ${ true }
+  ${ "latitude" } | ${ true }
+  ${ "latitude_0" } | ${ true }
+  ${ "longitude_0" } | ${ true }
+  ${ "grid_latitude" } | ${ true }
+  ${ "grid_longitude" } | ${ true }
+`("isLonLatDim($dimName) === $expected", ({ dimName, expected }) => {
+    expect(isLonLatDim(dimName)).toEqual(expected)
 })
