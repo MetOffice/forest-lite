@@ -3,6 +3,7 @@ import datetime as dt
 import numpy as np
 import iris
 from iris.analysis.cartography import unrotate_pole
+from iris.coord_systems import RotatedGeogCS
 from functools import lru_cache
 from forest_lite.server.util import get_file_names
 from forest_lite.server.drivers import BaseDriver
@@ -60,12 +61,13 @@ def tilable(settings, data_var, query=None):
     cube_slice = cube.extract(iris.Constraint(**kwargs))
     values = cube_slice.data.copy()
 
-    # UKV Rotated pole support
-    rotated_lons, rotated_lats = np.meshgrid(lons, lats)
     coord_system = cube.coord_system()
-    pole_lon = coord_system.grid_north_pole_longitude
-    pole_lat = coord_system.grid_north_pole_latitude
-    lons, lats = unrotate_pole(rotated_lons, rotated_lats, pole_lon, pole_lat)
+    if isinstance(coord_system, RotatedGeogCS):
+        # UKV Rotated pole support
+        rotated_lons, rotated_lats = np.meshgrid(lons, lats)
+        pole_lon = coord_system.grid_north_pole_longitude
+        pole_lat = coord_system.grid_north_pole_latitude
+        lons, lats = unrotate_pole(rotated_lons, rotated_lats, pole_lon, pole_lat)
 
     # # Roll input data into [-180, 180] range
     # if np.any(lons > 180.0):

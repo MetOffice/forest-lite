@@ -1,6 +1,7 @@
 import datetime as dt
 import os
 import iris
+from iris.coord_systems import RotatedGeogCS
 import pytest
 from forest_lite.server.drivers import find_driver, BaseDriver
 from forest_lite.server.drivers.iris import data_vars, fromisoformat
@@ -136,3 +137,9 @@ def test_cube_extract_time(cubes):
     actual = cube.extract(iris.Constraint(time=time))
     assert cube.shape == (3, 13, 8, 9)
     assert actual.shape == (13, 8, 9)
+
+
+def test_unrotate_pole(cubes):
+    cube = cubes[0]
+    coord_system = cube.coord_system()
+    assert isinstance(coord_system, RotatedGeogCS)
