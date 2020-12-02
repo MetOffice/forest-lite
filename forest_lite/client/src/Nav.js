@@ -48,6 +48,14 @@ const pointURL = (baseURL, datasetID, variable, dimension) => {
 }
 
 
+/**
+ * Detect longitude/latitude dimension from name
+ */
+export const isLonLatDim = dimName => {
+    return dimName.includes("latitude") || dimName.includes("longitude")
+}
+
+
 export const NavPanel = ({ baseURL, datasets, datasetName, dataVar, point={} }) => {
 
     // Dispatch actions
@@ -73,9 +81,7 @@ export const NavPanel = ({ baseURL, datasets, datasetName, dataVar, point={} }) 
             if ( variables.indexOf(dataVar) !== -1 ) {
                 const description = datasets[index].description
                 const dims = description.data_vars[dataVar].dims
-                const dimensions = dims.filter(dim => {
-                    return ["latitude", "longitude"].indexOf(dim) === -1
-                })
+                const dimensions = dims.filter(dim => !isLonLatDim(dim))
                 setDimensions(dimensions)
             }
         }
