@@ -1,5 +1,8 @@
-import setuptools
+"""
+Initial setup script
+"""
 
+import setuptools
 
 setuptools.setup(
     name="forest_lite",
