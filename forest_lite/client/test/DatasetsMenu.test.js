@@ -14,4 +14,5 @@ test("DatasetsMenu", () => {
         </Provider>
     )
     expect(screen.getByText(/dataset/i)).toBeInTheDocument()
+    expect(screen.getByText(/please select/i)).toBeInTheDocument()
 })

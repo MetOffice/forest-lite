@@ -10,6 +10,10 @@
     flex: 1;
 }
 
+.Sidebar__row {
+    display: flex;
+}
+
 .Sidebar--hidden {
     display: none;
 }
