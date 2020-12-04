@@ -15,10 +15,10 @@ class ZoomButton extends React.Component {
             <div className="zoom-button">
                 <button
                     onClick={ onClicks.ZoomIn }
-                    className="tooltip">+<span className="tooltip-text">Zoom in</span></button>
+                    className="tooltip">+<span className="tooltip-text tooltip-text--left">Zoom in</span></button>
                 <button
                     onClick={ onClicks.ZoomOut }
-                    className="tooltip">-<span className="tooltip-text">Zoom out</span></button>
+                    className="tooltip">-<span className="tooltip-text tooltip-text--left">Zoom out</span></button>
             </div>
         )
     }
