@@ -14,12 +14,7 @@ const ShowLayer = () => {
         ev.preventDefault()
         dispatch(setVisible(!visible))
     }, [ visible ])
-    let className
-    if (visible) {
-        className = "fas fa-eye"
-    } else {
-        className = "fas fa-eye-slash"
-    }
+    let className = visible ? "fas fa-eye" : "fas fa-eye-slash"
     return (
             <button onClick={ onClick } className="ShowLayer__button" aria-label="visible">
                 <i className={ className } />
