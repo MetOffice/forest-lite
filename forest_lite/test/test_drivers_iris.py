@@ -50,13 +50,15 @@ def test_driver_tilable(sample_file, time):
     driver = find_driver("iris")
     settings = {"pattern": sample_file}
     data_var = "relative_humidity"
+    pressure = 1000
     query = {
         "time": time,
+        "pressure": pressure,
         "forecast_reference_time": time,
         "forecast_period": 0
     }
     actual = driver.tilable(settings, data_var, query=query)
-    assert actual["values"].shape == (13, 8, 9)
+    assert actual["values"].shape == (8, 9)
 
 
 @pytest.mark.parametrize("time", [
