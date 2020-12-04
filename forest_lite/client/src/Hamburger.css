@@ -1,0 +1,13 @@
+.Hamburger {
+    padding: 6px;
+    cursor: pointer;
+}
+
+
+.Hamburger__line {
+    width: 32px;
+    height: 3px;
+    margin: 4px;
+    background-color: #333;
+    border-radius: 4px;
+}

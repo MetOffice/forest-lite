@@ -76,22 +76,24 @@ const App = ({ baseURL }) => {
 const Main = ({ baseURL }) => {
     return (
         <div className="App-container">
-            <div className="App-title">
-                <Title/>
-            </div>
             <div className="App-sidebar">
                 <Sidebar baseURL={ baseURL } />
             </div>
-            <div className="App-colorbar">
-                <ColorbarStack />
-            </div>
-            <MapFigure className="App-map" baseURL={ baseURL } />
-            <ViewPort baseURL={ baseURL } />
-            <div className="App-controls">
-                <AnimationControls />
-            </div>
-            <div className="App-zoom">
-                <ZoomButton />
+            <div className="App-content">
+                <div className="App-title">
+                    <Title/>
+                </div>
+                <div className="App-colorbar">
+                    <ColorbarStack />
+                </div>
+                <MapFigure className="App-map" baseURL={ baseURL } />
+                <ViewPort baseURL={ baseURL } />
+                <div className="App-controls">
+                    <AnimationControls />
+                </div>
+                <div className="App-zoom">
+                    <ZoomButton />
+                </div>
             </div>
             <ColorPaletteFetch baseURL={ baseURL } />
             <FetchDatasets baseURL={ baseURL } />
