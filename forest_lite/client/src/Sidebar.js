@@ -16,27 +16,34 @@ const TabChoice = ({ children, onClick, active=false }) => {
 }
 
 const Sidebar = ({ baseURL }) => {
+    const [ isOpen, setOpen ] = useState(true)
     const [ tabName, setTabName ] = useState("datasets")
     const showTab = tabName => () => {
         setTabName(tabName)
     }
     const onClick = ev => {
         ev.preventDefault()
-        alert("Hamburger")
+        setOpen(!isOpen)
+    }
+    let className = "Sidebar--hidden"
+    if (isOpen) {
+        className = "Sidebar--visible"
     }
     return (<div className="layer-menu-container">
             <Hamburger onClick={ onClick } />
-            <div className="tab__header">
-                <TabChoice active={ tabName === "datasets" }
-                           onClick={ showTab("datasets") }>
-                    Layer
-                </TabChoice>
+            <div className={ className }>
+                <div className="tab__header">
+                    <TabChoice active={ tabName === "datasets" }
+                               onClick={ showTab("datasets") }>
+                        Layer
+                    </TabChoice>
+                </div>
+                <Tab active={ tabName === "datasets" } >
+                    <DatasetsMenu />
+                    <Nav baseURL={ baseURL } />
+                    <CoastlineMenu />
+                </Tab>
             </div>
-            <Tab active={ tabName === "datasets" } >
-                <DatasetsMenu />
-                <Nav baseURL={ baseURL } />
-                <CoastlineMenu />
-            </Tab>
     </div>)
 }
 

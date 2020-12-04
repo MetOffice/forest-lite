@@ -9,3 +9,11 @@
 .tool-icon {
     flex: 1;
 }
+
+.Sidebar--hidden {
+    display: none;
+}
+
+.Sidebar--visible {
+    display: block;
+}
