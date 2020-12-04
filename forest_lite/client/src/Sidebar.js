@@ -5,6 +5,7 @@ import Tab from "./Tab.js"
 import Nav from "./Nav.js"
 import CoastlineMenu from "./CoastlineMenu.js"
 import DatasetsMenu from "./DatasetsMenu.js"
+import Hamburger from "./Hamburger.js"
 
 
 const TabChoice = ({ children, onClick, active=false }) => {
@@ -19,7 +20,12 @@ const Sidebar = ({ baseURL }) => {
     const showTab = tabName => () => {
         setTabName(tabName)
     }
+    const onClick = ev => {
+        ev.preventDefault()
+        alert("Hamburger")
+    }
     return (<div className="layer-menu-container">
+            <Hamburger onClick={ onClick } />
             <div className="tab__header">
                 <TabChoice active={ tabName === "datasets" }
                            onClick={ showTab("datasets") }>

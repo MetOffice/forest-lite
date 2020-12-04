@@ -93,7 +93,7 @@ body {
     z-index: 1;
 }
 
-.App-colorbar, .App-controls, .App-zoom, .App-title, .App-sidebar {
+.App-colorbar, .App-controls, .App-zoom, .App-title {
     z-index: 2;
 }
 
@@ -114,6 +114,7 @@ body {
 }
 
 .App-sidebar {
+    z-index: 3;
     grid-column: 2/3;
     grid-row: 1/-1;
 }
