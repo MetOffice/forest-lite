@@ -23,7 +23,11 @@ def points(settings, data_var, dim_name):
     file_names = get_file_names(settings["pattern"])
     cubes = get_cubes(file_names[0], data_var)
     cube = cubes[0]
-    points = [cell.point for cell in cube.coord(dim_name).cells()]
+    try:
+        points = [cell.point for cell in cube.coord(dim_name).cells()]
+    except:
+        # MultiDimensionalCoordinate Exception
+        points = []
     if "time" in dim_name:
         data = [point.isoformat() for point in points]
     else:
@@ -41,10 +45,14 @@ def tilable(settings, data_var, query=None):
     file_names = get_file_names(settings["pattern"])
     cubes = get_cubes(file_names[0], data_var)
     cube = cubes[0]
-    lats = cube.coord("grid_latitude")[:].points
-    lons = cube.coord("grid_longitude")[:].points.copy()
 
-    print(cube.shape)
+    # Search for lon/lat arrays
+    lons, lats = None, None
+    for name in dim_names(cube):
+        if "latitude" in name:
+            lats = cube.coord(name)[:].points
+        if "longitude" in name:
+            lons = cube.coord(name)[:].points
 
     # Constrain cube
     dims = {key: value for key, value in query.items()
@@ -59,7 +67,6 @@ def tilable(settings, data_var, query=None):
             kwargs[key] = float(value)
 
     cube_slice = cube.extract(iris.Constraint(**kwargs))
-    values = cube_slice.data.copy()
 
     coord_system = cube.coord_system()
     if isinstance(coord_system, RotatedGeogCS):
@@ -75,6 +82,11 @@ def tilable(settings, data_var, query=None):
     #     lons[lons > 180.0] -= 360.
     #     lons = np.roll(lons, shift_by)
     #     values = np.roll(values, shift_by, axis=1)
+
+    if cube_slice.ndim != 2:
+        raise Exception(f"unsupported ndim: {cube_slice.ndim}")
+
+    values = cube_slice.data.copy()
     return {
         "latitude": lats,
         "longitude": lons,
