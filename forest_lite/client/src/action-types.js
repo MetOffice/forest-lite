@@ -1,5 +1,6 @@
 // Action keywords
 export const SET_ACTIVE = 'SET_ACTIVE'
+export const SET_VISIBLE = 'SET_VISIBLE'
 export const TOGGLE_ACTIVE = 'TOGGLE_ACTIVE'
 export const SET_ONLY_ACTIVE = 'SET_ONLY_ACTIVE'
 export const SET_URL = 'SET_URL'

@@ -317,7 +317,8 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
     const ranges = useSelector(state => state.figure || null)
 
     const active = useSelector(state => {
-        const { datasets = [] } = state
+        const { datasets = [], visible = true } = state
+        if (visible === false) return false
         let active = false
         if (datasets.length > 0) {
             const flags = findById(datasets, datasetId).active || {}
