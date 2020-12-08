@@ -1,11 +1,11 @@
-import React, { useEffect, useRef } from "react"
+import React from "react"
 import { Provider } from "react-redux"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, waitFor } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
 import { createStore } from "../src/create-store.js"
 import * as Bokeh from "@bokeh/bokehjs"
 import { act } from "react-dom/test-utils"
-import Contours, { mapStateToProps } from "../src/Contours.js"
+import Contours, { selectEndpoint, selectVisible } from "../src/Contours.js"
 import { setState } from "../src/actions.js"
 import { server } from "./server.js"
 
@@ -72,25 +72,25 @@ test("Contours", async () => {
 })
 
 
-const table = [
+test.each([
+    [ {}, false ],
+    [ { contours: true }, true ],
+])("selectVisible(%o)", (state, expected) => {
+    const actual = selectVisible(state)
+    expect(actual).toEqual(expected)
+})
+
+
+test.each([
     [
         {},
-        { visible: false }
-    ],
-    [
-        { contours: true },
-        { visible: true }
+        null
     ],
     [
         { dataset: 42, times: [5], time_index: 0 },
-        { visible: false, endpoint: "datasets/42/times/5/points" }
+        "datasets/42/times/5/points"
     ],
-    [
-        { dataset: 42, times: [5], time_index: 0, contours: true },
-        { visible: true, endpoint: "datasets/42/times/5/points" }
-    ],
-]
-test.each(table)("mapStateToProps(%o)", (state, expected) => {
-    const actual = mapStateToProps(state)
+])("selectEndpoint(%o)", (state, expected) => {
+    const actual = selectEndpoint(state)
     expect(actual).toEqual(expected)
 })
