@@ -47,7 +47,7 @@ class Contours extends React.Component {
 }
 
 
-const mapStateToProps = state => {
+export const mapStateToProps = state => {
     const { time_index, times, dataset: id, contours: visible=false } = state
     if (typeof time_index === "undefined") return { visible }
     if (typeof times === "undefined") return { visible }

@@ -5,7 +5,7 @@ import "@testing-library/jest-dom/extend-expect"
 import { createStore } from "../src/create-store.js"
 import * as Bokeh from "@bokeh/bokehjs"
 import { act } from "react-dom/test-utils"
-import Contours from "../src/Contours.js"
+import Contours, { mapStateToProps } from "../src/Contours.js"
 import { setState } from "../src/actions.js"
 import { server } from "./server.js"
 
@@ -69,4 +69,28 @@ test("Contours", async () => {
             [NaN, NaN]
         ],
     })
+})
+
+
+const table = [
+    [
+        {},
+        { visible: false }
+    ],
+    [
+        { contours: true },
+        { visible: true }
+    ],
+    [
+        { dataset: 42, times: [5], time_index: 0 },
+        { visible: false, endpoint: "datasets/42/times/5/points" }
+    ],
+    [
+        { dataset: 42, times: [5], time_index: 0, contours: true },
+        { visible: true, endpoint: "datasets/42/times/5/points" }
+    ],
+]
+test.each(table)("mapStateToProps(%o)", (state, expected) => {
+    const actual = mapStateToProps(state)
+    expect(actual).toEqual(expected)
 })
