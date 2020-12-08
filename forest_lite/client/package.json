@@ -24,6 +24,7 @@
     "babel-loader": "^8.1.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "css-loader": "^4.2.1",
+    "d3-contour": "^2.0.0",
     "html-webpack-plugin": "^4.5.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.4.0",
