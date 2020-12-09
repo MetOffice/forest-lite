@@ -26,6 +26,20 @@ export const handlers = [
         )
     }),
 
+    rest.get('/contours/*', async (req, res, ctx) => {
+        // Fake contour endpoint data
+        return res(
+            ctx.status(200),
+            ctx.json({
+                data: [[280, 281], [292, 303]],
+                coords: {
+                    latitude: { data: [52, 53] },
+                    longitude: { data: [125, 126] }
+                }
+            })
+        )
+    }),
+
     rest.get("*", (req, res, ctx) => {
         return res(
             ctx.status(500),
