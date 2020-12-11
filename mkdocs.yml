@@ -3,6 +3,7 @@ repo_url: https://github.com/MetOffice/forest-lite
 nav:
   - FOREST Lite: index.md
   - Getting started: beginner.md
+  - Developer guide: dev-guide.md
   - design.md
 theme:
   name: material
