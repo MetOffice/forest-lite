@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { connect, useSelector } from "react-redux"
 import * as Bokeh from "@bokeh/bokehjs"
 import * as R from "ramda"
@@ -85,7 +85,7 @@ class Colorbar extends React.Component {
         // Hide/show container element
         let style
         if (visible) {
-            style = { display: "block" }
+            style = { display: "flex" }
         } else {
             style = { display: "none" }
         }
@@ -96,16 +96,59 @@ class Colorbar extends React.Component {
         }
 
         return (
-            <div style={ style }
-                    className="colorbar-container"
-                    ref={ el => this.el = el }>
-                <ColorbarTitle
-                    datasetId={ datasetId }
-                    colorbar={ colorbar } />
+            <div style={ style } className="colorbar-container">
+                <div ref={ el => this.el = el }>
+                    <ColorbarTitle
+                        datasetId={ datasetId }
+                        colorbar={ colorbar } />
+                </div>
+                <ColorbarPenButton />
             </div>
         )
     }
 }
+
+
+/**
+ * Configure colorbar
+ */
+const ColorbarPenButton = () => {
+    const [ visible, setVisible ] = useState(false)
+    const onClick = ev => {
+        ev.preventDefault()
+        setVisible(!visible)
+    }
+    let panel = null
+    return (
+        <>
+            <button className="Colorbar__edit" onClick={ onClick }>
+                <i className="fas fa-edit"></i>
+            </button>
+        </>
+    )
+}
+
+
+const ColorbarControls = () => {
+    const [ visible, setVisible ] = useState(false)
+    const onClick = ev => {
+        ev.preventDefault()
+        setVisible(!visible)
+    }
+    let panel = null
+    if (visible) {
+        panel = <div>Controls</div>
+    }
+    return (
+        <>
+            <button className="Colorbar__edit" onClick={ onClick }>
+                <i className="fas fa-edit"></i>
+            </button>
+            { panel }
+        </>
+    )
+}
+
 
 export const mapStateToProps = (state, ownProps) => {
     const { datasetId } = ownProps
