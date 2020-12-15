@@ -8,7 +8,7 @@ import "./Colorbar.css"
 import { findById } from "./helpers.js"
 
 
-const ColorbarTitle = ({ colorbar, datasetId }) => {
+export const ColorbarTitle = ({ colorbar, datasetId }) => {
     const title = useSelector(state => {
         const { datasets = [] } = state
         const { active = {}, description = {} } = findById(datasets, datasetId)
@@ -112,7 +112,7 @@ class Colorbar extends React.Component {
 /**
  * Configure colorbar
  */
-const ColorbarPenButton = () => {
+export const ColorbarPenButton = () => {
     const [ visible, setVisible ] = useState(false)
     const onClick = ev => {
         ev.preventDefault()
@@ -120,11 +120,9 @@ const ColorbarPenButton = () => {
     }
     let panel = null
     return (
-        <>
-            <button className="Colorbar__edit" onClick={ onClick }>
-                <i className="fas fa-edit"></i>
-            </button>
-        </>
+        <button aria-label="edit" className="Colorbar__edit" onClick={ onClick }>
+            <i className="fas fa-edit"></i>
+        </button>
     )
 }
 
