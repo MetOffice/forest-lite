@@ -26,3 +26,29 @@
     color: white;
     background-color: #333;
 }
+
+.Colorbar__options {
+    background-color: white;
+    color: #333;
+    padding: 1em;
+    margin-top: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: Helvetica;
+}
+
+.Colorbar__options_title {
+    font-weight: 100;
+    margin: 0;
+}
+
+
+.Colorbar__options__label {
+    margin-top: 0.5em;
+}
+
+
+.Colorbar__options__input {
+    width: 100%;
+    box-sizing: border-box;
+}

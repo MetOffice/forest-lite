@@ -43,6 +43,12 @@ test("Colorbar", async () => {
     await waitFor(() => {
         expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
     })
+
+    // Click edit button
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }))
+
+    // Check edit options available
+    expect(screen.getByText(/colorbar options/i)).toBeInTheDocument()
 })
 
 
@@ -94,9 +100,14 @@ test("ColorbarTitle", async () => {
 
 
 test("ColorbarPenButton", async () => {
-    render(<ColorbarPenButton />)
-    const actual = screen.getByRole('button', { name: /edit/i })
-    expect(actual).toBeInTheDocument()
+    const onClick = jest.fn()
+    render(
+        <ColorbarPenButton onClick={ onClick } />
+    )
+    const pen = screen.getByRole('button', { name: /edit/i })
+    fireEvent.click(pen)
+    expect(pen).toBeInTheDocument()
+    expect(onClick.mock.calls.length).toEqual(1)
 })
 
 

@@ -68,14 +68,15 @@ class Colorbar extends React.Component {
             sizing_mode: "stretch_both"
         })
         figure.add_layout(colorbar, "below")
-        this.state = { color_mapper, figure, colorbar }
+        const showOptions = false
+        this.state = { color_mapper, figure, colorbar, showOptions }
     }
     componentDidMount() {
         const { figure } = this.state
         Bokeh.Plotting.show(figure, this.el)
     }
     render() {
-        const { color_mapper, colorbar } = this.state
+        const { color_mapper, colorbar, showOptions } = this.state
         const { visible, limits: {low, high}, palette } = this.props
         const { datasetId } = this.props
 
@@ -95,32 +96,61 @@ class Colorbar extends React.Component {
             color_mapper.palette = palette
         }
 
-        return (
+        const onClick = ev => {
+            ev.preventDefault()
+            this.setState({ showOptions: !showOptions })
+        }
+
+        let options = null
+        if (showOptions) {
+            options = <Options />
+        }
+
+        return (<>
             <div style={ style } className="colorbar-container">
                 <div ref={ el => this.el = el }>
                     <ColorbarTitle
                         datasetId={ datasetId }
                         colorbar={ colorbar } />
                 </div>
-                <ColorbarPenButton />
+                <ColorbarPenButton onClick={ onClick } />
             </div>
-        )
+            { options }
+        </>)
     }
 }
 
 
 /**
- * Configure colorbar
+ * Options
  */
-export const ColorbarPenButton = () => {
-    const [ visible, setVisible ] = useState(false)
-    const onClick = ev => {
-        ev.preventDefault()
-        setVisible(!visible)
-    }
-    let panel = null
+const Options = () => {
+    return (<div className="Colorbar__options">
+        <h2 className="Colorbar__options_title">Colorbar options</h2>
+        <div className="Colorbar__options__label">
+            <label>Lower limit</label>
+        </div>
+        <div>
+            <input className="Colorbar__options__input" />
+        </div>
+        <div className="Colorbar__options__label">
+            <label>Upper limit</label>
+        </div>
+        <div>
+            <input className="Colorbar__options__input" />
+        </div>
+    </div>)
+}
+
+
+/**
+ * Edit button
+ */
+export const ColorbarPenButton = ({ onClick }) => {
     return (
-        <button aria-label="edit" className="Colorbar__edit" onClick={ onClick }>
+        <button aria-label="edit"
+                className="Colorbar__edit"
+                onClick={ onClick }>
             <i className="fas fa-edit"></i>
         </button>
     )
