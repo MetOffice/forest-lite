@@ -1,0 +1,39 @@
+.ToggleButton__input {
+    display: none;
+}
+
+.ToggleButton__container {
+    font-family: Helvetica;
+}
+
+
+.ToggleButton__title {
+    color: #333;
+    line-height: 2em;
+}
+
+.ToggleButton__form {
+    display: flex;
+    border: 2px solid limegreen;
+    border-radius: 6px;
+}
+
+.ToggleButton__div {
+    flex-grow: 1;
+    flex-basis: 0;
+    color: limegreen;
+    background-color: white;
+    text-align: center;
+    border-radius: 6px;
+}
+
+.ToggleButton__label {
+    display: block;
+    line-height: 2em;
+    cursor: pointer;
+}
+
+.ToggleButton__input:checked + label {
+    color: white;
+    background-color: limegreen;
+}
