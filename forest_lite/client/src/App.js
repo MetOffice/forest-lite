@@ -28,18 +28,7 @@ import {
 
 
 const App = ({ baseURL }) => {
-    // Simple localStorage authentication via tokens
-    const [ status, setStatus ] = useState(LOGGED_OUT)
-    const [ user, setUser ] = useState(null)
-    const localStorageToken = localStorage.getItem("token")
-    const [ token, setAuthToken ] = useState(localStorageToken)
-    const setToken = (value) => {
-        localStorage.setItem("token", value)
-        setAuthToken(value)
-    }
     return (
-        <AuthContext.Provider value={{ token, setToken, user, setUser,
-                status, setStatus }}>
         <Router>
             <div className="App-window">
                 <div className="App-navbar">
@@ -48,7 +37,6 @@ const App = ({ baseURL }) => {
                                 <Logo width={ "1em" } mode={ "icon" } />
                             </Link></li>
                         <li><Link to="/about">About</Link></li>
-                        <li><Link to="/login"><LoginStatus /></Link></li>
                     </ul>
                 </div>
                 <Switch>
@@ -58,14 +46,9 @@ const App = ({ baseURL }) => {
                     <Route exact path="/about">
                         <About baseURL={ baseURL } />
                     </Route>
-                    <Route path="/login">
-                        <LoginForm baseURL={ baseURL } />
-                    </Route>
                 </Switch>
             </div>
-            <FetchUser baseURL={ baseURL } />
         </Router>
-        </AuthContext.Provider>
     )
 }
 
