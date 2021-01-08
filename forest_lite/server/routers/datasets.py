@@ -7,20 +7,14 @@ from forest_lite.server import config
 from typing import Optional
 import json
 from forest_lite.server.config import Settings, get_settings
-from forest_lite.server.routers.auth import (
-    User,
-    get_current_active_user
-)
 
 
 router = APIRouter()
 
 
-async def get_datasets(settings: Settings = Depends(get_settings),
-                       user: User = Depends(get_current_active_user)):
+async def get_datasets(settings: Settings = Depends(get_settings)):
     """Datasets by user"""
-    return [dataset for dataset in settings.datasets
-            if has_access(dataset, user)]
+    return [dataset for dataset in settings.datasets]
 
 
 def has_access(dataset, user):

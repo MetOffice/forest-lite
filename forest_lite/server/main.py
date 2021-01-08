@@ -18,11 +18,6 @@ app.include_router(palettes.router)
 app.include_router(viewport.router)
 
 
-# Authorisation
-from forest_lite.server.routers import auth
-app.include_router(auth.router)
-
-
 # CORS
 origins = [
     "*"  # TODO: Restrict origin to client only
