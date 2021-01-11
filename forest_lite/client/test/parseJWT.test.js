@@ -1,3 +1,7 @@
+import { parseToken } from "../src/jwt.js"
+import { URLSafeToBase64, base64ToURLSafe } from "../src/base64.js"
+import { getCookieValue } from "../src/cookie.js"
+
 
 // Simulate JWT token encoding
 const fakeEncodeToken = payload => {
@@ -9,41 +13,6 @@ const fakeEncodeToken = payload => {
 
 const encodePart = data => {
     return base64ToURLSafe(window.btoa(JSON.stringify(data)))
-}
-
-
-// URL and file name safe base64 from standard base64
-const base64ToURLSafe = text => {
-    return text.replace(/\+/g, '-')
-               .replace(/\//g, '_')
-}
-
-
-// URL and file name safe base64 to standard base64
-const URLSafeToBase64 = text => {
-    return text.replace(/-/g, '+')
-               .replace(/_/g, '/')
-}
-
-
-// Get value encoded in cookie
-const getCookieValue = (cookie, key) => {
-    const obj = cookie
-                    .split(";")
-                    .reduce((acc, statement) => {
-                        const [ key, value ] = statement.split("=")
-                        acc[key.trim()] = value.trim()
-                        return acc
-                    }, {})
-    return obj[key]
-}
-
-
-// Parse JSON Web Token (JWT)
-const parseToken = token => {
-    // payload in URL safe base64 encoding
-    const payloadBase64URL = token.split(".")[1]
-    return JSON.parse(window.atob(URLSafeToBase64(payloadBase64URL)))
 }
 
 
