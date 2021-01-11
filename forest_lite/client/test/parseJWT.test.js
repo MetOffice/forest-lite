@@ -1,5 +1,5 @@
 import { parseToken } from "../src/jwt.js"
-import { URLSafeToBase64, base64ToURLSafe } from "../src/base64.js"
+import { inStandardBase64, inURLSafeBase64 } from "../src/base64.js"
 import { getCookieValue } from "../src/cookie.js"
 
 
@@ -12,7 +12,7 @@ const fakeEncodeToken = payload => {
 
 
 const encodePart = data => {
-    return base64ToURLSafe(window.btoa(JSON.stringify(data)))
+    return inURLSafeBase64(window.btoa(JSON.stringify(data)))
 }
 
 
@@ -108,8 +108,8 @@ test.each`
     ${ "foo" } | ${ "foo" }
     ${ "-" }   | ${ "+" }
     ${ "_" }   | ${ "/" }
-`("URLSafeToBase64('$text') -> '$expected'", ({ text, expected }) => {
-    expect(URLSafeToBase64(text)).toEqual(expected)
+`("inStandardBase64('$text') -> '$expected'", ({ text, expected }) => {
+    expect(inStandardBase64(text)).toEqual(expected)
 })
 
 
@@ -118,6 +118,6 @@ test.each`
     ${ "foo" } | ${ "foo" }
     ${ "+" }   | ${ "-" }
     ${ "/" }   | ${ "_" }
-`("base64ToURLSafe('$text') -> '$expected'", ({ text, expected }) => {
-    expect(base64ToURLSafe(text)).toEqual(expected)
+`("inURLSafeBase64('$text') -> '$expected'", ({ text, expected }) => {
+    expect(inURLSafeBase64(text)).toEqual(expected)
 })

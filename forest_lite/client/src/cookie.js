@@ -1,13 +1,14 @@
-
-
-// Get value encoded in cookie
-export const getCookieValue = (cookie, key) => {
-    const obj = cookie
-                    .split(";")
-                    .reduce((acc, statement) => {
+/**
+ * Get value encoded in cookie
+ *
+ * Parses cookie syntax 'x=y ; a=b'
+ */
+export const getCookieValue = (cookieText, variableName) => {
+    const statements = cookieText.split(";")
+    const mapping = statements.reduce((accum, statement) => {
                         const [ key, value ] = statement.split("=")
-                        acc[key.trim()] = value.trim()
-                        return acc
+                        accum[key.trim()] = value.trim()
+                        return accum
                     }, {})
-    return obj[key]
+    return mapping[variableName]
 }
