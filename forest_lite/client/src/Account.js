@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 
 
-const User = () => {
+const Account = () => {
     const [ name, setName ] = useState("Bloggs, Joe")
     const [ email, setEmail ] = useState("joe.bloggs@example.com")
     const styles = {
@@ -42,4 +42,4 @@ const User = () => {
 }
 
 
-export default User
+export default Account
