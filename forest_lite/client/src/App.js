@@ -16,6 +16,7 @@ import { AuthContext } from "./context/Auth.js"
 import { LOGGED_OUT } from "./status.js"
 import { About } from "./About.js"
 import { Logo } from "./Logo.js"
+import User from "./User.js"
 
 
 // React router
@@ -36,12 +37,16 @@ const App = ({ baseURL }) => {
                         <li className="App-navbar--left"><Link to="/">
                                 <Logo width={ "1em" } mode={ "icon" } />
                             </Link></li>
+                        <li><Link to="/user">Account</Link></li>
                         <li><Link to="/about">About</Link></li>
                     </ul>
                 </div>
                 <Switch>
                     <Route exact path="/">
                         <Main baseURL={ baseURL } />
+                    </Route>
+                    <Route exact path="/user">
+                        <User />
                     </Route>
                     <Route exact path="/about">
                         <About baseURL={ baseURL } />
