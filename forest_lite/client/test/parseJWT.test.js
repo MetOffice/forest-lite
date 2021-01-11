@@ -30,9 +30,11 @@ const realisticCookie = [
 
 test.each`
     cookie | key | expected
+    ${ "" } | ${ "TOKEN" } | ${ undefined }
     ${ "TOKEN=Value" } | ${ "TOKEN" } | ${ "Value" }
     ${ "TOKEN=Value; Foo=Bar" } | ${ "Foo" } | ${ "Bar" }
-`("getCookieValue", ({ cookie, key, expected }) => {
+`("getCookieValue('$cookie', '$key') -> $expected",
+        ({ cookie, key, expected }) => {
     const actual = getCookieValue(cookie, key)
     expect(actual).toEqual(expected)
 })

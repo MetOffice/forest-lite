@@ -6,6 +6,9 @@
 export const getCookieValue = (cookieText, variableName) => {
     const statements = cookieText.split(";")
     const mapping = statements.reduce((accum, statement) => {
+                        if (statement.indexOf("=") === -1) {
+                            return accum
+                        }
                         const [ key, value ] = statement.split("=")
                         accum[key.trim()] = value.trim()
                         return accum
