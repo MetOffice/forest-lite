@@ -17,6 +17,11 @@ import { LOGGED_OUT } from "./status.js"
 import { About } from "./About.js"
 import { Logo } from "./Logo.js"
 
+// Account user interface Elm app
+import Elm from "react-elm-components"
+import Account from "./elm-app/dist/account.js"
+import "./Elm.css"
+
 
 // React router
 import {
@@ -28,6 +33,16 @@ import {
 
 
 const App = ({ baseURL }) => {
+    const flags = {
+        name: "Martin, Bob",
+        given_name: "Bob",
+        family_name: "Martin",
+        email: "user@example.com",
+        groups: ["forest-wcssp", "forest-highway"],
+        iat: 0,
+        exp: 0,
+        auth_time: 0,
+    }
     return (
         <Router>
             <div className="App-window">
@@ -36,6 +51,7 @@ const App = ({ baseURL }) => {
                         <li className="App-navbar--left"><Link to="/">
                                 <Logo width={ "1em" } mode={ "icon" } />
                             </Link></li>
+                        <li><Link to="/account">Account</Link></li>
                         <li><Link to="/about">About</Link></li>
                     </ul>
                 </div>
@@ -45,6 +61,9 @@ const App = ({ baseURL }) => {
                     </Route>
                     <Route exact path="/about">
                         <About baseURL={ baseURL } />
+                    </Route>
+                    <Route exact path="/account">
+                        <Elm src={ Account.Elm.Main } flags={ flags } />
                     </Route>
                 </Switch>
             </div>
