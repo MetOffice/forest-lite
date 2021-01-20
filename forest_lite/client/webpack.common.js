@@ -1,4 +1,5 @@
 const path = require('path')
+const elmSource = path.resolve(__dirname, "src/elm-app")
 
 
 module.exports = {
@@ -31,6 +32,15 @@ module.exports = {
             test: /\.tsx?$/,
             use: 'awesome-typescript-loader',
             exclude: /node_modules/
+        }, {
+            test: /\.elm$/,
+            exclude: [ /elm-stuff/, /node_modules/ ],
+            use: {
+                loader: 'elm-webpack-loader',
+                options: {
+                    cwd: elmSource
+                }
+            }
         }]
     }
 }

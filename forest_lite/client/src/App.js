@@ -19,7 +19,7 @@ import { Logo } from "./Logo.js"
 
 // Account user interface Elm app
 import Elm from "react-elm-components"
-import Account from "./elm-app/dist/account.js"
+import Account from "./elm-app/src/Main.elm"
 import "./Elm.css"
 
 
