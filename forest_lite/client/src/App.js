@@ -17,6 +17,9 @@ import { LOGGED_OUT } from "./status.js"
 import { About } from "./About.js"
 import { Logo } from "./Logo.js"
 
+// JWT token from Cookie
+import { useJWTClaim } from "./jwt.js"
+
 // Account user interface Elm app
 import Elm from "react-elm-components"
 import Account from "./elm-app/src/Main.elm"
@@ -33,16 +36,8 @@ import {
 
 
 const App = ({ baseURL }) => {
-    const flags = {
-        name: "Martin, Bob",
-        given_name: "Bob",
-        family_name: "Martin",
-        email: "user@example.com",
-        groups: ["forest-wcssp", "forest-highway"],
-        iat: 0,
-        exp: 0,
-        auth_time: 0,
-    }
+    const flags = useJWTClaim("TOKEN")
+    console.log(flags)
     return (
         <Router>
             <div className="App-window">

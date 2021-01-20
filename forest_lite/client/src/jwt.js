@@ -1,5 +1,20 @@
+import React, { useState } from "react"
+import { getCookieValue } from "./cookie"
 import { inStandardBase64 } from "./base64"
 
+
+/**
+ * JWT React hook
+ */
+export const useJWTClaim = cookieKey => {
+    const token = getCookieValue(document.cookie, cookieKey)
+    let initialValue = {}
+    if (typeof token !== "undefined") {
+        initialValue = parseToken(token)
+    }
+    const [ claim, setClaim ] = useState(initialValue)
+    return claim
+}
 
 // Convert JSON Web Token (JWT) to data structure
 export const parseToken = token => {
