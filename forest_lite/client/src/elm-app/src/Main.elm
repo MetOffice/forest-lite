@@ -3,6 +3,21 @@ module Main exposing (..)
 import Browser
 import Html exposing (Html, div, h1, li, span, text, ul)
 import Html.Attributes exposing (class, style)
+import Json.Decode as Decode exposing (Decoder, field, int, list, string)
+import Json.Decode.Pipeline exposing (optional, required)
+
+
+jwtDecoder : Decoder JWTClaim
+jwtDecoder =
+    Decode.succeed JWTClaim
+        |> required "auth_time" int
+        |> required "email" string
+        |> required "name" string
+        |> required "given_name" string
+        |> required "family_name" string
+        |> required "groups" (list string)
+        |> required "iat" int
+        |> required "exp" int
 
 
 type alias JWTClaim =
