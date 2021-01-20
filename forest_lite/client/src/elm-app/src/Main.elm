@@ -3,15 +3,15 @@ module Main exposing (..)
 import Browser
 import Html exposing (Html, div, h1, li, span, text, ul)
 import Html.Attributes exposing (class, style)
-import Json.Decode as Decode exposing (Decoder, field, int, list, string)
+import Json.Decode exposing (Decoder, field, int, list, string)
 import Json.Decode.Pipeline exposing (optional, required)
 
 
 jwtDecoder : Decoder JWTClaim
 jwtDecoder =
-    Decode.succeed JWTClaim
+    Json.Decode.succeed JWTClaim
         |> required "auth_time" int
-        |> required "email" string
+        |> optional "email" string "Not provided"
         |> required "name" string
         |> required "given_name" string
         |> required "family_name" string
@@ -40,7 +40,11 @@ type alias User =
 
 
 type alias Model =
-    { user : User }
+    { user : Maybe User }
+
+
+type alias Flags =
+    Json.Decode.Value
 
 
 type Msg
@@ -51,7 +55,7 @@ type Msg
 -- MAIN
 
 
-main : Program JWTClaim Model Msg
+main : Program Flags Model Msg
 main =
     Browser.element
         { init = init
@@ -65,16 +69,25 @@ main =
 -- INIT
 
 
-init : JWTClaim -> ( Model, Cmd Msg )
-init claim =
-    ( { user =
-            { name = claim.name
-            , email = claim.email
-            , groups = claim.groups
-            }
-      }
-    , Cmd.none
-    )
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    case Json.Decode.decodeValue jwtDecoder flags of
+        Ok claim ->
+            ( { user =
+                    Just
+                        { name = claim.name
+                        , email = claim.email
+                        , groups = claim.groups
+                        }
+              }
+            , Cmd.none
+            )
+
+        Err err ->
+            -- TODO: Support failed JSON decode in Model
+            ( { user = Nothing }
+            , Cmd.none
+            )
 
 
 
@@ -112,24 +125,29 @@ viewTitle =
         [ text "Account information" ]
 
 
-viewUser : User -> Html Msg
-viewUser user =
-    div
-        []
-        [ viewItem "Name" user.name
-        , viewItem "Contact" user.email
-        , div
-            [ class "Account__item__container" ]
-            [ div [ class "Account__item__label" ]
-                [ text "Authentication groups"
+viewUser : Maybe User -> Html Msg
+viewUser maybeUser =
+    case maybeUser of
+        Just user ->
+            div
+                []
+                [ viewItem "Name" user.name
+                , viewItem "Contact" user.email
+                , div
+                    [ class "Account__item__container" ]
+                    [ div [ class "Account__item__label" ]
+                        [ text "Authentication groups"
+                        ]
+                    , div []
+                        [ ul
+                            [ class "Account__ul" ]
+                            (List.map viewGroup user.groups)
+                        ]
+                    ]
                 ]
-            , div []
-                [ ul
-                    [ class "Account__ul" ]
-                    (List.map viewGroup user.groups)
-                ]
-            ]
-        ]
+
+        Nothing ->
+            div [] [ text "Not logged in" ]
 
 
 viewGroup group =
