@@ -61,7 +61,7 @@ def description(settings):
 
 
 @driver.override("points")
-def points(settings, data_var, dim_name):
+def points(settings, data_var, dim_name, query=None):
     """Coordinate/Dimension meta-data and values"""
     settings = Settings(**settings)
     pattern = settings.pattern

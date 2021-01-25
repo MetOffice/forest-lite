@@ -154,12 +154,15 @@ async def palette(dataset_id: int,
 async def axis(dataset_id: int,
                data_var: str,
                dim_name: str,
+               query: Optional[str] = None,
                settings: config.Settings = Depends(config.get_settings)):
     """GET dimension values related to particular data_var"""
+    if query is not None:
+        query = json.loads(query)
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
     settings = dataset.driver.settings
-    obj = driver.points(settings, data_var, dim_name)
+    obj = driver.points(settings, data_var, dim_name, query=query)
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")
