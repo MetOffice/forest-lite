@@ -7,7 +7,7 @@ from forest_lite.server import config, user_db
 app = typer.Typer()
 
 
-def scan_ports(initial_port):
+def scan_port(initial_port):
     """Helper to detect available port"""
     port = initial_port
     while in_use(port):
