@@ -1,6 +1,11 @@
 import typer
-label = typer.style("INFO", fg=typer.colors.BLUE)
-typer.echo(f"{label} importing modules, please wait")
+
+INFO = typer.style("INFO", fg=typer.colors.BLUE)
+HELP = typer.style("HELP", fg=typer.colors.BLUE)
+FAIL = typer.style("FAIL", fg=typer.colors.RED)
+SUCCESS = typer.style("SUCCESS", fg=typer.colors.GREEN)
+
+typer.echo(f"{INFO} importing modules, please wait")
 
 import os
 import uvicorn
@@ -15,11 +20,9 @@ def scan_port(initial_port):
     """Helper to detect available port"""
     port = initial_port
     while in_use(port):
-        label = typer.style("FAIL", fg=typer.colors.RED)
-        typer.echo(f"{label} {port} in use")
+        typer.echo(f"{FAIL} {port} in use")
         port += 1
-    label = typer.style("SUCCESS", fg=typer.colors.GREEN)
-    typer.echo(f"{label} {port} available")
+    typer.echo(f"{SUCCESS} {port} available")
     return port
 
 
@@ -94,13 +97,11 @@ def serve(config_file: str,
     used to serve the app
     """
     if not os.path.exists(config_file):
-        label = typer.style("FAIL", fg=typer.colors.RED)
-        typer.echo(f"{label} {config_file} not found on file system")
-        label = typer.style("HELP", fg=typer.colors.BLUE)
+        typer.echo(f"{FAIL} {config_file} not found on file system")
         if os.path.isabs(config_file):
-            helper = f"{label} looks like an absolute path, is there a typo?"
+            helper = f"{HELP} looks like an absolute path, is there a typo?"
         else:
-            helper = f"{label} looks like a relative path, are you in the right directory?"
+            helper = f"{HELP} looks like a relative path, are you in the right directory?"
         typer.echo(helper)
 
         raise typer.Exit()
