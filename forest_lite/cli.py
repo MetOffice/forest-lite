@@ -7,6 +7,13 @@ from forest_lite.server import config, user_db
 app = typer.Typer()
 
 
+def in_use(port):
+    """Check if port is accessible"""
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
+
 def get_settings(file_name, driver_name, palette):
     def fn():
         return config.Settings(datasets=[
@@ -32,25 +39,60 @@ def get_settings(file_name, driver_name, palette):
     return fn
 
 
+def browser_thread(url):
+    import threading
+    import webbrowser
+    print(f"opening browser: {url}")
+    return threading.Thread(target=webbrowser.open, args=(url,))
+
+
 @app.command()
 def view(file_name: str, driver: str = "eida50", open_tab: bool = True,
-         palette: str = "Viridis"):
+         palette: str = "Viridis",
+         port: int = 1234):
     """
     FOREST Lite viewer
 
     A simplified interface to the FOREST Lite server tool
     """
     if open_tab:
-        import threading
-        import webbrowser
-        url = "http://localhost:1234"
-        print(f"opening browser: {url}")
-        thread = threading.Thread(target=webbrowser.open, args=(url,))
+        url = f"http://localhost:{port}"
+        thread = browser_thread(url)
         thread.start()
 
     callback = get_settings(file_name, driver, palette)
     _main.app.dependency_overrides[config.get_settings] = callback
-    uvicorn.run(_main.app, port=1234)
+    uvicorn.run(_main.app, port=port)
+
+
+@app.command()
+def serve(config_file: str,
+          open_tab: bool = True,
+          port: int = 1234):
+    """
+    FOREST Lite server
+
+    A simplified interface to uvicorn and configuration files
+    used to serve the app
+    """
+    while in_use(port):
+        print(f"port {port} already in use")
+        port += 1
+    print(f"port {port} available")
+
+    def get_settings():
+        import yaml
+        with open(config_file) as stream:
+            data = yaml.safe_load(stream)
+        return config.Settings(**data)
+
+    if open_tab:
+        url = f"http://localhost:{port}"
+        thread = browser_thread(url)
+        thread.start()
+
+    _main.app.dependency_overrides[config.get_settings] = get_settings
+    uvicorn.run(_main.app, port=port)
 
 
 @app.command()
