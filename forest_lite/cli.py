@@ -7,6 +7,16 @@ from forest_lite.server import config, user_db
 app = typer.Typer()
 
 
+def scan_ports(initial_port):
+    """Helper to detect available port"""
+    port = initial_port
+    while in_use(port):
+        print(f"port {port} already in use")
+        port += 1
+    print(f"port {port} available")
+    return port
+
+
 def in_use(port):
     """Check if port is accessible"""
     import socket
@@ -55,6 +65,8 @@ def view(file_name: str, driver: str = "eida50", open_tab: bool = True,
 
     A simplified interface to the FOREST Lite server tool
     """
+    port = scan_port(port)
+
     if open_tab:
         url = f"http://localhost:{port}"
         thread = browser_thread(url)
@@ -75,10 +87,7 @@ def serve(config_file: str,
     A simplified interface to uvicorn and configuration files
     used to serve the app
     """
-    while in_use(port):
-        print(f"port {port} already in use")
-        port += 1
-    print(f"port {port} available")
+    port = scan_port(port)
 
     def get_settings():
         import yaml
