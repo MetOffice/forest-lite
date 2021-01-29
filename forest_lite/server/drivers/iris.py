@@ -19,7 +19,7 @@ driver = BaseDriver()
 
 
 @driver.override("points")
-def points(settings, data_var, dim_name):
+def points(settings, data_var, dim_name, query=None):
     file_names = get_file_names(settings["pattern"])
     cubes = get_cubes(file_names[0], data_var)
     cube = cubes[0]
