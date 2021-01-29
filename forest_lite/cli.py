@@ -1,3 +1,4 @@
+import os
 import typer
 import uvicorn
 import forest_lite.server.main as _main
@@ -11,9 +12,11 @@ def scan_port(initial_port):
     """Helper to detect available port"""
     port = initial_port
     while in_use(port):
-        print(f"port {port} already in use")
+        label = typer.style("FAIL", fg=typer.colors.RED)
+        typer.echo(f"{label} {port} in use")
         port += 1
-    print(f"port {port} available")
+    label = typer.style("SUCCESS", fg=typer.colors.GREEN)
+    typer.echo(f"{label} {port} available")
     return port
 
 
@@ -87,6 +90,18 @@ def serve(config_file: str,
     A simplified interface to uvicorn and configuration files
     used to serve the app
     """
+    if not os.path.exists(config_file):
+        label = typer.style("FAIL", fg=typer.colors.RED)
+        typer.echo(f"{label} {config_file} does not exist on file system")
+        label = typer.style("HELP", fg=typer.colors.BLUE)
+        if os.path.isabs(config_file):
+            helper = f"{label} looks like an absolute path, is there a typo?"
+        else:
+            helper = f"{label} looks like a relative path, are you in the right directory?"
+        typer.echo(helper)
+
+        raise typer.Exit()
+
     port = scan_port(port)
 
     def get_settings():
