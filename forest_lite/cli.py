@@ -1,11 +1,11 @@
 import typer
 
-INFO = typer.style("INFO", fg=typer.colors.BLUE)
-HELP = typer.style("HELP", fg=typer.colors.BLUE)
-FAIL = typer.style("FAIL", fg=typer.colors.RED)
-SUCCESS = typer.style("SUCCESS", fg=typer.colors.GREEN)
+INFO = typer.style("INFO", fg=typer.colors.GREEN) + ":    "
+HELP = typer.style("HELP", fg=typer.colors.BLUE) + ":    "
+FAIL = typer.style("FAIL", fg=typer.colors.RED) + ":    "
+SUCCESS = typer.style("SUCCESS", fg=typer.colors.BLUE) + ": "
 
-typer.echo(f"{INFO} importing modules, please wait")
+typer.echo(f"{INFO} Importing modules, please wait")
 
 import os
 import uvicorn
@@ -19,10 +19,11 @@ app = typer.Typer()
 def scan_port(initial_port):
     """Helper to detect available port"""
     port = initial_port
+    typer.echo(f"{INFO} Scanning ports")
     while in_use(port):
-        typer.echo(f"{FAIL} {port} in use")
+        typer.echo(f"{FAIL} Port {port} in use")
         port += 1
-    typer.echo(f"{SUCCESS} {port} available")
+    typer.echo(f"{SUCCESS} Port {port} available")
     return port
 
 
@@ -61,7 +62,7 @@ def get_settings(file_name, driver_name, palette):
 def browser_thread(url):
     import threading
     import webbrowser
-    print(f"opening browser: {url}")
+    typer.echo(f"{INFO} Opening browser: {url}")
     return threading.Thread(target=webbrowser.open, args=(url,))
 
 
@@ -99,9 +100,10 @@ def serve(config_file: str,
     if not os.path.exists(config_file):
         typer.echo(f"{FAIL} {config_file} not found on file system")
         if os.path.isabs(config_file):
-            helper = f"{HELP} looks like an absolute path, is there a typo?"
+            helper = f"{HELP} Looks like an absolute path, is there a typo?"
         else:
-            helper = f"{HELP} looks like a relative path, are you in the right directory?"
+            helper = (f"{HELP} Looks like a relative path, "
+                       "are you in the right directory?")
         typer.echo(helper)
 
         raise typer.Exit()
