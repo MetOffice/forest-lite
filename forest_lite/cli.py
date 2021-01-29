@@ -1,5 +1,8 @@
-import os
 import typer
+label = typer.style("INFO", fg=typer.colors.BLUE)
+typer.echo(f"{label} importing modules, please wait")
+
+import os
 import uvicorn
 import forest_lite.server.main as _main
 from forest_lite.server import config, user_db
@@ -92,7 +95,7 @@ def serve(config_file: str,
     """
     if not os.path.exists(config_file):
         label = typer.style("FAIL", fg=typer.colors.RED)
-        typer.echo(f"{label} {config_file} does not exist on file system")
+        typer.echo(f"{label} {config_file} not found on file system")
         label = typer.style("HELP", fg=typer.colors.BLUE)
         if os.path.isabs(config_file):
             helper = f"{label} looks like an absolute path, is there a typo?"
