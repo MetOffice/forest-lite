@@ -12,6 +12,7 @@ It does not prevent users from extending drivers via
 traditional approaches, e.g. class inheritance.
 
 """
+from functools import wraps
 from inspect import signature
 
 
@@ -39,6 +40,7 @@ class Injectable:
 
 
 def solve_dependencies(fn):
+    @wraps(fn)
     def wrapper(*args, **kwargs):
         deps = {}
         for key, param in signature(fn).parameters.items():
