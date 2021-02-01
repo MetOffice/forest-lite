@@ -3,6 +3,7 @@ port module Main exposing (..)
 import Browser
 import Html exposing (Html, div, h1, li, span, text, ul)
 import Html.Attributes exposing (class, style)
+import Http
 import Json.Decode exposing (Decoder, field, int, list, string)
 import Json.Decode.Pipeline exposing (optional, required)
 
@@ -42,7 +43,14 @@ type alias User =
 type alias Model =
     { user : Maybe User
     , route : Maybe Route
+    , datasets : Request
     }
+
+
+type Request
+    = Failure
+    | Loading
+    | Success String
 
 
 type Route
@@ -56,6 +64,7 @@ type alias Flags =
 
 type Msg
     = HashReceived String
+    | GotText (Result Http.Error String)
 
 
 
@@ -87,14 +96,21 @@ init flags =
                         , groups = claim.groups
                         }
               , route = Nothing
+              , datasets = Loading
               }
-            , Cmd.none
+            , Http.get
+                { url = "https://localhost:8080/datasets"
+                , expect = Http.expectString GotText
+                }
             )
 
         Err err ->
             -- TODO: Support failed JSON decode in Model
-            ( { user = Nothing, route = Nothing }
-            , Cmd.none
+            ( { user = Nothing, route = Nothing, datasets = Loading }
+            , Http.get
+                { url = "https://localhost:8080/datasets"
+                , expect = Http.expectString GotText
+                }
             )
 
 
@@ -114,6 +130,14 @@ update msg model =
     case msg of
         HashReceived hashRoute ->
             ( { model | route = parseRoute hashRoute }, Cmd.none )
+
+        GotText result ->
+            case result of
+                Ok fullText ->
+                    ( { model | datasets = Success fullText }, Cmd.none )
+
+                Err _ ->
+                    ( { model | datasets = Failure }, Cmd.none )
 
 
 parseRoute : String -> Maybe Route
@@ -149,7 +173,15 @@ view model =
 
 viewHome : Model -> Html Msg
 viewHome model =
-    div [] [ text "Home page" ]
+    case model.datasets of
+        Success datasetText ->
+            div [] [ text datasetText ]
+
+        Loading ->
+            div [] [ text "..." ]
+
+        Failure ->
+            div [] [ text "failed to fetch datasets" ]
 
 
 viewAccountInfo : Model -> Html Msg
