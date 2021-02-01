@@ -305,7 +305,10 @@ viewHome model =
 
 viewDatasets : List Dataset -> Model -> Html Msg
 viewDatasets datasets model =
-    select [ onSelect DataVarSelected ] (List.map (viewDataset model) datasets)
+    div []
+        [ select [ onSelect DataVarSelected ] (List.map (viewDataset model) datasets)
+        , div [] [ viewSelected model ]
+        ]
 
 
 viewDataset : Model -> Dataset -> Html Msg
@@ -356,6 +359,43 @@ dataVarToString props =
             , ( "data_var", Json.Encode.string props.data_var )
             ]
         )
+
+
+viewSelected : Model -> Html Msg
+viewSelected model =
+    case model.selected of
+        Just payload ->
+            let
+                maybeDesc =
+                    Dict.get payload.dataset_id model.datasetDescriptions
+            in
+            case maybeDesc of
+                Just descRequest ->
+                    case descRequest of
+                        SuccessDescription desc ->
+                            let
+                                maybeVar =
+                                    Dict.get payload.data_var desc.data_vars
+                            in
+                            case maybeVar of
+                                Just var ->
+                                    ul []
+                                        (List.map (\d -> li [] [ text d ]) var.dims)
+
+                                Nothing ->
+                                    text "no dims found"
+
+                        LoadingDescription ->
+                            text "..."
+
+                        FailureDescription ->
+                            text "failed to load description"
+
+                Nothing ->
+                    text "no description found"
+
+        Nothing ->
+            text "nothing selected"
 
 
 
