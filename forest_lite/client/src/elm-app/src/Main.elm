@@ -2,11 +2,13 @@ port module Main exposing (..)
 
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Html, div, h1, li, optgroup, option, select, span, text, ul)
+import Html exposing (Attribute, Html, div, h1, li, optgroup, option, select, span, text, ul)
 import Html.Attributes exposing (attribute, class, style)
+import Html.Events exposing (on, targetValue)
 import Http
 import Json.Decode exposing (Decoder, dict, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
+import Json.Encode
 
 
 jwtDecoder : Decoder JWTClaim
@@ -44,6 +46,7 @@ type alias User =
 type alias Model =
     { user : Maybe User
     , route : Maybe Route
+    , selected : Maybe SelectDataVar
     , datasets : Request
     , datasetDescriptions : Dict Int RequestDescription
     }
@@ -65,6 +68,12 @@ type alias DatasetDescription =
 type alias DataVar =
     { dims : List String
     , attrs : Dict String String
+    }
+
+
+type alias SelectDataVar =
+    { dataset_id : Int
+    , data_var : String
     }
 
 
@@ -93,6 +102,7 @@ type Msg
     = HashReceived String
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription (Result Http.Error DatasetDescription)
+    | DataVarSelected String
 
 
 
@@ -124,6 +134,7 @@ init flags =
                         , groups = claim.groups
                         }
               , route = Nothing
+              , selected = Nothing
               , datasets = Loading
               , datasetDescriptions = Dict.empty
               }
@@ -134,6 +145,7 @@ init flags =
             -- TODO: Support failed JSON decode in Model
             ( { user = Nothing
               , route = Nothing
+              , selected = Nothing
               , datasets = Loading
               , datasetDescriptions = Dict.empty
               }
@@ -168,6 +180,14 @@ dataVarDecoder =
         DataVar
         (field "dims" (list string))
         (field "attrs" (dict string))
+
+
+selectDataVarDecoder : Decoder SelectDataVar
+selectDataVarDecoder =
+    Json.Decode.map2
+        SelectDataVar
+        (field "dataset_id" int)
+        (field "data_var" string)
 
 
 
@@ -213,6 +233,14 @@ update msg model =
 
                 Err _ ->
                     ( model, Cmd.none )
+
+        DataVarSelected payload ->
+            case Json.Decode.decodeString selectDataVarDecoder payload of
+                Ok selected ->
+                    ( { model | selected = Just selected }, Cmd.none )
+
+                Err err ->
+                    ( { model | selected = Nothing }, Cmd.none )
 
 
 getDatasets : Cmd Msg
@@ -277,7 +305,7 @@ viewHome model =
 
 viewDatasets : List Dataset -> Model -> Html Msg
 viewDatasets datasets model =
-    select [] (List.map (viewDataset model) datasets)
+    select [ onSelect DataVarSelected ] (List.map (viewDataset model) datasets)
 
 
 viewDataset : Model -> Dataset -> Html Msg
@@ -292,7 +320,17 @@ viewDataset model dataset =
                 SuccessDescription desc ->
                     optgroup [ attribute "label" dataset.label ]
                         (List.map
-                            (\v -> option [] [ text v ])
+                            (\v ->
+                                option
+                                    [ attribute "value"
+                                        (dataVarToString
+                                            { data_var = v
+                                            , dataset_id = dataset.id
+                                            }
+                                        )
+                                    ]
+                                    [ text v ]
+                            )
                             (Dict.keys desc.data_vars)
                         )
 
@@ -308,6 +346,29 @@ viewDataset model dataset =
 
         Nothing ->
             optgroup [ attribute "label" dataset.label ] []
+
+
+dataVarToString : SelectDataVar -> String
+dataVarToString props =
+    Json.Encode.encode 0
+        (Json.Encode.object
+            [ ( "dataset_id", Json.Encode.int props.dataset_id )
+            , ( "data_var", Json.Encode.string props.data_var )
+            ]
+        )
+
+
+
+-- Select on "change" event
+
+
+onSelect : (String -> msg) -> Attribute msg
+onSelect tagger =
+    on "change" (Json.Decode.map tagger targetValue)
+
+
+
+-- Account info component
 
 
 viewAccountInfo : Model -> Html Msg
