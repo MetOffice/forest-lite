@@ -1,10 +1,11 @@
 port module Main exposing (..)
 
 import Browser
+import Dict exposing (Dict)
 import Html exposing (Html, div, h1, li, option, select, span, text, ul)
 import Html.Attributes exposing (class, style)
 import Http
-import Json.Decode exposing (Decoder, field, int, list, string)
+import Json.Decode exposing (Decoder, dict, field, int, list, string)
 import Json.Decode.Pipeline exposing (optional, required)
 
 
@@ -54,6 +55,18 @@ type alias Dataset =
     }
 
 
+type alias DatasetDescription =
+    { attrs : Dict String String
+    , data_vars : Dict String DataVar
+    }
+
+
+type alias DataVar =
+    { dims : List String
+    , attrs : Dict String String
+    }
+
+
 type Request
     = Failure
     | Loading
@@ -63,7 +76,7 @@ type Request
 type RequestDescription
     = FailureDescription
     | LoadingDescription
-    | SuccessDescription String
+    | SuccessDescription DatasetDescription
 
 
 type Route
@@ -78,7 +91,7 @@ type alias Flags =
 type Msg
     = HashReceived String
     | GotDatasets (Result Http.Error (List Dataset))
-    | GotDatasetDescription (Result Http.Error String)
+    | GotDatasetDescription (Result Http.Error DatasetDescription)
 
 
 
@@ -139,6 +152,22 @@ datasetDecoder =
         (field "id" int)
 
 
+datasetDescriptionDecoder : Decoder DatasetDescription
+datasetDescriptionDecoder =
+    Json.Decode.map2
+        DatasetDescription
+        (field "attrs" (dict string))
+        (field "data_vars" (dict dataVarDecoder))
+
+
+dataVarDecoder : Decoder DataVar
+dataVarDecoder =
+    Json.Decode.map2
+        DataVar
+        (field "dims" (list string))
+        (field "attrs" (dict string))
+
+
 
 -- PORTS
 
@@ -189,7 +218,7 @@ getDatasetDescription : Int -> Cmd Msg
 getDatasetDescription datasetId =
     Http.get
         { url = "http://localhost:8000/datasets/" ++ String.fromInt datasetId
-        , expect = Http.expectString GotDatasetDescription
+        , expect = Http.expectJson GotDatasetDescription datasetDescriptionDecoder
         }
 
 
