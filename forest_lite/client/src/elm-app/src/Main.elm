@@ -2,7 +2,21 @@ port module Main exposing (..)
 
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Attribute, Html, div, h1, li, optgroup, option, select, span, text, ul)
+import Html
+    exposing
+        ( Attribute
+        , Html
+        , div
+        , h1
+        , label
+        , li
+        , optgroup
+        , option
+        , select
+        , span
+        , text
+        , ul
+        )
 import Html.Attributes exposing (attribute, class, style)
 import Html.Events exposing (on, targetValue)
 import Http
@@ -102,6 +116,7 @@ type Msg
     = HashReceived String
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription (Result Http.Error DatasetDescription)
+    | GotAxis (Result Http.Error String)
     | DataVarSelected String
 
 
@@ -207,6 +222,14 @@ update msg model =
         HashReceived hashRoute ->
             ( { model | route = parseRoute hashRoute }, Cmd.none )
 
+        GotAxis result ->
+            case result of
+                Ok axis ->
+                    ( model, Cmd.none )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
         GotDatasets result ->
             case result of
                 Ok datasets ->
@@ -237,7 +260,28 @@ update msg model =
         DataVarSelected payload ->
             case Json.Decode.decodeString selectDataVarDecoder payload of
                 Ok selected ->
-                    ( { model | selected = Just selected }, Cmd.none )
+                    let
+                        dataset_id =
+                            selected.dataset_id
+
+                        data_var =
+                            selected.data_var
+
+                        maybeDims =
+                            selectedDims model dataset_id data_var
+                    in
+                    case maybeDims of
+                        Just dims ->
+                            ( { model | selected = Just selected }
+                            , Cmd.batch
+                                (List.map
+                                    (\dim -> getAxis dataset_id data_var dim)
+                                    dims
+                                )
+                            )
+
+                        Nothing ->
+                            ( { model | selected = Just selected }, Cmd.none )
 
                 Err err ->
                     ( { model | selected = Nothing }, Cmd.none )
@@ -256,6 +300,21 @@ getDatasetDescription datasetId =
     Http.get
         { url = "http://localhost:8000/datasets/" ++ String.fromInt datasetId
         , expect = Http.expectJson GotDatasetDescription datasetDescriptionDecoder
+        }
+
+
+getAxis : Int -> String -> String -> Cmd Msg
+getAxis dataset_id data_var dim =
+    Http.get
+        { url =
+            String.join "/"
+                [ "http://localhost:8000/datasets"
+                , String.fromInt dataset_id
+                , data_var
+                , "axis"
+                , dim
+                ]
+        , expect = Http.expectString GotAxis
         }
 
 
@@ -379,8 +438,7 @@ viewSelected model =
                             in
                             case maybeVar of
                                 Just var ->
-                                    ul []
-                                        (List.map (\d -> li [] [ text d ]) var.dims)
+                                    viewDims var.dims
 
                                 Nothing ->
                                     text "no dims found"
@@ -396,6 +454,53 @@ viewSelected model =
 
         Nothing ->
             text "nothing selected"
+
+
+selectedDims : Model -> Int -> String -> Maybe (List String)
+selectedDims model dataset_id data_var =
+    let
+        maybeDesc =
+            Dict.get dataset_id model.datasetDescriptions
+    in
+    case maybeDesc of
+        Just descRequest ->
+            case descRequest of
+                SuccessDescription desc ->
+                    let
+                        maybeVar =
+                            Dict.get data_var desc.data_vars
+                    in
+                    case maybeVar of
+                        Just var ->
+                            Just var.dims
+
+                        Nothing ->
+                            Nothing
+
+                LoadingDescription ->
+                    Nothing
+
+                FailureDescription ->
+                    Nothing
+
+        Nothing ->
+            Nothing
+
+
+viewDims : List String -> Html Msg
+viewDims dims =
+    div []
+        (List.map
+            (\d ->
+                div []
+                    [ label [] [ text ("Dimension: " ++ d) ]
+                    , div
+                        []
+                        [ select [] [] ]
+                    ]
+            )
+            dims
+        )
 
 
 
