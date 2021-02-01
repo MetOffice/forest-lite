@@ -5,7 +5,7 @@ import Dict exposing (Dict)
 import Html exposing (Html, div, h1, li, option, select, span, text, ul)
 import Html.Attributes exposing (class, style)
 import Http
-import Json.Decode exposing (Decoder, dict, field, int, list, string)
+import Json.Decode exposing (Decoder, dict, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
 
 
@@ -45,7 +45,7 @@ type alias Model =
     { user : Maybe User
     , route : Maybe Route
     , datasets : Request
-    , datasetDescription : RequestDescription
+    , datasetDescriptions : Dict Int RequestDescription
     }
 
 
@@ -58,6 +58,7 @@ type alias Dataset =
 type alias DatasetDescription =
     { attrs : Dict String String
     , data_vars : Dict String DataVar
+    , dataset_id : Int
     }
 
 
@@ -124,7 +125,7 @@ init flags =
                         }
               , route = Nothing
               , datasets = Loading
-              , datasetDescription = LoadingDescription
+              , datasetDescriptions = Dict.empty
               }
             , getDatasets
             )
@@ -134,7 +135,7 @@ init flags =
             ( { user = Nothing
               , route = Nothing
               , datasets = Loading
-              , datasetDescription = LoadingDescription
+              , datasetDescriptions = Dict.empty
               }
             , getDatasets
             )
@@ -154,10 +155,11 @@ datasetDecoder =
 
 datasetDescriptionDecoder : Decoder DatasetDescription
 datasetDescriptionDecoder =
-    Json.Decode.map2
+    Json.Decode.map3
         DatasetDescription
         (field "attrs" (dict string))
         (field "data_vars" (dict dataVarDecoder))
+        (field "dataset_id" int)
 
 
 dataVarDecoder : Decoder DataVar
@@ -187,9 +189,12 @@ update msg model =
 
         GotDatasets result ->
             case result of
-                Ok payload ->
-                    ( { model | datasets = Success payload }
-                    , getDatasetDescription 0
+                Ok datasets ->
+                    ( { model | datasets = Success datasets }
+                    , Cmd.batch
+                        (List.map (\d -> getDatasetDescription d.id)
+                            datasets
+                        )
                     )
 
                 Err _ ->
@@ -198,12 +203,16 @@ update msg model =
         GotDatasetDescription result ->
             case result of
                 Ok payload ->
-                    ( { model | datasetDescription = SuccessDescription payload }
+                    let
+                        datasetDescriptions =
+                            Dict.insert payload.dataset_id (SuccessDescription payload) model.datasetDescriptions
+                    in
+                    ( { model | datasetDescriptions = datasetDescriptions }
                     , Cmd.none
                     )
 
                 Err _ ->
-                    ( { model | datasetDescription = FailureDescription }, Cmd.none )
+                    ( model, Cmd.none )
 
 
 getDatasets : Cmd Msg
