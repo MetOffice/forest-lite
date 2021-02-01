@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Html exposing (Html, div, h1, li, span, text, ul)
@@ -40,7 +40,14 @@ type alias User =
 
 
 type alias Model =
-    { user : Maybe User }
+    { user : Maybe User
+    , route : Maybe Route
+    }
+
+
+type Route
+    = Account
+    | Home
 
 
 type alias Flags =
@@ -48,7 +55,7 @@ type alias Flags =
 
 
 type Msg
-    = Name String
+    = HashReceived String
 
 
 
@@ -79,15 +86,23 @@ init flags =
                         , email = claim.email
                         , groups = claim.groups
                         }
+              , route = Nothing
               }
             , Cmd.none
             )
 
         Err err ->
             -- TODO: Support failed JSON decode in Model
-            ( { user = Nothing }
+            ( { user = Nothing, route = Nothing }
             , Cmd.none
             )
+
+
+
+-- PORTS
+
+
+port hash : (String -> msg) -> Sub msg
 
 
 
@@ -95,8 +110,22 @@ init flags =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update _ model =
-    ( model, Cmd.none )
+update msg model =
+    case msg of
+        HashReceived hashRoute ->
+            ( { model | route = parseRoute hashRoute }, Cmd.none )
+
+
+parseRoute : String -> Maybe Route
+parseRoute hashText =
+    if hashText == "#/account" then
+        Just Account
+
+    else if hashText == "#/" then
+        Just Home
+
+    else
+        Nothing
 
 
 
@@ -105,6 +134,26 @@ update _ model =
 
 view : Model -> Html Msg
 view model =
+    case model.route of
+        Just validRoute ->
+            case validRoute of
+                Account ->
+                    viewAccountInfo model
+
+                Home ->
+                    viewHome model
+
+        Nothing ->
+            div [] []
+
+
+viewHome : Model -> Html Msg
+viewHome model =
+    div [] [ text "Home page" ]
+
+
+viewAccountInfo : Model -> Html Msg
+viewAccountInfo model =
     div
         [ style "display" "grid"
         , style "grid-template-columns" "1fr 1fr 1fr"
@@ -175,4 +224,4 @@ viewItem label content =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    hash HashReceived
