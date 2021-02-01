@@ -2,8 +2,8 @@ port module Main exposing (..)
 
 import Browser
 import Dict exposing (Dict)
-import Html exposing (Html, div, h1, li, option, select, span, text, ul)
-import Html.Attributes exposing (class, style)
+import Html exposing (Html, div, h1, li, optgroup, option, select, span, text, ul)
+import Html.Attributes exposing (attribute, class, style)
 import Http
 import Json.Decode exposing (Decoder, dict, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
@@ -265,8 +265,8 @@ view model =
 viewHome : Model -> Html Msg
 viewHome model =
     case model.datasets of
-        Success payload ->
-            div [] [ viewOptions (List.map (\o -> o.label) payload) ]
+        Success datasets ->
+            div [] [ viewDatasets datasets model ]
 
         Loading ->
             div [] [ text "..." ]
@@ -275,9 +275,39 @@ viewHome model =
             div [] [ text "failed to fetch datasets" ]
 
 
-viewOptions : List String -> Html Msg
-viewOptions texts =
-    select [] (List.map (\t -> option [] [ text t ]) texts)
+viewDatasets : List Dataset -> Model -> Html Msg
+viewDatasets datasets model =
+    select [] (List.map (viewDataset model) datasets)
+
+
+viewDataset : Model -> Dataset -> Html Msg
+viewDataset model dataset =
+    let
+        maybeDescription =
+            Dict.get dataset.id model.datasetDescriptions
+    in
+    case maybeDescription of
+        Just description ->
+            case description of
+                SuccessDescription desc ->
+                    optgroup [ attribute "label" dataset.label ]
+                        (List.map
+                            (\v -> option [] [ text v ])
+                            (Dict.keys desc.data_vars)
+                        )
+
+                FailureDescription ->
+                    optgroup [ attribute "label" dataset.label ]
+                        [ option [] [ text "Failed to load variables" ]
+                        ]
+
+                LoadingDescription ->
+                    optgroup [ attribute "label" dataset.label ]
+                        [ option [] [ text "..." ]
+                        ]
+
+        Nothing ->
+            optgroup [ attribute "label" dataset.label ] []
 
 
 viewAccountInfo : Model -> Html Msg
