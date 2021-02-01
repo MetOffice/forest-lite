@@ -44,13 +44,26 @@ type alias Model =
     { user : Maybe User
     , route : Maybe Route
     , datasets : Request
+    , datasetDescription : RequestDescription
+    }
+
+
+type alias Dataset =
+    { label : String
+    , id : Int
     }
 
 
 type Request
     = Failure
     | Loading
-    | Success (List String)
+    | Success (List Dataset)
+
+
+type RequestDescription
+    = FailureDescription
+    | LoadingDescription
+    | SuccessDescription String
 
 
 type Route
@@ -64,7 +77,8 @@ type alias Flags =
 
 type Msg
     = HashReceived String
-    | GotText (Result Http.Error (List String))
+    | GotDatasets (Result Http.Error (List Dataset))
+    | GotDatasetDescription (Result Http.Error String)
 
 
 
@@ -97,31 +111,32 @@ init flags =
                         }
               , route = Nothing
               , datasets = Loading
+              , datasetDescription = LoadingDescription
               }
-            , Http.get
-                { url = "http://localhost:8000/datasets"
-                , expect = Http.expectJson GotText datasetsDecoder
-                }
+            , getDatasets
             )
 
         Err err ->
             -- TODO: Support failed JSON decode in Model
-            ( { user = Nothing, route = Nothing, datasets = Loading }
-            , Http.get
-                { url = "http://localhost:8000/datasets"
-                , expect = Http.expectJson GotText datasetsDecoder
-                }
+            ( { user = Nothing
+              , route = Nothing
+              , datasets = Loading
+              , datasetDescription = LoadingDescription
+              }
+            , getDatasets
             )
 
 
-datasetsDecoder : Decoder (List String)
+datasetsDecoder : Decoder (List Dataset)
 datasetsDecoder =
-    field "datasets" (list labelDecoder)
+    field "datasets" (list datasetDecoder)
 
 
-labelDecoder : Decoder String
-labelDecoder =
-    field "label" string
+datasetDecoder : Decoder Dataset
+datasetDecoder =
+    Json.Decode.map2 Dataset
+        (field "label" string)
+        (field "id" int)
 
 
 
@@ -141,13 +156,41 @@ update msg model =
         HashReceived hashRoute ->
             ( { model | route = parseRoute hashRoute }, Cmd.none )
 
-        GotText result ->
+        GotDatasets result ->
             case result of
-                Ok fullText ->
-                    ( { model | datasets = Success fullText }, Cmd.none )
+                Ok payload ->
+                    ( { model | datasets = Success payload }
+                    , getDatasetDescription 0
+                    )
 
                 Err _ ->
                     ( { model | datasets = Failure }, Cmd.none )
+
+        GotDatasetDescription result ->
+            case result of
+                Ok payload ->
+                    ( { model | datasetDescription = SuccessDescription payload }
+                    , Cmd.none
+                    )
+
+                Err _ ->
+                    ( { model | datasetDescription = FailureDescription }, Cmd.none )
+
+
+getDatasets : Cmd Msg
+getDatasets =
+    Http.get
+        { url = "http://localhost:8000/datasets"
+        , expect = Http.expectJson GotDatasets datasetsDecoder
+        }
+
+
+getDatasetDescription : Int -> Cmd Msg
+getDatasetDescription datasetId =
+    Http.get
+        { url = "http://localhost:8000/datasets/" ++ String.fromInt datasetId
+        , expect = Http.expectString GotDatasetDescription
+        }
 
 
 parseRoute : String -> Maybe Route
@@ -184,8 +227,8 @@ view model =
 viewHome : Model -> Html Msg
 viewHome model =
     case model.datasets of
-        Success datasetText ->
-            div [] [ viewOptions datasetText ]
+        Success payload ->
+            div [] [ viewOptions (List.map (\o -> o.label) payload) ]
 
         Loading ->
             div [] [ text "..." ]
