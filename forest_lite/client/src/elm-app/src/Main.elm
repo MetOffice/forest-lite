@@ -1,7 +1,7 @@
 port module Main exposing (..)
 
 import Browser
-import Html exposing (Html, div, h1, li, span, text, ul)
+import Html exposing (Html, div, h1, li, option, select, span, text, ul)
 import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode exposing (Decoder, field, int, list, string)
@@ -50,7 +50,7 @@ type alias Model =
 type Request
     = Failure
     | Loading
-    | Success String
+    | Success (List String)
 
 
 type Route
@@ -64,7 +64,7 @@ type alias Flags =
 
 type Msg
     = HashReceived String
-    | GotText (Result Http.Error String)
+    | GotText (Result Http.Error (List String))
 
 
 
@@ -99,8 +99,8 @@ init flags =
               , datasets = Loading
               }
             , Http.get
-                { url = "https://localhost:8080/datasets"
-                , expect = Http.expectString GotText
+                { url = "http://localhost:8000/datasets"
+                , expect = Http.expectJson GotText datasetsDecoder
                 }
             )
 
@@ -108,10 +108,20 @@ init flags =
             -- TODO: Support failed JSON decode in Model
             ( { user = Nothing, route = Nothing, datasets = Loading }
             , Http.get
-                { url = "https://localhost:8080/datasets"
-                , expect = Http.expectString GotText
+                { url = "http://localhost:8000/datasets"
+                , expect = Http.expectJson GotText datasetsDecoder
                 }
             )
+
+
+datasetsDecoder : Decoder (List String)
+datasetsDecoder =
+    field "datasets" (list labelDecoder)
+
+
+labelDecoder : Decoder String
+labelDecoder =
+    field "label" string
 
 
 
@@ -175,13 +185,18 @@ viewHome : Model -> Html Msg
 viewHome model =
     case model.datasets of
         Success datasetText ->
-            div [] [ text datasetText ]
+            div [] [ viewOptions datasetText ]
 
         Loading ->
             div [] [ text "..." ]
 
         Failure ->
             div [] [ text "failed to fetch datasets" ]
+
+
+viewOptions : List String -> Html Msg
+viewOptions texts =
+    select [] (List.map (\t -> option [] [ text t ]) texts)
 
 
 viewAccountInfo : Model -> Html Msg
