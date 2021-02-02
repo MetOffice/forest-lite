@@ -63,6 +63,7 @@ type alias Model =
     , selected : Maybe SelectDataVar
     , datasets : Request
     , datasetDescriptions : Dict Int RequestDescription
+    , dimensions : Dict String (List Int)
     }
 
 
@@ -82,6 +83,20 @@ type alias DatasetDescription =
 type alias DataVar =
     { dims : List String
     , attrs : Dict String String
+    }
+
+
+type alias Axis =
+    { attrs : Dict String String
+    , data : List Int
+    , data_var : String
+    , dim_name : String
+    }
+
+
+type alias Dimension =
+    { label : String
+    , points : List Int
     }
 
 
@@ -116,7 +131,7 @@ type Msg
     = HashReceived String
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription (Result Http.Error DatasetDescription)
-    | GotAxis (Result Http.Error String)
+    | GotAxis (Result Http.Error Axis)
     | DataVarSelected String
 
 
@@ -152,6 +167,7 @@ init flags =
               , selected = Nothing
               , datasets = Loading
               , datasetDescriptions = Dict.empty
+              , dimensions = Dict.empty
               }
             , getDatasets
             )
@@ -163,9 +179,19 @@ init flags =
               , selected = Nothing
               , datasets = Loading
               , datasetDescriptions = Dict.empty
+              , dimensions = Dict.empty
               }
             , getDatasets
             )
+
+
+axisDecoder : Decoder Axis
+axisDecoder =
+    Json.Decode.map4 Axis
+        (field "attrs" (dict string))
+        (field "data" (list int))
+        (field "data_var" string)
+        (field "dim_name" string)
 
 
 datasetsDecoder : Decoder (List Dataset)
@@ -225,7 +251,17 @@ update msg model =
         GotAxis result ->
             case result of
                 Ok axis ->
-                    ( model, Cmd.none )
+                    let
+                        key =
+                            axis.dim_name
+
+                        values =
+                            axis.data
+
+                        dimensions =
+                            Dict.insert key values model.dimensions
+                    in
+                    ( { model | dimensions = dimensions }, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -314,7 +350,7 @@ getAxis dataset_id data_var dim =
                 , "axis"
                 , dim
                 ]
-        , expect = Http.expectString GotAxis
+        , expect = Http.expectJson GotAxis axisDecoder
         }
 
 
@@ -438,7 +474,7 @@ viewSelected model =
                             in
                             case maybeVar of
                                 Just var ->
-                                    viewDims var.dims
+                                    viewDims (List.map (selectDimension model) var.dims)
 
                                 Nothing ->
                                     text "no dims found"
@@ -454,6 +490,20 @@ viewSelected model =
 
         Nothing ->
             text "nothing selected"
+
+
+selectDimension : Model -> String -> Dimension
+selectDimension model dim_name =
+    let
+        maybePoints =
+            Dict.get dim_name model.dimensions
+    in
+    case maybePoints of
+        Just points ->
+            { label = dim_name, points = points }
+
+        Nothing ->
+            { label = dim_name, points = [] }
 
 
 selectedDims : Model -> Int -> String -> Maybe (List String)
@@ -487,20 +537,25 @@ selectedDims model dataset_id data_var =
             Nothing
 
 
-viewDims : List String -> Html Msg
+viewDims : List Dimension -> Html Msg
 viewDims dims =
+    div [] (List.map viewDim dims)
+
+
+viewDim : Dimension -> Html Msg
+viewDim dim =
     div []
-        (List.map
-            (\d ->
-                div []
-                    [ label [] [ text ("Dimension: " ++ d) ]
-                    , div
-                        []
-                        [ select [] [] ]
-                    ]
-            )
-            dims
-        )
+        [ label [] [ text ("Dimension: " ++ dim.label) ]
+        , div
+            []
+            [ select [] (List.map viewPoint dim.points)
+            ]
+        ]
+
+
+viewPoint : Int -> Html Msg
+viewPoint point =
+    option [] [ text (String.fromInt point) ]
 
 
 
