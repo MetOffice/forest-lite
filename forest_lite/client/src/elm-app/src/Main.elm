@@ -63,7 +63,7 @@ type alias Model =
     , selected : Maybe SelectDataVar
     , datasets : Request
     , datasetDescriptions : Dict Int RequestDescription
-    , dimensions : Dict String (List Int)
+    , dimensions : Dict String Dimension
     }
 
 
@@ -255,11 +255,13 @@ update msg model =
                         key =
                             axis.dim_name
 
-                        values =
-                            axis.data
+                        dimension =
+                            { label = axis.dim_name
+                            , points = axis.data
+                            }
 
                         dimensions =
-                            Dict.insert key values model.dimensions
+                            Dict.insert key dimension model.dimensions
                     in
                     ( { model | dimensions = dimensions }, Cmd.none )
 
@@ -495,12 +497,12 @@ viewSelected model =
 selectDimension : Model -> String -> Dimension
 selectDimension model dim_name =
     let
-        maybePoints =
+        maybeDimension =
             Dict.get dim_name model.dimensions
     in
-    case maybePoints of
-        Just points ->
-            { label = dim_name, points = points }
+    case maybeDimension of
+        Just dimension ->
+            dimension
 
         Nothing ->
             { label = dim_name, points = [] }
