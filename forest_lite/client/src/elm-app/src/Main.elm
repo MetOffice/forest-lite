@@ -65,6 +65,7 @@ type alias Model =
     , datasets : Request
     , datasetDescriptions : Dict Int RequestDescription
     , dimensions : Dict String Dimension
+    , point : Maybe SelectPoint
     }
 
 
@@ -113,6 +114,12 @@ type alias SelectDataVar =
     }
 
 
+type alias SelectPoint =
+    { dim_name : String
+    , point : Int
+    }
+
+
 type Request
     = Failure
     | Loading
@@ -140,6 +147,7 @@ type Msg
     | GotDatasetDescription (Result Http.Error DatasetDescription)
     | GotAxis (Result Http.Error Axis)
     | DataVarSelected String
+    | PointSelected String
 
 
 
@@ -162,32 +170,33 @@ main =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
+    let
+        default =
+            { user = Nothing
+            , route = Nothing
+            , selected = Nothing
+            , datasets = Loading
+            , datasetDescriptions = Dict.empty
+            , dimensions = Dict.empty
+            , point = Nothing
+            }
+    in
     case Json.Decode.decodeValue jwtDecoder flags of
         Ok claim ->
-            ( { user =
+            ( { default
+                | user =
                     Just
                         { name = claim.name
                         , email = claim.email
                         , groups = claim.groups
                         }
-              , route = Nothing
-              , selected = Nothing
-              , datasets = Loading
-              , datasetDescriptions = Dict.empty
-              , dimensions = Dict.empty
               }
             , getDatasets
             )
 
         Err err ->
             -- TODO: Support failed JSON decode in Model
-            ( { user = Nothing
-              , route = Nothing
-              , selected = Nothing
-              , datasets = Loading
-              , datasetDescriptions = Dict.empty
-              , dimensions = Dict.empty
-              }
+            ( default
             , getDatasets
             )
 
@@ -236,6 +245,14 @@ selectDataVarDecoder =
         SelectDataVar
         (field "dataset_id" int)
         (field "data_var" string)
+
+
+selectPointDecoder : Decoder SelectPoint
+selectPointDecoder =
+    Json.Decode.map2
+        SelectPoint
+        (field "dim_name" string)
+        (field "point" int)
 
 
 
@@ -332,6 +349,14 @@ update msg model =
                 Err err ->
                     ( { model | selected = Nothing }, Cmd.none )
 
+        PointSelected payload ->
+            case Json.Decode.decodeString selectPointDecoder payload of
+                Ok point ->
+                    ( { model | point = Just point }, Cmd.none )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
 
 getDatasets : Cmd Msg
 getDatasets =
@@ -421,7 +446,8 @@ viewDatasets : List Dataset -> Model -> Html Msg
 viewDatasets datasets model =
     div []
         [ div [ class "select__container" ]
-            [ select
+            [ label [ class "select__label" ] [ text "Dataset:" ]
+            , select
                 [ onSelect DataVarSelected
                 , class "select__select"
                 ]
@@ -477,6 +503,16 @@ dataVarToString props =
         (Json.Encode.object
             [ ( "dataset_id", Json.Encode.int props.dataset_id )
             , ( "data_var", Json.Encode.string props.data_var )
+            ]
+        )
+
+
+pointToString : SelectPoint -> String
+pointToString props =
+    Json.Encode.encode 0
+        (Json.Encode.object
+            [ ( "dim_name", Json.Encode.string props.dim_name )
+            , ( "point", Json.Encode.int props.point )
             ]
         )
 
@@ -573,19 +609,33 @@ viewDim dim =
         [ label [ class "select__label" ] [ text ("Dimension: " ++ dim.label) ]
         , div
             []
-            [ select [ class "select__select" ] (List.map (viewPoint dim.kind) dim.points)
+            [ select
+                [ onSelect PointSelected
+                , class "select__select"
+                ]
+                (List.map (viewPoint dim) dim.points)
             ]
         ]
 
 
-viewPoint : DimensionKind -> Int -> Html Msg
-viewPoint kind point =
+viewPoint : Dimension -> Int -> Html Msg
+viewPoint dim point =
+    let
+        kind =
+            dim.kind
+
+        dim_name =
+            dim.label
+
+        value =
+            pointToString { dim_name = dim_name, point = point }
+    in
     case kind of
         Numeric ->
-            option [] [ text (String.fromInt point) ]
+            option [ attribute "value" value ] [ text (String.fromInt point) ]
 
         Temporal ->
-            option [] [ text (formatTime point) ]
+            option [ attribute "value" value ] [ text (formatTime point) ]
 
 
 formatTime : Int -> String
