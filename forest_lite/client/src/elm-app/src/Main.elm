@@ -73,9 +73,13 @@ type alias Model =
     }
 
 
+type alias DatasetID =
+    Int
+
+
 type alias Dataset =
     { label : String
-    , id : Int
+    , id : DatasetID
     }
 
 
@@ -111,14 +115,18 @@ type alias DimensionLabel =
     String
 
 
+type alias DataVarLabel =
+    String
+
+
 type DimensionKind
     = Numeric
     | Temporal
 
 
 type alias SelectDataVar =
-    { dataset_id : Int
-    , data_var : String
+    { dataset_id : DatasetID
+    , data_var : DataVarLabel
     }
 
 
@@ -421,10 +429,10 @@ update msg model =
                 Ok selectPoint ->
                     let
                         dataset_id =
-                            0
+                            selectDatasetId model
 
                         data_var =
-                            "U component of wind"
+                            selectDataVarLabel model
 
                         dim =
                             "time"
@@ -433,11 +441,16 @@ update msg model =
                             selectPoint.point
                     in
                     if selectPoint.dim_name == "start_time" then
-                        ( updatePoint model selectPoint
-                        , Cmd.batch
-                            [ getAxis dataset_id data_var dim (Just start_time)
-                            ]
-                        )
+                        case ( dataset_id, data_var ) of
+                            ( Just dataset_id_, Just data_var_ ) ->
+                                ( updatePoint model selectPoint
+                                , Cmd.batch
+                                    [ getAxis dataset_id_ data_var_ dim (Just start_time)
+                                    ]
+                                )
+
+                            _ ->
+                                ( updatePoint model selectPoint, Cmd.none )
 
                     else
                         ( updatePoint model selectPoint, Cmd.none )
@@ -490,7 +503,7 @@ getDatasetDescription datasetId =
         }
 
 
-getAxis : Int -> String -> String -> Maybe Int -> Cmd Msg
+getAxis : DatasetID -> DataVarLabel -> String -> Maybe Int -> Cmd Msg
 getAxis dataset_id data_var dim maybeStartTime =
     Http.get
         { url = formatAxisURL dataset_id data_var dim maybeStartTime
@@ -707,6 +720,26 @@ viewSelected model =
 
         Nothing ->
             text "nothing selected"
+
+
+selectDatasetId : Model -> Maybe DatasetID
+selectDatasetId model =
+    case model.selected of
+        Just selected ->
+            Just selected.dataset_id
+
+        Nothing ->
+            Nothing
+
+
+selectDataVarLabel : Model -> Maybe DataVarLabel
+selectDataVarLabel model =
+    case model.selected of
+        Just selected ->
+            Just selected.data_var
+
+        Nothing ->
+            Nothing
 
 
 selectDimension : Model -> String -> Dimension
