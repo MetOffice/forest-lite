@@ -132,6 +132,10 @@ type alias Point =
     Dict String Int
 
 
+type alias Query =
+    { start_time : Int }
+
+
 type Request
     = Failure
     | Loading
@@ -396,7 +400,12 @@ update msg model =
                             ( { model | selected = Just selected }
                             , Cmd.batch
                                 (List.map
-                                    (\dim -> getAxis dataset_id data_var dim)
+                                    (\dim ->
+                                        getAxis dataset_id
+                                            data_var
+                                            dim
+                                            Nothing
+                                    )
                                     dims
                                 )
                             )
@@ -411,32 +420,58 @@ update msg model =
             case Json.Decode.decodeString selectPointDecoder payload of
                 Ok selectPoint ->
                     let
-                        key =
-                            selectPoint.dim_name
+                        dataset_id =
+                            0
 
-                        value =
+                        data_var =
+                            "U component of wind"
+
+                        dim =
+                            "time"
+
+                        start_time =
                             selectPoint.point
                     in
-                    case model.point of
-                        Just modelPoint ->
-                            let
-                                point =
-                                    Dict.insert key value modelPoint
-                            in
-                            ( { model | point = Just point }, Cmd.none )
+                    if selectPoint.dim_name == "start_time" then
+                        ( updatePoint model selectPoint
+                        , Cmd.batch
+                            [ getAxis dataset_id data_var dim (Just start_time)
+                            ]
+                        )
 
-                        Nothing ->
-                            let
-                                container =
-                                    Dict.empty
-
-                                point =
-                                    Dict.insert key value container
-                            in
-                            ( { model | point = Just point }, Cmd.none )
+                    else
+                        ( updatePoint model selectPoint, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
+
+
+updatePoint : Model -> SelectPoint -> Model
+updatePoint model selectPoint =
+    let
+        key =
+            selectPoint.dim_name
+
+        value =
+            selectPoint.point
+    in
+    case model.point of
+        Just modelPoint ->
+            let
+                point =
+                    Dict.insert key value modelPoint
+            in
+            { model | point = Just point }
+
+        Nothing ->
+            let
+                container =
+                    Dict.empty
+
+                point =
+                    Dict.insert key value container
+            in
+            { model | point = Just point }
 
 
 getDatasets : Cmd Msg
@@ -455,10 +490,18 @@ getDatasetDescription datasetId =
         }
 
 
-getAxis : Int -> String -> String -> Cmd Msg
-getAxis dataset_id data_var dim =
+getAxis : Int -> String -> String -> Maybe Int -> Cmd Msg
+getAxis dataset_id data_var dim maybeStartTime =
     Http.get
-        { url =
+        { url = formatAxisURL dataset_id data_var dim maybeStartTime
+        , expect = Http.expectJson GotAxis axisDecoder
+        }
+
+
+formatAxisURL : Int -> String -> String -> Maybe Int -> String
+formatAxisURL dataset_id data_var dim maybeStartTime =
+    let
+        path =
             String.join "/"
                 [ "http://localhost:8000/datasets"
                 , String.fromInt dataset_id
@@ -466,8 +509,13 @@ getAxis dataset_id data_var dim =
                 , "axis"
                 , dim
                 ]
-        , expect = Http.expectJson GotAxis axisDecoder
-        }
+    in
+    case maybeStartTime of
+        Just start_time ->
+            path ++ "?query=" ++ queryToString { start_time = start_time }
+
+        Nothing ->
+            path
 
 
 parseRoute : String -> Maybe Route
@@ -594,6 +642,15 @@ viewDataset model dataset =
 
         Nothing ->
             optgroup [ attribute "label" dataset.label ] []
+
+
+queryToString : Query -> String
+queryToString query =
+    Json.Encode.encode 0
+        (Json.Encode.object
+            [ ( "start_time", Json.Encode.int query.start_time )
+            ]
+        )
 
 
 dataVarToString : SelectDataVar -> String
