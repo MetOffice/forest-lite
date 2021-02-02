@@ -16,7 +16,7 @@ const TabChoice = ({ children, onClick, active=false }) => {
     )
 }
 
-const Sidebar = ({ baseURL }) => {
+const Sidebar = ({ baseURL, children }) => {
     const [ isOpen, setOpen ] = useState(true)
     const [ tabName, setTabName ] = useState("datasets")
     const showTab = tabName => () => {
@@ -46,6 +46,7 @@ const Sidebar = ({ baseURL }) => {
                     </div>
                     <Nav baseURL={ baseURL } />
                     <CoastlineMenu />
+                    { children }
                 </Tab>
             </div>
     </div>)

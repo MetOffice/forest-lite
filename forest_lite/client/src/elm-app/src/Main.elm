@@ -420,7 +420,13 @@ viewHome model =
 viewDatasets : List Dataset -> Model -> Html Msg
 viewDatasets datasets model =
     div []
-        [ select [ onSelect DataVarSelected ] (List.map (viewDataset model) datasets)
+        [ div [ class "select__container" ]
+            [ select
+                [ onSelect DataVarSelected
+                , class "select__select"
+                ]
+                (List.map (viewDataset model) datasets)
+            ]
         , div [] [ viewSelected model ]
         ]
 
@@ -563,11 +569,11 @@ viewDims dims =
 
 viewDim : Dimension -> Html Msg
 viewDim dim =
-    div []
-        [ label [] [ text ("Dimension: " ++ dim.label) ]
+    div [ class "select__container" ]
+        [ label [ class "select__label" ] [ text ("Dimension: " ++ dim.label) ]
         , div
             []
-            [ select [] (List.map (viewPoint dim.kind) dim.points)
+            [ select [ class "select__select" ] (List.map (viewPoint dim.kind) dim.points)
             ]
         ]
 

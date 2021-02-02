@@ -85,9 +85,10 @@ const Main = ({ baseURL, flags }) => {
     return (
         <div className="App-container">
             <div className="App-sidebar">
-                <Sidebar baseURL={ baseURL } />
+                <Sidebar baseURL={ baseURL }>
                 <Elm src={ ElmApp.Elm.Main } flags={ flags }
                      ports={ setupPorts } />
+                </Sidebar>
             </div>
             <div className="App-content">
                 <div className="App-title">
