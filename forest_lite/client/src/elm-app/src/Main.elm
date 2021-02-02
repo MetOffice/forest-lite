@@ -78,7 +78,7 @@ type alias DatasetID =
 
 
 type alias Dataset =
-    { label : String
+    { label : DatasetLabel
     , id : DatasetID
     }
 
@@ -112,6 +112,10 @@ type alias Dimension =
 
 
 type alias DimensionLabel =
+    String
+
+
+type alias DatasetLabel =
     String
 
 
@@ -606,7 +610,7 @@ viewDatasets : List Dataset -> Model -> Html Msg
 viewDatasets datasets model =
     div []
         [ div [ class "select__container" ]
-            [ label [ class "select__label" ] [ text "Dataset:" ]
+            [ viewDatasetLabel model
             , select
                 [ onSelect DataVarSelected
                 , class "select__select"
@@ -615,6 +619,16 @@ viewDatasets datasets model =
             ]
         , div [] [ viewSelected model ]
         ]
+
+
+viewDatasetLabel : Model -> Html Msg
+viewDatasetLabel model =
+    case selectDatasetLabel model of
+        Just name ->
+            label [ class "select__label" ] [ text ("Dataset: " ++ name) ]
+
+        Nothing ->
+            label [ class "select__label" ] [ text "Dataset:" ]
 
 
 viewDataset : Model -> Dataset -> Html Msg
@@ -727,6 +741,39 @@ selectDatasetId model =
     case model.selected of
         Just selected ->
             Just selected.dataset_id
+
+        Nothing ->
+            Nothing
+
+
+selectDatasetLabel : Model -> Maybe DatasetLabel
+selectDatasetLabel model =
+    case selectDatasetId model of
+        Just dataset_id ->
+            case model.datasets of
+                Success datasets ->
+                    datasets
+                        |> List.filter (matchId dataset_id)
+                        |> List.head
+                        |> asDatasetLabel
+
+                _ ->
+                    Nothing
+
+        Nothing ->
+            Nothing
+
+
+matchId : DatasetID -> Dataset -> Bool
+matchId dataset_id dataset =
+    dataset.id == dataset_id
+
+
+asDatasetLabel : Maybe Dataset -> Maybe DatasetLabel
+asDatasetLabel maybeDataset =
+    case maybeDataset of
+        Just dataset ->
+            Just dataset.label
 
         Nothing ->
             Nothing
