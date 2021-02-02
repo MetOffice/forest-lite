@@ -464,13 +464,31 @@ viewHome : Model -> Html Msg
 viewHome model =
     case model.datasets of
         Success datasets ->
-            div [] [ viewDatasets datasets model ]
+            div []
+                [ viewDatasets datasets model
+                , viewSelectedPoint model.point
+                ]
 
         Loading ->
             div [] [ text "..." ]
 
         Failure ->
             div [] [ text "failed to fetch datasets" ]
+
+
+viewSelectedPoint : Maybe Point -> Html Msg
+viewSelectedPoint maybePoint =
+    case maybePoint of
+        Just point ->
+            div [] (List.map viewKeyValue (Dict.toList point))
+
+        Nothing ->
+            div [] [ text "No point selected" ]
+
+
+viewKeyValue : ( String, Int ) -> Html Msg
+viewKeyValue ( key, value ) =
+    div [] [ text (key ++ ": " ++ String.fromInt value) ]
 
 
 viewDatasets : List Dataset -> Model -> Html Msg
