@@ -101,10 +101,14 @@ type alias Axis =
 
 
 type alias Dimension =
-    { label : String
+    { label : DimensionLabel
     , points : List Int
     , kind : DimensionKind
     }
+
+
+type alias DimensionLabel =
+    String
 
 
 type DimensionKind
@@ -274,6 +278,61 @@ port hash : (String -> msg) -> Sub msg
 -- UPDATE
 
 
+insertDimension : Axis -> Model -> Model
+insertDimension axis model =
+    let
+        key =
+            axis.dim_name
+
+        dimension =
+            { label = axis.dim_name
+            , points = axis.data
+            , kind = parseDimensionKind axis.dim_name
+            }
+
+        dimensions =
+            Dict.insert key dimension model.dimensions
+    in
+    { model | dimensions = dimensions }
+
+
+initPoint : Axis -> Model -> Model
+initPoint axis model =
+    let
+        dim_name =
+            axis.dim_name
+
+        maybeValue =
+            List.head axis.data
+    in
+    case maybeValue of
+        Just value ->
+            case model.point of
+                Just point ->
+                    if Dict.member dim_name point then
+                        model
+
+                    else
+                        let
+                            newPoint =
+                                Dict.insert dim_name value point
+                        in
+                        { model | point = Just newPoint }
+
+                Nothing ->
+                    let
+                        container =
+                            Dict.empty
+
+                        newPoint =
+                            Dict.insert dim_name value container
+                    in
+                    { model | point = Just newPoint }
+
+        Nothing ->
+            model
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -283,20 +342,11 @@ update msg model =
         GotAxis result ->
             case result of
                 Ok axis ->
-                    let
-                        key =
-                            axis.dim_name
-
-                        dimension =
-                            { label = axis.dim_name
-                            , points = axis.data
-                            , kind = parseDimensionKind axis.dim_name
-                            }
-
-                        dimensions =
-                            Dict.insert key dimension model.dimensions
-                    in
-                    ( { model | dimensions = dimensions }, Cmd.none )
+                    ( model
+                        |> insertDimension axis
+                        |> initPoint axis
+                    , Cmd.none
+                    )
 
                 Err _ ->
                     ( model, Cmd.none )
