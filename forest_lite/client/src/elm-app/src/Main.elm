@@ -58,6 +58,10 @@ type alias User =
     }
 
 
+
+-- MODEL
+
+
 type alias Model =
     { user : Maybe User
     , route : Maybe Route
@@ -65,7 +69,7 @@ type alias Model =
     , datasets : Request
     , datasetDescriptions : Dict Int RequestDescription
     , dimensions : Dict String Dimension
-    , point : Maybe SelectPoint
+    , point : Maybe Point
     }
 
 
@@ -118,6 +122,10 @@ type alias SelectPoint =
     { dim_name : String
     , point : Int
     }
+
+
+type alias Point =
+    Dict String Int
 
 
 type Request
@@ -351,8 +359,31 @@ update msg model =
 
         PointSelected payload ->
             case Json.Decode.decodeString selectPointDecoder payload of
-                Ok point ->
-                    ( { model | point = Just point }, Cmd.none )
+                Ok selectPoint ->
+                    let
+                        key =
+                            selectPoint.dim_name
+
+                        value =
+                            selectPoint.point
+                    in
+                    case model.point of
+                        Just modelPoint ->
+                            let
+                                point =
+                                    Dict.insert key value modelPoint
+                            in
+                            ( { model | point = Just point }, Cmd.none )
+
+                        Nothing ->
+                            let
+                                container =
+                                    Dict.empty
+
+                                point =
+                                    Dict.insert key value container
+                            in
+                            ( { model | point = Just point }, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
