@@ -23,6 +23,7 @@ import Http
 import Json.Decode exposing (Decoder, dict, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
+import Time
 
 
 jwtDecoder : Decoder JWTClaim
@@ -97,7 +98,13 @@ type alias Axis =
 type alias Dimension =
     { label : String
     , points : List Int
+    , kind : DimensionKind
     }
+
+
+type DimensionKind
+    = Numeric
+    | Temporal
 
 
 type alias SelectDataVar =
@@ -258,6 +265,7 @@ update msg model =
                         dimension =
                             { label = axis.dim_name
                             , points = axis.data
+                            , kind = parseDimensionKind axis.dim_name
                             }
 
                         dimensions =
@@ -366,6 +374,15 @@ parseRoute hashText =
 
     else
         Nothing
+
+
+parseDimensionKind : String -> DimensionKind
+parseDimensionKind dim_name =
+    if String.contains "time" dim_name then
+        Temporal
+
+    else
+        Numeric
 
 
 
@@ -505,7 +522,7 @@ selectDimension model dim_name =
             dimension
 
         Nothing ->
-            { label = dim_name, points = [] }
+            { label = dim_name, points = [], kind = Numeric }
 
 
 selectedDims : Model -> Int -> String -> Maybe (List String)
@@ -550,14 +567,92 @@ viewDim dim =
         [ label [] [ text ("Dimension: " ++ dim.label) ]
         , div
             []
-            [ select [] (List.map viewPoint dim.points)
+            [ select [] (List.map (viewPoint dim.kind) dim.points)
             ]
         ]
 
 
-viewPoint : Int -> Html Msg
-viewPoint point =
-    option [] [ text (String.fromInt point) ]
+viewPoint : DimensionKind -> Int -> Html Msg
+viewPoint kind point =
+    case kind of
+        Numeric ->
+            option [] [ text (String.fromInt point) ]
+
+        Temporal ->
+            option [] [ text (formatTime point) ]
+
+
+formatTime : Int -> String
+formatTime millis =
+    let
+        posix =
+            Time.millisToPosix millis
+
+        year =
+            String.fromInt (Time.toYear Time.utc posix)
+
+        month =
+            formatMonth (Time.toMonth Time.utc posix)
+
+        day =
+            String.fromInt (Time.toDay Time.utc posix)
+
+        hour =
+            String.padLeft 2 '0' (String.fromInt (Time.toHour Time.utc posix))
+
+        minute =
+            String.padLeft 2 '0' (String.fromInt (Time.toMinute Time.utc posix))
+
+        date =
+            String.join " " [ year, month, day ]
+
+        time =
+            String.join ":" [ hour, minute ]
+
+        zone =
+            "UTC"
+    in
+    String.join " " [ date, time, zone ]
+
+
+formatMonth : Time.Month -> String
+formatMonth month =
+    case month of
+        Time.Jan ->
+            "January"
+
+        Time.Feb ->
+            "February"
+
+        Time.Mar ->
+            "March"
+
+        Time.Apr ->
+            "April"
+
+        Time.May ->
+            "May"
+
+        Time.Jun ->
+            "June"
+
+        Time.Jul ->
+            "July"
+
+        Time.Aug ->
+            "August"
+
+        Time.Sep ->
+            "September"
+
+        Time.Oct ->
+            "October"
+
+        Time.Nov ->
+            "November"
+
+        Time.Dec ->
+            "December"
 
 
 
