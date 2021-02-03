@@ -26,6 +26,19 @@ import Json.Encode
 import Time
 
 
+type alias Settings =
+    { claim : Maybe JWTClaim
+    , baseURL : String
+    }
+
+
+flagsDecoder : Decoder Settings
+flagsDecoder =
+    Json.Decode.map2 Settings
+        (maybe (field "claim" jwtDecoder))
+        (field "baseURL" string)
+
+
 jwtDecoder : Decoder JWTClaim
 jwtDecoder =
     Json.Decode.succeed JWTClaim
@@ -70,6 +83,7 @@ type alias Model =
     , datasetDescriptions : Dict Int RequestDescription
     , dimensions : Dict String Dimension
     , point : Maybe Point
+    , baseURL : String
     }
 
 
@@ -209,25 +223,40 @@ init flags =
             , datasetDescriptions = Dict.empty
             , dimensions = Dict.empty
             , point = Nothing
+            , baseURL = "http://localhost:8000"
             }
     in
-    case Json.Decode.decodeValue jwtDecoder flags of
-        Ok claim ->
-            ( { default
-                | user =
-                    Just
-                        { name = claim.name
-                        , email = claim.email
-                        , groups = claim.groups
-                        }
-              }
-            , getDatasets
-            )
+    case Json.Decode.decodeValue flagsDecoder flags of
+        Ok settings ->
+            let
+                baseURL =
+                    settings.baseURL
+            in
+            case settings.claim of
+                Just claim ->
+                    ( { default
+                        | user =
+                            Just
+                                { name = claim.name
+                                , email = claim.email
+                                , groups = claim.groups
+                                }
+                        , baseURL = baseURL
+                      }
+                    , getDatasets baseURL
+                    )
+
+                Nothing ->
+                    ( { default
+                        | baseURL = baseURL
+                      }
+                    , getDatasets baseURL
+                    )
 
         Err err ->
             -- TODO: Support failed JSON decode in Model
             ( default
-            , getDatasets
+            , Cmd.none
             )
 
 
@@ -411,7 +440,12 @@ update msg model =
                     ( { model | datasets = Success datasets }
                     , Cmd.batch
                         (actionCmd
-                            :: List.map (\d -> getDatasetDescription d.id)
+                            :: List.map
+                                (\d ->
+                                    getDatasetDescription
+                                        model.baseURL
+                                        d.id
+                                )
                                 datasets
                         )
                     )
@@ -469,7 +503,9 @@ update msg model =
                                 (actionCmd
                                     :: List.map
                                         (\dim ->
-                                            getAxis dataset_id
+                                            getAxis
+                                                model.baseURL
+                                                dataset_id
                                                 data_var
                                                 dim
                                                 Nothing
@@ -544,7 +580,7 @@ linkAxis model selectPoint =
     if selectPoint.dim_name == "start_time" then
         case ( dataset_id, data_var ) of
             ( Just dataset_id_, Just data_var_ ) ->
-                [ getAxis dataset_id_ data_var_ dim (Just start_time)
+                [ getAxis model.baseURL dataset_id_ data_var_ dim (Just start_time)
                 ]
 
             _ ->
@@ -582,36 +618,37 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getDatasets : Cmd Msg
-getDatasets =
+getDatasets : String -> Cmd Msg
+getDatasets baseURL =
     Http.get
-        { url = "http://localhost:8000/datasets"
+        { url = baseURL ++ "/datasets"
         , expect = Http.expectJson GotDatasets datasetsDecoder
         }
 
 
-getDatasetDescription : Int -> Cmd Msg
-getDatasetDescription datasetId =
+getDatasetDescription : String -> Int -> Cmd Msg
+getDatasetDescription baseURL datasetId =
     Http.get
-        { url = "http://localhost:8000/datasets/" ++ String.fromInt datasetId
+        { url = baseURL ++ "/datasets/" ++ String.fromInt datasetId
         , expect = Http.expectJson (GotDatasetDescription datasetId) datasetDescriptionDecoder
         }
 
 
-getAxis : DatasetID -> DataVarLabel -> String -> Maybe Int -> Cmd Msg
-getAxis dataset_id data_var dim maybeStartTime =
+getAxis : String -> DatasetID -> DataVarLabel -> String -> Maybe Int -> Cmd Msg
+getAxis baseURL dataset_id data_var dim maybeStartTime =
     Http.get
-        { url = formatAxisURL dataset_id data_var dim maybeStartTime
+        { url = formatAxisURL baseURL dataset_id data_var dim maybeStartTime
         , expect = Http.expectJson (GotAxis dataset_id) axisDecoder
         }
 
 
-formatAxisURL : Int -> String -> String -> Maybe Int -> String
-formatAxisURL dataset_id data_var dim maybeStartTime =
+formatAxisURL : String -> Int -> String -> String -> Maybe Int -> String
+formatAxisURL baseURL dataset_id data_var dim maybeStartTime =
     let
         path =
             String.join "/"
-                [ "http://localhost:8000/datasets"
+                [ baseURL
+                , "datasets"
                 , String.fromInt dataset_id
                 , data_var
                 , "axis"

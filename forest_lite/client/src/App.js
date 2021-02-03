@@ -52,7 +52,11 @@ const setupPorts = dispatch => ports => {
 
 
 const App = ({ baseURL }) => {
-    const flags = useJWTClaim("TOKEN")
+    const flags = {
+        claim: useJWTClaim("TOKEN"),
+        baseURL: baseURL
+    }
+
     console.log(flags)
 
     const dispatch = useDispatch()
