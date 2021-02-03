@@ -420,25 +420,40 @@ update msg model =
                         data_var =
                             selected.data_var
 
+                        maybeDataset =
+                            selectDatasetLabelById model dataset_id
+
                         maybeDims =
                             selectedDims model dataset_id data_var
                     in
-                    case maybeDims of
-                        Just dims ->
+                    case ( maybeDims, maybeDataset ) of
+                        ( Just dims, Just dataset ) ->
+                            let
+                                only_active =
+                                    { dataset = dataset
+                                    , data_var = data_var
+                                    }
+
+                                actionCmd =
+                                    SetOnlyActive only_active
+                                        |> encodeAction
+                                        |> sendAction
+                            in
                             ( { model | selected = Just selected }
                             , Cmd.batch
-                                (List.map
-                                    (\dim ->
-                                        getAxis dataset_id
-                                            data_var
-                                            dim
-                                            Nothing
-                                    )
-                                    dims
+                                (actionCmd
+                                    :: List.map
+                                        (\dim ->
+                                            getAxis dataset_id
+                                                data_var
+                                                dim
+                                                Nothing
+                                        )
+                                        dims
                                 )
                             )
 
-                        Nothing ->
+                        _ ->
                             ( { model | selected = Just selected }, Cmd.none )
 
                 Err err ->
@@ -695,6 +710,11 @@ viewDataset model dataset =
 type Action
     = SetDatasets (List Dataset)
     | SetDatasetDescription DatasetDescription
+    | SetOnlyActive OnlyActive
+
+
+type alias OnlyActive =
+    { dataset : String, data_var : String }
 
 
 encodeAction : Action -> String
@@ -713,6 +733,14 @@ encodeAction action =
                 (Json.Encode.object
                     [ ( "type", Json.Encode.string "SET_DATASET_DESCRIPTION" )
                     , ( "payload", encodeDatasetDescription payload )
+                    ]
+                )
+
+        SetOnlyActive active ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_ONLY_ACTIVE" )
+                    , ( "payload", encodeOnlyActive active )
                     ]
                 )
 
@@ -755,6 +783,14 @@ encodeDataVar data_var =
 encodeAttrs : Dict String String -> Json.Encode.Value
 encodeAttrs attrs =
     Json.Encode.dict identity Json.Encode.string attrs
+
+
+encodeOnlyActive : OnlyActive -> Json.Encode.Value
+encodeOnlyActive only_active =
+    Json.Encode.object
+        [ ( "dataset", Json.Encode.string only_active.dataset )
+        , ( "data_var", Json.Encode.string only_active.data_var )
+        ]
 
 
 
@@ -840,17 +876,22 @@ selectDatasetLabel : Model -> Maybe DatasetLabel
 selectDatasetLabel model =
     case selectDatasetId model of
         Just dataset_id ->
-            case model.datasets of
-                Success datasets ->
-                    datasets
-                        |> List.filter (matchId dataset_id)
-                        |> List.head
-                        |> asDatasetLabel
-
-                _ ->
-                    Nothing
+            selectDatasetLabelById model dataset_id
 
         Nothing ->
+            Nothing
+
+
+selectDatasetLabelById : Model -> DatasetID -> Maybe DatasetLabel
+selectDatasetLabelById model dataset_id =
+    case model.datasets of
+        Success datasets ->
+            datasets
+                |> List.filter (matchId dataset_id)
+                |> List.head
+                |> asDatasetLabel
+
+        _ ->
             Nothing
 
 
