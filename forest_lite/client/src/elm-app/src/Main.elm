@@ -488,14 +488,35 @@ update msg model =
             case Json.Decode.decodeString selectPointDecoder payload of
                 Ok selectPoint ->
                     let
-                        actionCmd =
-                            GoToItem { path = [], item = selectPoint.point }
-                                |> encodeAction
-                                |> sendAction
+                        maybeDataset =
+                            selectDatasetLabel model
+
+                        maybeDataVar =
+                            selectDataVarLabel model
                     in
-                    ( updatePoint model selectPoint
-                    , Cmd.batch (actionCmd :: linkAxis model selectPoint)
-                    )
+                    case ( maybeDataset, maybeDataVar ) of
+                        ( Just dataset, Just data_var ) ->
+                            let
+                                path =
+                                    [ "navigate"
+                                    , dataset
+                                    , data_var
+                                    , selectPoint.dim_name
+                                    ]
+
+                                actionCmd =
+                                    GoToItem { path = path, item = selectPoint.point }
+                                        |> encodeAction
+                                        |> sendAction
+                            in
+                            ( updatePoint model selectPoint
+                            , Cmd.batch (actionCmd :: linkAxis model selectPoint)
+                            )
+
+                        _ ->
+                            ( updatePoint model selectPoint
+                            , Cmd.batch (linkAxis model selectPoint)
+                            )
 
                 Err _ ->
                     ( model, Cmd.none )
