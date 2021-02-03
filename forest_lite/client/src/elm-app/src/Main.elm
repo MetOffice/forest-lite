@@ -80,6 +80,8 @@ type alias DatasetID =
 type alias Dataset =
     { label : DatasetLabel
     , id : DatasetID
+    , driver : String
+    , view : String
     }
 
 
@@ -245,9 +247,11 @@ datasetsDecoder =
 
 datasetDecoder : Decoder Dataset
 datasetDecoder =
-    Json.Decode.map2 Dataset
+    Json.Decode.map4 Dataset
         (field "label" string)
         (field "id" int)
+        (field "driver" string)
+        (field "view" string)
 
 
 datasetDescriptionDecoder : Decoder DatasetDescription
@@ -373,10 +377,17 @@ update msg model =
         GotDatasets result ->
             case result of
                 Ok datasets ->
+                    let
+                        actionCmd =
+                            SetDatasets datasets
+                                |> encodeAction
+                                |> sendAction
+                    in
                     ( { model | datasets = Success datasets }
                     , Cmd.batch
-                        (List.map (\d -> getDatasetDescription d.id)
-                            datasets
+                        (actionCmd
+                            :: List.map (\d -> getDatasetDescription d.id)
+                                datasets
                         )
                     )
 
@@ -677,17 +688,26 @@ viewDataset model dataset =
 
 
 
--- ACTIONS (React-Redux interop)
--- JSON encoders to simulate action creators
+-- ACTIONS (React-Redux JS interop)
+-- JSON encoders to simulate action creators, only needed while migrating
 
 
 type Action
-    = SetDatasetDescription DatasetDescription
+    = SetDatasets (List Dataset)
+    | SetDatasetDescription DatasetDescription
 
 
 encodeAction : Action -> String
 encodeAction action =
     case action of
+        SetDatasets datasets ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_DATASETS" )
+                    , ( "payload", Json.Encode.list encodeDataset datasets )
+                    ]
+                )
+
         SetDatasetDescription payload ->
             Json.Encode.encode 0
                 (Json.Encode.object
@@ -695,6 +715,16 @@ encodeAction action =
                     , ( "payload", encodeDatasetDescription payload )
                     ]
                 )
+
+
+encodeDataset : Dataset -> Json.Encode.Value
+encodeDataset dataset =
+    Json.Encode.object
+        [ ( "id", Json.Encode.int dataset.id )
+        , ( "driver", Json.Encode.string dataset.driver )
+        , ( "label", Json.Encode.string dataset.label )
+        , ( "view", Json.Encode.string dataset.view )
+        ]
 
 
 encodeDatasetDescription : DatasetDescription -> Json.Encode.Value
