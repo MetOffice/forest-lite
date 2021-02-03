@@ -145,7 +145,7 @@ def nearcast_points(settings: Settings, data_var: str, dim_name: str,
                 dates.append(dt.datetime(1970, 1, 1))
             else:
                 dates.append(date)
-        data = list(sorted(set(dates)))
+        data = list(sorted(set(dates)))[-100:]  # TODO: support 100+ dates in UI
         attrs = PointsAttrs(standard_name="time")
 
     elif DIMENSION[dim_name] == DIMENSION.level:
