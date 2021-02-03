@@ -175,7 +175,7 @@ type Msg
     = HashReceived String
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription (Result Http.Error DatasetDescription)
-    | GotAxis (Result Http.Error Axis)
+    | GotAxis DatasetID (Result Http.Error Axis)
     | DataVarSelected String
     | PointSelected String
 
@@ -362,14 +362,39 @@ update msg model =
         HashReceived hashRoute ->
             ( { model | route = parseRoute hashRoute }, Cmd.none )
 
-        GotAxis result ->
+        GotAxis dataset_id result ->
             case result of
                 Ok axis ->
-                    ( model
-                        |> insertDimension axis
-                        |> initPoint axis
-                    , Cmd.none
-                    )
+                    let
+                        maybeDataset =
+                            selectDatasetLabelById model dataset_id
+                    in
+                    case maybeDataset of
+                        Just dataset ->
+                            ( model
+                                |> insertDimension axis
+                                |> initPoint axis
+                            , Cmd.batch
+                                [ SetItems
+                                    { path =
+                                        [ "navigate"
+                                        , dataset
+                                        , axis.data_var
+                                        , axis.dim_name
+                                        ]
+                                    , items = axis.data
+                                    }
+                                    |> encodeAction
+                                    |> sendAction
+                                ]
+                            )
+
+                        Nothing ->
+                            ( model
+                                |> insertDimension axis
+                                |> initPoint axis
+                            , Cmd.none
+                            )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -542,7 +567,7 @@ getAxis : DatasetID -> DataVarLabel -> String -> Maybe Int -> Cmd Msg
 getAxis dataset_id data_var dim maybeStartTime =
     Http.get
         { url = formatAxisURL dataset_id data_var dim maybeStartTime
-        , expect = Http.expectJson GotAxis axisDecoder
+        , expect = Http.expectJson (GotAxis dataset_id) axisDecoder
         }
 
 
@@ -711,10 +736,15 @@ type Action
     = SetDatasets (List Dataset)
     | SetDatasetDescription DatasetDescription
     | SetOnlyActive OnlyActive
+    | SetItems Items
 
 
 type alias OnlyActive =
     { dataset : String, data_var : String }
+
+
+type alias Items =
+    { path : List String, items : List Int }
 
 
 encodeAction : Action -> String
@@ -741,6 +771,14 @@ encodeAction action =
                 (Json.Encode.object
                     [ ( "type", Json.Encode.string "SET_ONLY_ACTIVE" )
                     , ( "payload", encodeOnlyActive active )
+                    ]
+                )
+
+        SetItems items ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_ITEMS" )
+                    , ( "payload", encodeItems items )
                     ]
                 )
 
@@ -790,6 +828,14 @@ encodeOnlyActive only_active =
     Json.Encode.object
         [ ( "dataset", Json.Encode.string only_active.dataset )
         , ( "data_var", Json.Encode.string only_active.data_var )
+        ]
+
+
+encodeItems : Items -> Json.Encode.Value
+encodeItems items =
+    Json.Encode.object
+        [ ( "path", Json.Encode.list Json.Encode.string items.path )
+        , ( "items", Json.Encode.list Json.Encode.int items.items )
         ]
 
 
