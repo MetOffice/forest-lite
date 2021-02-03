@@ -174,7 +174,7 @@ type alias Flags =
 type Msg
     = HashReceived String
     | GotDatasets (Result Http.Error (List Dataset))
-    | GotDatasetDescription (Result Http.Error DatasetDescription)
+    | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
     | DataVarSelected String
     | PointSelected String
@@ -419,12 +419,12 @@ update msg model =
                 Err _ ->
                     ( { model | datasets = Failure }, Cmd.none )
 
-        GotDatasetDescription result ->
+        GotDatasetDescription dataset_id result ->
             case result of
                 Ok desc ->
                     let
                         datasetDescriptions =
-                            Dict.insert desc.dataset_id (SuccessDescription desc) model.datasetDescriptions
+                            Dict.insert dataset_id (SuccessDescription desc) model.datasetDescriptions
                     in
                     ( { model | datasetDescriptions = datasetDescriptions }
                     , SetDatasetDescription desc
@@ -594,7 +594,7 @@ getDatasetDescription : Int -> Cmd Msg
 getDatasetDescription datasetId =
     Http.get
         { url = "http://localhost:8000/datasets/" ++ String.fromInt datasetId
-        , expect = Http.expectJson GotDatasetDescription datasetDescriptionDecoder
+        , expect = Http.expectJson (GotDatasetDescription datasetId) datasetDescriptionDecoder
         }
 
 
