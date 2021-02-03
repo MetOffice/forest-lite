@@ -290,6 +290,9 @@ selectPointDecoder =
 port hash : (String -> msg) -> Sub msg
 
 
+port sendAction : String -> Cmd msg
+
+
 
 -- UPDATE
 
@@ -388,7 +391,7 @@ update msg model =
                             Dict.insert payload.dataset_id (SuccessDescription payload) model.datasetDescriptions
                     in
                     ( { model | datasetDescriptions = datasetDescriptions }
-                    , Cmd.none
+                    , sendAction (action "SET_DATASET_DESCRIPTION" payload)
                     )
 
                 Err _ ->
@@ -669,6 +672,55 @@ viewDataset model dataset =
 
         Nothing ->
             optgroup [ attribute "label" dataset.label ] []
+
+
+
+-- ACTIONS (React-Redux interop)
+-- JSON encoders to simulate action creators
+
+
+action : String -> DatasetDescription -> String
+action kind payload =
+    Json.Encode.encode 0
+        (Json.Encode.object
+            [ ( "type", Json.Encode.string kind )
+            , ( "payload", encodeDatasetDescription payload )
+            ]
+        )
+
+
+encodeDatasetDescription : DatasetDescription -> Json.Encode.Value
+encodeDatasetDescription description =
+    Json.Encode.object
+        [ ( "datasetId", Json.Encode.int description.dataset_id )
+        , ( "data", encodeData description )
+        ]
+
+
+encodeData : DatasetDescription -> Json.Encode.Value
+encodeData desc =
+    Json.Encode.object
+        [ ( "attrs", encodeAttrs desc.attrs )
+        , ( "dataset_id", Json.Encode.int desc.dataset_id )
+        , ( "data_vars", Json.Encode.dict identity encodeDataVar desc.data_vars )
+        ]
+
+
+encodeDataVar : DataVar -> Json.Encode.Value
+encodeDataVar data_var =
+    Json.Encode.object
+        [ ( "attrs", encodeAttrs data_var.attrs )
+        , ( "dims", Json.Encode.list Json.Encode.string data_var.dims )
+        ]
+
+
+encodeAttrs : Dict String String -> Json.Encode.Value
+encodeAttrs attrs =
+    Json.Encode.dict identity Json.Encode.string attrs
+
+
+
+-- JSON ENCODERS
 
 
 queryToString : Query -> String

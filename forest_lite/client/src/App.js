@@ -41,6 +41,11 @@ const setupPorts = ports => {
     window.addEventListener("hashchange", () => {
         ports.hash.send(window.location.hash)
     })
+
+    // Connect Elm app to React app
+    ports.sendAction.subscribe(message => {
+        console.log("Elm", JSON.parse(message))
+    })
 }
 
 
