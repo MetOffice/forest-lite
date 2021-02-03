@@ -488,35 +488,49 @@ update msg model =
             case Json.Decode.decodeString selectPointDecoder payload of
                 Ok selectPoint ->
                     let
-                        dataset_id =
-                            selectDatasetId model
-
-                        data_var =
-                            selectDataVarLabel model
-
-                        dim =
-                            "time"
-
-                        start_time =
-                            selectPoint.point
+                        actionCmd =
+                            GoToItem { path = [], item = selectPoint.point }
+                                |> encodeAction
+                                |> sendAction
                     in
-                    if selectPoint.dim_name == "start_time" then
-                        case ( dataset_id, data_var ) of
-                            ( Just dataset_id_, Just data_var_ ) ->
-                                ( updatePoint model selectPoint
-                                , Cmd.batch
-                                    [ getAxis dataset_id_ data_var_ dim (Just start_time)
-                                    ]
-                                )
-
-                            _ ->
-                                ( updatePoint model selectPoint, Cmd.none )
-
-                    else
-                        ( updatePoint model selectPoint, Cmd.none )
+                    ( updatePoint model selectPoint
+                    , Cmd.batch (actionCmd :: linkAxis model selectPoint)
+                    )
 
                 Err _ ->
                     ( model, Cmd.none )
+
+
+
+-- Logic to request time axis if start_time axis changes
+
+
+linkAxis : Model -> SelectPoint -> List (Cmd Msg)
+linkAxis model selectPoint =
+    let
+        dataset_id =
+            selectDatasetId model
+
+        data_var =
+            selectDataVarLabel model
+
+        dim =
+            "time"
+
+        start_time =
+            selectPoint.point
+    in
+    if selectPoint.dim_name == "start_time" then
+        case ( dataset_id, data_var ) of
+            ( Just dataset_id_, Just data_var_ ) ->
+                [ getAxis dataset_id_ data_var_ dim (Just start_time)
+                ]
+
+            _ ->
+                []
+
+    else
+        []
 
 
 updatePoint : Model -> SelectPoint -> Model
@@ -737,6 +751,7 @@ type Action
     | SetDatasetDescription DatasetDescription
     | SetOnlyActive OnlyActive
     | SetItems Items
+    | GoToItem Item
 
 
 type alias OnlyActive =
@@ -745,6 +760,10 @@ type alias OnlyActive =
 
 type alias Items =
     { path : List String, items : List Int }
+
+
+type alias Item =
+    { path : List String, item : Int }
 
 
 encodeAction : Action -> String
@@ -779,6 +798,14 @@ encodeAction action =
                 (Json.Encode.object
                     [ ( "type", Json.Encode.string "SET_ITEMS" )
                     , ( "payload", encodeItems items )
+                    ]
+                )
+
+        GoToItem item ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "GOTO_ITEM" )
+                    , ( "payload", encodeItem item )
                     ]
                 )
 
@@ -836,6 +863,14 @@ encodeItems items =
     Json.Encode.object
         [ ( "path", Json.Encode.list Json.Encode.string items.path )
         , ( "items", Json.Encode.list Json.Encode.int items.items )
+        ]
+
+
+encodeItem : Item -> Json.Encode.Value
+encodeItem item =
+    Json.Encode.object
+        [ ( "path", Json.Encode.list Json.Encode.string item.path )
+        , ( "item", Json.Encode.int item.item )
         ]
 
 
