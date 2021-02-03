@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { useDispatch } from "react-redux"
 import AnimationControls from "./AnimationControls.js"
 import MapFigure from "./MapFigure.js"
 import Title from "./Title.js"
@@ -22,7 +23,7 @@ import { useJWTClaim } from "./jwt.js"
 
 // Account user interface Elm app
 import Elm from "react-elm-components"
-import Account from "./elm-app/src/Main.elm"
+import ElmApp from "./elm-app/src/Main.elm"
 import "./Elm.css"
 
 
@@ -35,9 +36,26 @@ import {
 } from "react-router-dom"
 
 
+// Elm ports
+const setupPorts = dispatch => ports => {
+    ports.hash.send(window.location.hash)
+    window.addEventListener("hashchange", () => {
+        ports.hash.send(window.location.hash)
+    })
+
+    // Connect Elm app to React app
+    ports.sendAction.subscribe(message => {
+        const action = JSON.parse(message)
+        dispatch(action)
+    })
+}
+
+
 const App = ({ baseURL }) => {
     const flags = useJWTClaim("TOKEN")
     console.log(flags)
+
+    const dispatch = useDispatch()
     return (
         <Router>
             <div className="App-window">
@@ -52,13 +70,14 @@ const App = ({ baseURL }) => {
                 </div>
                 <Switch>
                     <Route exact path="/">
-                        <Main baseURL={ baseURL } />
+                        <Main baseURL={ baseURL } flags={ flags } />
                     </Route>
                     <Route exact path="/about">
                         <About baseURL={ baseURL } />
                     </Route>
                     <Route exact path="/account">
-                        <Elm src={ Account.Elm.Main } flags={ flags } />
+                        <Elm src={ ElmApp.Elm.Main } flags={ flags }
+                             ports={ setupPorts(dispatch) } />
                     </Route>
                 </Switch>
             </div>
@@ -70,11 +89,16 @@ const App = ({ baseURL }) => {
 /**
  * Map interface for exploring datasets
  */
-const Main = ({ baseURL }) => {
+const Main = ({ baseURL, flags }) => {
+    //        <FetchDatasets baseURL={ baseURL } />
+    const dispatch = useDispatch()
     return (
         <div className="App-container">
             <div className="App-sidebar">
-                <Sidebar baseURL={ baseURL } />
+                <Sidebar baseURL={ baseURL }>
+                <Elm src={ ElmApp.Elm.Main } flags={ flags }
+                     ports={ setupPorts(dispatch) } />
+                </Sidebar>
             </div>
             <div className="App-content">
                 <div className="App-title">
@@ -93,7 +117,6 @@ const Main = ({ baseURL }) => {
                 </div>
             </div>
             <ColorPaletteFetch baseURL={ baseURL } />
-            <FetchDatasets baseURL={ baseURL } />
         </div>
     )
 }

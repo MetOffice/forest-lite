@@ -12,6 +12,8 @@
 
 .Sidebar__row {
     display: flex;
+    font-family: Helvetica;
+    margin: 1em;
 }
 
 .Sidebar--hidden {
