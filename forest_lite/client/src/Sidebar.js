@@ -30,6 +30,11 @@ const Sidebar = ({ baseURL, children }) => {
     if (isOpen) {
         className = "Sidebar--visible"
     }
+    //                <div className="Sidebar__row">
+    //                    <DatasetsMenu />
+    //                    <ShowLayer />
+    //                </div>
+    //                <Nav baseURL={ baseURL } />
     return (<div className="layer-menu-container">
             <Hamburger onClick={ onClick } />
             <div className={ className }>
@@ -40,11 +45,6 @@ const Sidebar = ({ baseURL, children }) => {
                     </TabChoice>
                 </div>
                 <Tab active={ tabName === "datasets" } >
-                    <div className="Sidebar__row">
-                        <DatasetsMenu />
-                        <ShowLayer />
-                    </div>
-                    <Nav baseURL={ baseURL } />
                     <CoastlineMenu />
                     { children }
                 </Tab>

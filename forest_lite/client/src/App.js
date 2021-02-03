@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { useDispatch } from "react-redux"
 import AnimationControls from "./AnimationControls.js"
 import MapFigure from "./MapFigure.js"
 import Title from "./Title.js"
@@ -36,7 +37,7 @@ import {
 
 
 // Elm ports
-const setupPorts = ports => {
+const setupPorts = dispatch => ports => {
     ports.hash.send(window.location.hash)
     window.addEventListener("hashchange", () => {
         ports.hash.send(window.location.hash)
@@ -44,7 +45,8 @@ const setupPorts = ports => {
 
     // Connect Elm app to React app
     ports.sendAction.subscribe(message => {
-        console.log("Elm", JSON.parse(message))
+        const action = JSON.parse(message)
+        dispatch(action)
     })
 }
 
@@ -53,6 +55,7 @@ const App = ({ baseURL }) => {
     const flags = useJWTClaim("TOKEN")
     console.log(flags)
 
+    const dispatch = useDispatch()
     return (
         <Router>
             <div className="App-window">
@@ -74,7 +77,7 @@ const App = ({ baseURL }) => {
                     </Route>
                     <Route exact path="/account">
                         <Elm src={ ElmApp.Elm.Main } flags={ flags }
-                             ports={ setupPorts } />
+                             ports={ setupPorts(dispatch) } />
                     </Route>
                 </Switch>
             </div>
@@ -87,12 +90,14 @@ const App = ({ baseURL }) => {
  * Map interface for exploring datasets
  */
 const Main = ({ baseURL, flags }) => {
+    //        <FetchDatasets baseURL={ baseURL } />
+    const dispatch = useDispatch()
     return (
         <div className="App-container">
             <div className="App-sidebar">
                 <Sidebar baseURL={ baseURL }>
                 <Elm src={ ElmApp.Elm.Main } flags={ flags }
-                     ports={ setupPorts } />
+                     ports={ setupPorts(dispatch) } />
                 </Sidebar>
             </div>
             <div className="App-content">
@@ -112,7 +117,6 @@ const Main = ({ baseURL, flags }) => {
                 </div>
             </div>
             <ColorPaletteFetch baseURL={ baseURL } />
-            <FetchDatasets baseURL={ baseURL } />
         </div>
     )
 }
