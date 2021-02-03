@@ -45,8 +45,12 @@ const Sidebar = ({ baseURL, children }) => {
                     </TabChoice>
                 </div>
                 <Tab active={ tabName === "datasets" } >
-                    <CoastlineMenu />
                     { children }
+                    <div className="Sidebar__row">
+                        <span>Hide or show layer:</span>
+                        <ShowLayer />
+                    </div>
+                    <CoastlineMenu />
                 </Tab>
             </div>
     </div>)

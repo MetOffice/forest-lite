@@ -689,12 +689,23 @@ viewSelectedPoint maybePoint =
             div [] (List.map viewKeyValue (Dict.toList point))
 
         Nothing ->
-            div [] [ text "No point selected" ]
+            div [] []
 
 
 viewKeyValue : ( String, Int ) -> Html Msg
 viewKeyValue ( key, value ) =
-    div [] [ text (key ++ ": " ++ String.fromInt value) ]
+    case parseDimensionKind key of
+        Numeric ->
+            div []
+                [ div [] [ text (key ++ ":") ]
+                , div [ style "margin" "0.5em" ] [ text (String.fromInt value) ]
+                ]
+
+        Temporal ->
+            div []
+                [ div [] [ text (key ++ ":") ]
+                , div [ style "margin" "0.5em" ] [ text (formatTime value) ]
+                ]
 
 
 viewDatasets : List Dataset -> Model -> Html Msg
@@ -949,19 +960,19 @@ viewSelected model =
                                     viewDims (List.map (selectDimension model) var.dims)
 
                                 Nothing ->
-                                    text "no dims found"
+                                    text "No dims found"
 
                         LoadingDescription ->
                             text "..."
 
                         FailureDescription ->
-                            text "failed to load description"
+                            text "Failed to load description"
 
                 Nothing ->
-                    text "no description found"
+                    text "No description found"
 
         Nothing ->
-            text "nothing selected"
+            text "Nothing selected"
 
 
 selectDatasetId : Model -> Maybe DatasetID
