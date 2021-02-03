@@ -385,13 +385,15 @@ update msg model =
 
         GotDatasetDescription result ->
             case result of
-                Ok payload ->
+                Ok desc ->
                     let
                         datasetDescriptions =
-                            Dict.insert payload.dataset_id (SuccessDescription payload) model.datasetDescriptions
+                            Dict.insert desc.dataset_id (SuccessDescription desc) model.datasetDescriptions
                     in
                     ( { model | datasetDescriptions = datasetDescriptions }
-                    , sendAction (action "SET_DATASET_DESCRIPTION" payload)
+                    , SetDatasetDescription desc
+                        |> encodeAction
+                        |> sendAction
                     )
 
                 Err _ ->
@@ -679,14 +681,20 @@ viewDataset model dataset =
 -- JSON encoders to simulate action creators
 
 
-action : String -> DatasetDescription -> String
-action kind payload =
-    Json.Encode.encode 0
-        (Json.Encode.object
-            [ ( "type", Json.Encode.string kind )
-            , ( "payload", encodeDatasetDescription payload )
-            ]
-        )
+type Action
+    = SetDatasetDescription DatasetDescription
+
+
+encodeAction : Action -> String
+encodeAction action =
+    case action of
+        SetDatasetDescription payload ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_DATASET_DESCRIPTION" )
+                    , ( "payload", encodeDatasetDescription payload )
+                    ]
+                )
 
 
 encodeDatasetDescription : DatasetDescription -> Json.Encode.Value
