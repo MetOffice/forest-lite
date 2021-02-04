@@ -112,7 +112,12 @@ async def description(dataset_id: int,
                       settings: config.Settings = Depends(config.get_settings)):
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
-    return driver.description(dataset.driver.settings)
+    data = driver.description(dataset.driver.settings)
+    if not isinstance(data, dict):
+        data = data.dict()
+    data["dataset_id"] = dataset_id
+    return data
+
 
 
 @router.get("/datasets/{dataset_id}/times/{timestamp_ms}/geojson")
