@@ -8,8 +8,10 @@ import Html
         , Html
         , button
         , div
+        , fieldset
         , h1
         , i
+        , input
         , label
         , li
         , optgroup
@@ -19,8 +21,14 @@ import Html
         , text
         , ul
         )
-import Html.Attributes exposing (attribute, class, style)
-import Html.Events exposing (on, onClick, targetValue)
+import Html.Attributes exposing (attribute, checked, class, style)
+import Html.Events
+    exposing
+        ( on
+        , onCheck
+        , onClick
+        , targetValue
+        )
 import Http
 import Json.Decode exposing (Decoder, dict, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
@@ -87,6 +95,7 @@ type alias Model =
     , point : Maybe Point
     , baseURL : String
     , visible : Bool
+    , coastlines : Bool
     }
 
 
@@ -206,6 +215,7 @@ type Msg
     | DataVarSelected String
     | PointSelected String
     | HideShowLayer
+    | HideShowCoastlines Bool
 
 
 
@@ -239,6 +249,7 @@ init flags =
             , point = Nothing
             , baseURL = "http://localhost:8000"
             , visible = True
+            , coastlines = True
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -600,6 +611,13 @@ update msg model =
                 |> sendAction
             )
 
+        HideShowCoastlines check ->
+            ( { model | coastlines = check }
+            , SetFlag check
+                |> encodeAction
+                |> sendAction
+            )
+
 
 
 -- Logic to request time axis if start_time axis changes
@@ -754,6 +772,7 @@ viewHome model =
                 [ viewDatasets datasets model
                 , viewSelectedPoint model.point
                 , viewHideShowIcon model.visible
+                , viewCoastlineCheckbox model.coastlines
                 ]
 
         Loading ->
@@ -882,6 +901,26 @@ viewEye visible =
         i [ class "fas fa-eye-slash" ] []
 
 
+viewCoastlineCheckbox : Bool -> Html Msg
+viewCoastlineCheckbox flag =
+    div []
+        [ div [ class "label" ] [ text "Coastlines, borders and lakes" ]
+        , div []
+            [ fieldset []
+                [ label []
+                    [ input
+                        [ attribute "type" "checkbox"
+                        , checked flag
+                        , onCheck HideShowCoastlines
+                        ]
+                        []
+                    , text "Coastlines"
+                    ]
+                ]
+            ]
+        ]
+
+
 
 -- ACTIONS (React-Redux JS interop)
 -- JSON encoders to simulate action creators, only needed while migrating
@@ -894,6 +933,7 @@ type Action
     | SetItems Items
     | GoToItem Item
     | SetVisible Bool
+    | SetFlag Bool
 
 
 type alias OnlyActive =
@@ -956,6 +996,18 @@ encodeAction action =
                 (Json.Encode.object
                     [ ( "type", Json.Encode.string "SET_VISIBLE" )
                     , ( "payload", Json.Encode.bool flag )
+                    ]
+                )
+
+        SetFlag flag ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_FLAG" )
+                    , ( "payload"
+                      , Json.Encode.object
+                            [ ( "coastlines", Json.Encode.bool flag )
+                            ]
+                      )
                     ]
                 )
 
