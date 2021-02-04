@@ -6,20 +6,8 @@ import Nav from "./Nav.js"
 import DatasetsMenu from "./DatasetsMenu.js"
 import Hamburger from "./Hamburger.js"
 
-
-const TabChoice = ({ children, onClick, active=false }) => {
-    const className = `tab__choice ${active ? "tab__choice--active": ""}`
-    return (
-        <div className={ className } onClick={ onClick }>{ children }</div>
-    )
-}
-
 const Sidebar = ({ baseURL, children }) => {
     const [ isOpen, setOpen ] = useState(true)
-    const [ tabName, setTabName ] = useState("datasets")
-    const showTab = tabName => () => {
-        setTabName(tabName)
-    }
     const onClick = ev => {
         ev.preventDefault()
         setOpen(!isOpen)
@@ -36,15 +24,7 @@ const Sidebar = ({ baseURL, children }) => {
     return (<div className="layer-menu-container">
             <Hamburger onClick={ onClick } />
             <div className={ className }>
-                <div className="tab__header">
-                    <TabChoice active={ tabName === "datasets" }
-                               onClick={ showTab("datasets") }>
-                        Layer
-                    </TabChoice>
-                </div>
-                <Tab active={ tabName === "datasets" } >
                     { children }
-                </Tab>
             </div>
     </div>)
 }
