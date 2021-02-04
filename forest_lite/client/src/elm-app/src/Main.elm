@@ -87,8 +87,13 @@ type alias Model =
     }
 
 
-type alias DatasetID =
-    Int
+type DatasetID
+    = DatasetID Int
+
+
+unwrap : DatasetID -> Int
+unwrap (DatasetID n) =
+    n
 
 
 type alias Dataset =
@@ -102,7 +107,7 @@ type alias Dataset =
 type alias DatasetDescription =
     { attrs : Dict String String
     , data_vars : Dict String DataVar
-    , dataset_id : Int
+    , dataset_id : DatasetID
     }
 
 
@@ -278,7 +283,7 @@ datasetDecoder : Decoder Dataset
 datasetDecoder =
     Json.Decode.map4 Dataset
         (field "label" string)
-        (field "id" int)
+        (field "id" datasetIDDecoder)
         (field "driver" string)
         (field "view" string)
 
@@ -289,7 +294,7 @@ datasetDescriptionDecoder =
         DatasetDescription
         (field "attrs" (dict string))
         (field "data_vars" (dict dataVarDecoder))
-        (field "dataset_id" int)
+        (field "dataset_id" datasetIDDecoder)
 
 
 dataVarDecoder : Decoder DataVar
@@ -304,8 +309,15 @@ selectDataVarDecoder : Decoder SelectDataVar
 selectDataVarDecoder =
     Json.Decode.map2
         SelectDataVar
-        (field "dataset_id" int)
+        (field "dataset_id" datasetIDDecoder)
         (field "data_var" string)
+
+
+datasetIDDecoder : Decoder DatasetID
+datasetIDDecoder =
+    Json.Decode.map
+        DatasetID
+        int
 
 
 selectPointDecoder : Decoder SelectPoint
@@ -457,8 +469,11 @@ update msg model =
             case result of
                 Ok desc ->
                     let
+                        key =
+                            unwrap dataset_id
+
                         datasetDescriptions =
-                            Dict.insert dataset_id (SuccessDescription desc) model.datasetDescriptions
+                            Dict.insert key (SuccessDescription desc) model.datasetDescriptions
                     in
                     ( { model | datasetDescriptions = datasetDescriptions }
                     , SetDatasetDescription desc
@@ -626,10 +641,10 @@ getDatasets baseURL =
         }
 
 
-getDatasetDescription : String -> Int -> Cmd Msg
+getDatasetDescription : String -> DatasetID -> Cmd Msg
 getDatasetDescription baseURL datasetId =
     Http.get
-        { url = baseURL ++ "/datasets/" ++ String.fromInt datasetId
+        { url = baseURL ++ "/datasets/" ++ String.fromInt (unwrap datasetId)
         , expect = Http.expectJson (GotDatasetDescription datasetId) datasetDescriptionDecoder
         }
 
@@ -642,14 +657,14 @@ getAxis baseURL dataset_id data_var dim maybeStartTime =
         }
 
 
-formatAxisURL : String -> Int -> String -> String -> Maybe Int -> String
+formatAxisURL : String -> DatasetID -> String -> String -> Maybe Int -> String
 formatAxisURL baseURL dataset_id data_var dim maybeStartTime =
     let
         path =
             String.join "/"
                 [ baseURL
                 , "datasets"
-                , String.fromInt dataset_id
+                , String.fromInt (unwrap dataset_id)
                 , data_var
                 , "axis"
                 , dim
@@ -774,7 +789,7 @@ viewDataset : Model -> Dataset -> Html Msg
 viewDataset model dataset =
     let
         maybeDescription =
-            Dict.get dataset.id model.datasetDescriptions
+            Dict.get (unwrap dataset.id) model.datasetDescriptions
     in
     case maybeDescription of
         Just description ->
@@ -882,7 +897,7 @@ encodeAction action =
 encodeDataset : Dataset -> Json.Encode.Value
 encodeDataset dataset =
     Json.Encode.object
-        [ ( "id", Json.Encode.int dataset.id )
+        [ ( "id", Json.Encode.int (unwrap dataset.id) )
         , ( "driver", Json.Encode.string dataset.driver )
         , ( "label", Json.Encode.string dataset.label )
         , ( "view", Json.Encode.string dataset.view )
@@ -892,7 +907,7 @@ encodeDataset dataset =
 encodeDatasetDescription : DatasetDescription -> Json.Encode.Value
 encodeDatasetDescription description =
     Json.Encode.object
-        [ ( "datasetId", Json.Encode.int description.dataset_id )
+        [ ( "datasetId", Json.Encode.int (unwrap description.dataset_id) )
         , ( "data", encodeData description )
         ]
 
@@ -901,7 +916,7 @@ encodeData : DatasetDescription -> Json.Encode.Value
 encodeData desc =
     Json.Encode.object
         [ ( "attrs", encodeAttrs desc.attrs )
-        , ( "dataset_id", Json.Encode.int desc.dataset_id )
+        , ( "dataset_id", Json.Encode.int (unwrap desc.dataset_id) )
         , ( "data_vars", Json.Encode.dict identity encodeDataVar desc.data_vars )
         ]
 
@@ -960,7 +975,7 @@ dataVarToString : SelectDataVar -> String
 dataVarToString props =
     Json.Encode.encode 0
         (Json.Encode.object
-            [ ( "dataset_id", Json.Encode.int props.dataset_id )
+            [ ( "dataset_id", Json.Encode.int (unwrap props.dataset_id) )
             , ( "data_var", Json.Encode.string props.data_var )
             ]
         )
@@ -981,8 +996,11 @@ viewSelected model =
     case model.selected of
         Just payload ->
             let
+                dataset_id =
+                    unwrap payload.dataset_id
+
                 maybeDesc =
-                    Dict.get payload.dataset_id model.datasetDescriptions
+                    Dict.get dataset_id model.datasetDescriptions
             in
             case maybeDesc of
                 Just descRequest ->
@@ -1084,11 +1102,14 @@ selectDimension model dim_name =
             { label = dim_name, points = [], kind = Numeric }
 
 
-selectedDims : Model -> Int -> String -> Maybe (List String)
+selectedDims : Model -> DatasetID -> String -> Maybe (List String)
 selectedDims model dataset_id data_var =
     let
+        key =
+            unwrap dataset_id
+
         maybeDesc =
-            Dict.get dataset_id model.datasetDescriptions
+            Dict.get key model.datasetDescriptions
     in
     case maybeDesc of
         Just descRequest ->
