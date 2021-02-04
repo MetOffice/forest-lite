@@ -97,6 +97,7 @@ type alias Model =
     , visible : Bool
     , coastlines : Bool
     , tab : Tab
+    , color_palette : Request ColorPalette
     }
 
 
@@ -145,6 +146,10 @@ type alias Axis =
     , data_var : String
     , dim_name : String
     }
+
+
+type ColorPalette
+    = ColorPalette (List String)
 
 
 type alias Dimension =
@@ -212,6 +217,7 @@ type Msg
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
+    | GotColorPalette (Result Http.Error ColorPalette)
     | DataVarSelected String
     | PointSelected String
     | HideShowLayer
@@ -252,6 +258,7 @@ init flags =
             , visible = True
             , coastlines = True
             , tab = LayerTab
+            , color_palette = Loading
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -271,14 +278,14 @@ init flags =
                                 }
                         , baseURL = baseURL
                       }
-                    , getDatasets baseURL
+                    , getDatasets baseURL DatasetsEndpoint
                     )
 
                 Nothing ->
                     ( { default
                         | baseURL = baseURL
                       }
-                    , getDatasets baseURL
+                    , getDatasets baseURL DatasetsEndpoint
                     )
 
         Err err ->
@@ -486,6 +493,7 @@ update msg model =
                                 (\d ->
                                     getDatasetDescription
                                         model.baseURL
+                                        (DescriptionEndpoint d.id)
                                         d.id
                                 )
                                 datasets
@@ -513,6 +521,14 @@ update msg model =
 
                 Err _ ->
                     ( model, Cmd.none )
+
+        GotColorPalette result ->
+            case result of
+                Ok color_palette ->
+                    ( { model | color_palette = Success color_palette }, Cmd.none )
+
+                Err _ ->
+                    ( { model | color_palette = Failure }, Cmd.none )
 
         DataVarSelected payload ->
             case Json.Decode.decodeString selectDataVarDecoder payload of
@@ -542,18 +558,23 @@ update msg model =
                                     SetOnlyActive only_active
                                         |> encodeAction
                                         |> sendAction
+
+                                baseURL =
+                                    model.baseURL
                             in
                             ( { model | selected = Just selected }
                             , Cmd.batch
                                 (actionCmd
                                     :: List.map
                                         (\dim ->
-                                            getAxis
-                                                model.baseURL
+                                            getAxis baseURL
+                                                (AxisEndpoint
+                                                    dataset_id
+                                                    data_var
+                                                    dim
+                                                    Nothing
+                                                )
                                                 dataset_id
-                                                data_var
-                                                dim
-                                                Nothing
                                         )
                                         dims
                                 )
@@ -646,7 +667,16 @@ linkAxis model selectPoint =
     if selectPoint.dim_name == "start_time" then
         case ( dataset_id, data_var ) of
             ( Just dataset_id_, Just data_var_ ) ->
-                [ getAxis model.baseURL dataset_id_ data_var_ dim (Just start_time)
+                [ getAxis model.baseURL
+                    (AxisEndpoint
+                        dataset_id_
+                        data_var_
+                        dim
+                        (Just
+                            start_time
+                        )
+                    )
+                    dataset_id_
                 ]
 
             _ ->
@@ -684,49 +714,67 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getDatasets : String -> Cmd Msg
-getDatasets baseURL =
+getDatasets : String -> Endpoint -> Cmd Msg
+getDatasets baseURL endpoint =
     Http.get
-        { url = baseURL ++ "/datasets"
+        { url = formatEndpoint baseURL endpoint
         , expect = Http.expectJson GotDatasets datasetsDecoder
         }
 
 
-getDatasetDescription : String -> DatasetID -> Cmd Msg
-getDatasetDescription baseURL datasetId =
+getDatasetDescription : String -> Endpoint -> DatasetID -> Cmd Msg
+getDatasetDescription baseURL endpoint datasetId =
     Http.get
-        { url = baseURL ++ "/datasets/" ++ String.fromInt (idToInt datasetId)
+        { url = formatEndpoint baseURL endpoint
         , expect = Http.expectJson (GotDatasetDescription datasetId) datasetDescriptionDecoder
         }
 
 
-getAxis : String -> DatasetID -> DataVarLabel -> String -> Maybe Int -> Cmd Msg
-getAxis baseURL dataset_id data_var dim maybeStartTime =
+getAxis : String -> Endpoint -> DatasetID -> Cmd Msg
+getAxis baseURL endpoint dataset_id =
     Http.get
-        { url = formatAxisURL baseURL dataset_id data_var dim maybeStartTime
+        { url = formatEndpoint baseURL endpoint
         , expect = Http.expectJson (GotAxis dataset_id) axisDecoder
         }
 
 
-formatAxisURL : String -> DatasetID -> String -> String -> Maybe Int -> String
-formatAxisURL baseURL dataset_id data_var dim maybeStartTime =
-    let
-        path =
-            String.join "/"
-                [ baseURL
-                , "datasets"
-                , String.fromInt (idToInt dataset_id)
-                , data_var
-                , "axis"
-                , dim
-                ]
-    in
-    case maybeStartTime of
-        Just start_time ->
-            path ++ "?query=" ++ queryToString { start_time = start_time }
 
-        Nothing ->
-            path
+-- ENDPOINT
+
+
+type Endpoint
+    = AxisEndpoint DatasetID String String (Maybe Int)
+    | DatasetsEndpoint
+    | DescriptionEndpoint DatasetID
+
+
+formatEndpoint : String -> Endpoint -> String
+formatEndpoint baseURL endpoint =
+    case endpoint of
+        DatasetsEndpoint ->
+            baseURL ++ "/datasets"
+
+        DescriptionEndpoint dataset_id ->
+            baseURL ++ "/datasets/" ++ String.fromInt (idToInt dataset_id)
+
+        AxisEndpoint dataset_id data_var dim maybeStartTime ->
+            let
+                path =
+                    String.join "/"
+                        [ baseURL
+                        , "datasets"
+                        , String.fromInt (idToInt dataset_id)
+                        , data_var
+                        , "axis"
+                        , dim
+                        ]
+            in
+            case maybeStartTime of
+                Just start_time ->
+                    path ++ "?query=" ++ queryToString { start_time = start_time }
+
+                Nothing ->
+                    path
 
 
 parseRoute : String -> Maybe Route
