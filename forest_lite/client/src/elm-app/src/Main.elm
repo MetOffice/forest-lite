@@ -89,8 +89,8 @@ type alias Model =
     { user : Maybe User
     , route : Maybe Route
     , selected : Maybe SelectDataVar
-    , datasets : Request
-    , datasetDescriptions : Dict Int RequestDescription
+    , datasets : Request (List Dataset)
+    , datasetDescriptions : Dict Int (Request DatasetDescription)
     , dimensions : Dict String Dimension
     , point : Maybe Point
     , baseURL : String
@@ -187,16 +187,10 @@ type alias Query =
     { start_time : Int }
 
 
-type Request
+type Request a
     = Failure
     | Loading
-    | Success (List Dataset)
-
-
-type RequestDescription
-    = FailureDescription
-    | LoadingDescription
-    | SuccessDescription DatasetDescription
+    | Success a
 
 
 type Route
@@ -509,7 +503,7 @@ update msg model =
                             idToInt dataset_id
 
                         datasetDescriptions =
-                            Dict.insert key (SuccessDescription desc) model.datasetDescriptions
+                            Dict.insert key (Success desc) model.datasetDescriptions
                     in
                     ( { model | datasetDescriptions = datasetDescriptions }
                     , SetDatasetDescription desc
@@ -916,7 +910,7 @@ viewDataset model dataset =
     case maybeDescription of
         Just description ->
             case description of
-                SuccessDescription desc ->
+                Success desc ->
                     optgroup [ attribute "label" dataset_label ]
                         (List.map
                             (\v ->
@@ -933,12 +927,12 @@ viewDataset model dataset =
                             (Dict.keys desc.data_vars)
                         )
 
-                FailureDescription ->
+                Failure ->
                     optgroup [ attribute "label" dataset_label ]
                         [ option [] [ text "Failed to load variables" ]
                         ]
 
-                LoadingDescription ->
+                Loading ->
                     optgroup [ attribute "label" dataset_label ]
                         [ option [] [ text "..." ]
                         ]
@@ -1190,9 +1184,9 @@ viewSelected model =
                     Dict.get dataset_id model.datasetDescriptions
             in
             case maybeDesc of
-                Just descRequest ->
-                    case descRequest of
-                        SuccessDescription desc ->
+                Just request ->
+                    case request of
+                        Success desc ->
                             let
                                 maybeVar =
                                     Dict.get payload.data_var desc.data_vars
@@ -1204,10 +1198,10 @@ viewSelected model =
                                 Nothing ->
                                     text "No dims found"
 
-                        LoadingDescription ->
+                        Loading ->
                             text "..."
 
-                        FailureDescription ->
+                        Failure ->
                             text "Failed to load description"
 
                 Nothing ->
@@ -1299,9 +1293,9 @@ selectedDims model dataset_id data_var =
             Dict.get key model.datasetDescriptions
     in
     case maybeDesc of
-        Just descRequest ->
-            case descRequest of
-                SuccessDescription desc ->
+        Just request ->
+            case request of
+                Success desc ->
                     let
                         maybeVar =
                             Dict.get data_var desc.data_vars
@@ -1313,10 +1307,10 @@ selectedDims model dataset_id data_var =
                         Nothing ->
                             Nothing
 
-                LoadingDescription ->
+                Loading ->
                     Nothing
 
-                FailureDescription ->
+                Failure ->
                     Nothing
 
         Nothing ->
