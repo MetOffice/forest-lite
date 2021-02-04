@@ -3,7 +3,6 @@ import { connect } from "react-redux"
 import "./Sidebar.css"
 import Tab from "./Tab.js"
 import Nav from "./Nav.js"
-import CoastlineMenu from "./CoastlineMenu.js"
 import DatasetsMenu from "./DatasetsMenu.js"
 import Hamburger from "./Hamburger.js"
 
@@ -45,7 +44,6 @@ const Sidebar = ({ baseURL, children }) => {
                 </div>
                 <Tab active={ tabName === "datasets" } >
                     { children }
-                    <CoastlineMenu />
                 </Tab>
             </div>
     </div>)

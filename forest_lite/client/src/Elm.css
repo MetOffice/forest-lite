@@ -43,3 +43,18 @@
     margin: 0 0.5em;
     width: 1em;
 }
+
+/** CoastlineMenu.css **/
+fieldset {
+    font-family: Helvetica, Arial, sans-serif;
+    margin: 4px;
+    padding: 4px;
+    border: none;
+}
+
+.label {
+    font-weight: bold;
+    font-family: Helvetica, Arial, sans-serif;
+    margin-top: 20px;
+    margin-left: 6px;
+}
