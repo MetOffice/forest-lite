@@ -6,7 +6,6 @@ import Nav from "./Nav.js"
 import CoastlineMenu from "./CoastlineMenu.js"
 import DatasetsMenu from "./DatasetsMenu.js"
 import Hamburger from "./Hamburger.js"
-import ShowLayer from "./ShowLayer.js"
 
 
 const TabChoice = ({ children, onClick, active=false }) => {
@@ -46,10 +45,6 @@ const Sidebar = ({ baseURL, children }) => {
                 </div>
                 <Tab active={ tabName === "datasets" } >
                     { children }
-                    <div className="Sidebar__row">
-                        <span>Hide or show layer:</span>
-                        <ShowLayer />
-                    </div>
                     <CoastlineMenu />
                 </Tab>
             </div>

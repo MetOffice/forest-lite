@@ -6,8 +6,10 @@ import Html
     exposing
         ( Attribute
         , Html
+        , button
         , div
         , h1
+        , i
         , label
         , li
         , optgroup
@@ -18,7 +20,7 @@ import Html
         , ul
         )
 import Html.Attributes exposing (attribute, class, style)
-import Html.Events exposing (on, targetValue)
+import Html.Events exposing (on, onClick, targetValue)
 import Http
 import Json.Decode exposing (Decoder, dict, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
@@ -84,6 +86,7 @@ type alias Model =
     , dimensions : Dict String Dimension
     , point : Maybe Point
     , baseURL : String
+    , visible : Bool
     }
 
 
@@ -202,6 +205,7 @@ type Msg
     | GotAxis DatasetID (Result Http.Error Axis)
     | DataVarSelected String
     | PointSelected String
+    | HideShowLayer
 
 
 
@@ -234,6 +238,7 @@ init flags =
             , dimensions = Dict.empty
             , point = Nothing
             , baseURL = "http://localhost:8000"
+            , visible = True
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -584,6 +589,17 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
+        HideShowLayer ->
+            let
+                visible =
+                    not model.visible
+            in
+            ( { model | visible = visible }
+            , SetVisible visible
+                |> encodeAction
+                |> sendAction
+            )
+
 
 
 -- Logic to request time axis if start_time axis changes
@@ -737,6 +753,7 @@ viewHome model =
             div []
                 [ viewDatasets datasets model
                 , viewSelectedPoint model.point
+                , viewHideShowIcon model.visible
                 ]
 
         Loading ->
@@ -842,6 +859,29 @@ viewDataset model dataset =
             optgroup [ attribute "label" dataset_label ] []
 
 
+viewHideShowIcon : Bool -> Html Msg
+viewHideShowIcon visible =
+    div [ class "Sidebar__row" ]
+        [ span [] [ text "Hide or show layer:" ]
+        , button
+            [ class "ShowLayer__button"
+            , attribute "aria-label" "visible"
+            , onClick HideShowLayer
+            ]
+            [ viewEye visible
+            ]
+        ]
+
+
+viewEye : Bool -> Html Msg
+viewEye visible =
+    if visible then
+        i [ class "fas fa-eye" ] []
+
+    else
+        i [ class "fas fa-eye-slash" ] []
+
+
 
 -- ACTIONS (React-Redux JS interop)
 -- JSON encoders to simulate action creators, only needed while migrating
@@ -853,6 +893,7 @@ type Action
     | SetOnlyActive OnlyActive
     | SetItems Items
     | GoToItem Item
+    | SetVisible Bool
 
 
 type alias OnlyActive =
@@ -907,6 +948,14 @@ encodeAction action =
                 (Json.Encode.object
                     [ ( "type", Json.Encode.string "GOTO_ITEM" )
                     , ( "payload", encodeItem item )
+                    ]
+                )
+
+        SetVisible flag ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_VISIBLE" )
+                    , ( "payload", Json.Encode.bool flag )
                     ]
                 )
 
