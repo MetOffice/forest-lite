@@ -1,25 +1,14 @@
 import React, { useState } from "react"
 import { connect } from "react-redux"
 import "./Sidebar.css"
-import Tab from "./Tab.js"
-import Nav from "./Nav.js"
-import DatasetsMenu from "./DatasetsMenu.js"
+import "./Tab.css"
+import "./Nav.css"
+import "./Select.css"
+import "./DatasetsMenu.css"
 import Hamburger from "./Hamburger.js"
-
-
-const TabChoice = ({ children, onClick, active=false }) => {
-    const className = `tab__choice ${active ? "tab__choice--active": ""}`
-    return (
-        <div className={ className } onClick={ onClick }>{ children }</div>
-    )
-}
 
 const Sidebar = ({ baseURL, children }) => {
     const [ isOpen, setOpen ] = useState(true)
-    const [ tabName, setTabName ] = useState("datasets")
-    const showTab = tabName => () => {
-        setTabName(tabName)
-    }
     const onClick = ev => {
         ev.preventDefault()
         setOpen(!isOpen)
@@ -28,23 +17,10 @@ const Sidebar = ({ baseURL, children }) => {
     if (isOpen) {
         className = "Sidebar--visible"
     }
-    //                <div className="Sidebar__row">
-    //                    <DatasetsMenu />
-    //                    <ShowLayer />
-    //                </div>
-    //                <Nav baseURL={ baseURL } />
     return (<div className="layer-menu-container">
             <Hamburger onClick={ onClick } />
             <div className={ className }>
-                <div className="tab__header">
-                    <TabChoice active={ tabName === "datasets" }
-                               onClick={ showTab("datasets") }>
-                        Layer
-                    </TabChoice>
-                </div>
-                <Tab active={ tabName === "datasets" } >
                     { children }
-                </Tab>
             </div>
     </div>)
 }

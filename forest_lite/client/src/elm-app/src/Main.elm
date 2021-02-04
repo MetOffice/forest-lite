@@ -96,6 +96,7 @@ type alias Model =
     , baseURL : String
     , visible : Bool
     , coastlines : Bool
+    , tab : Tab
     }
 
 
@@ -207,6 +208,11 @@ type alias Flags =
     Json.Decode.Value
 
 
+type Tab
+    = LayerTab
+    | AdvancedTab
+
+
 type Msg
     = HashReceived String
     | GotDatasets (Result Http.Error (List Dataset))
@@ -216,6 +222,7 @@ type Msg
     | PointSelected String
     | HideShowLayer
     | HideShowCoastlines Bool
+    | ChooseTab Tab
 
 
 
@@ -250,6 +257,7 @@ init flags =
             , baseURL = "http://localhost:8000"
             , visible = True
             , coastlines = True
+            , tab = LayerTab
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -618,6 +626,9 @@ update msg model =
                 |> sendAction
             )
 
+        ChooseTab tab ->
+            ( { model | tab = tab }, Cmd.none )
+
 
 
 -- Logic to request time axis if start_time axis changes
@@ -766,6 +777,64 @@ view model =
 
 viewHome : Model -> Html Msg
 viewHome model =
+    viewTab model
+
+
+
+-- TAB LAYOUT
+
+
+viewTab : Model -> Html Msg
+viewTab model =
+    case model.tab of
+        LayerTab ->
+            div []
+                [ div [ class "tab__header" ]
+                    [ div
+                        [ class "tab__choice"
+                        , class "tab__choice--active"
+                        , onClick (ChooseTab LayerTab)
+                        ]
+                        [ text "Layer" ]
+                    , div
+                        [ class "tab__choice"
+                        , onClick (ChooseTab AdvancedTab)
+                        ]
+                        [ text "Advanced"
+                        ]
+                    ]
+                , div [] [ viewLayerMenu model ]
+                , div [ class "hidden" ] [ viewAdvancedMenu model ]
+                ]
+
+        AdvancedTab ->
+            div []
+                [ div [ class "tab__header" ]
+                    [ div
+                        [ class "tab__choice"
+                        , onClick (ChooseTab LayerTab)
+                        ]
+                        [ text "Layer" ]
+                    , div
+                        [ class "tab__choice"
+                        , class "tab__choice--active"
+                        , onClick (ChooseTab AdvancedTab)
+                        ]
+                        [ text "Advanced"
+                        ]
+                    ]
+                , div [ class "hidden" ] [ viewLayerMenu model ]
+                , div [] [ viewAdvancedMenu model ]
+                ]
+
+
+viewAdvancedMenu : Model -> Html Msg
+viewAdvancedMenu model =
+    text "TODO: populate this menu system"
+
+
+viewLayerMenu : Model -> Html Msg
+viewLayerMenu model =
     case model.datasets of
         Success datasets ->
             div []
