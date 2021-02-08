@@ -2,7 +2,6 @@ import React, { useState } from "react"
 import { useDispatch } from "react-redux"
 import AnimationControls from "./AnimationControls.js"
 import MapFigure from "./MapFigure.js"
-import Title from "./Title.js"
 import ColorbarStack from "./ColorbarStack.js"
 import ColorPaletteFetch from "./ColorPaletteFetch.js"
 import FetchDatasets from "./FetchDatasets.js"
@@ -105,9 +104,6 @@ const Main = ({ baseURL, flags }) => {
                 </Sidebar>
             </div>
             <div className="App-content">
-                <div className="App-title">
-                    <Title/>
-                </div>
                 <div className="App-colorbar">
                     <ColorbarStack />
                 </div>
