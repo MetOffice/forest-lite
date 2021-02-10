@@ -56,7 +56,7 @@ class BuildJSCommand(setuptools.command.build_py.build_py):
 
 setuptools.setup(
     name=NAME,
-    version="0.16.4",
+    version="0.16.6",
     author="Andrew Ryan",
     author_email="andrew.ryan@metoffice.gov.uk",
     cmdclass={
