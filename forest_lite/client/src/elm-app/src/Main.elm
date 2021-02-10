@@ -30,7 +30,17 @@ import Html.Events
         , targetValue
         )
 import Http
-import Json.Decode exposing (Decoder, dict, field, int, list, maybe, string)
+import Json.Decode
+    exposing
+        ( Decoder
+        , dict
+        , field
+        , float
+        , int
+        , list
+        , maybe
+        , string
+        )
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import Time
@@ -141,7 +151,7 @@ type alias DataVar =
 
 type alias Axis =
     { attrs : Dict String String
-    , data : List Int
+    , data : List Datum
     , data_var : String
     , dim_name : String
     }
@@ -149,7 +159,7 @@ type alias Axis =
 
 type alias Dimension =
     { label : DimensionLabel
-    , points : List Int
+    , points : List Datum
     , kind : DimensionKind
     }
 
@@ -165,6 +175,12 @@ type alias DataVarLabel =
 type DimensionKind
     = Numeric
     | Temporal
+    | Horizontal
+
+
+type Datum
+    = Discrete Int
+    | Continuous Float
 
 
 type alias SelectDataVar =
@@ -175,16 +191,16 @@ type alias SelectDataVar =
 
 type alias SelectPoint =
     { dim_name : String
-    , point : Int
+    , point : Datum
     }
 
 
 type alias Point =
-    Dict String Int
+    Dict String Datum
 
 
 type alias Query =
-    { start_time : Int }
+    { start_time : Datum }
 
 
 type Request a
@@ -291,10 +307,18 @@ init flags =
 axisDecoder : Decoder Axis
 axisDecoder =
     Json.Decode.map4 Axis
-        (field "attrs" (dict string))
-        (field "data" (list int))
+        (field "attrs" attrsDecoder)
+        (field "data" (list datumDecoder))
         (field "data_var" string)
         (field "dim_name" string)
+
+
+datumDecoder : Decoder Datum
+datumDecoder =
+    Json.Decode.oneOf
+        [ Json.Decode.map Discrete int
+        , Json.Decode.map Continuous float
+        ]
 
 
 datasetsDecoder : Decoder (List Dataset)
@@ -315,7 +339,7 @@ datasetDescriptionDecoder : Decoder DatasetDescription
 datasetDescriptionDecoder =
     Json.Decode.map3
         DatasetDescription
-        (field "attrs" (dict string))
+        (field "attrs" attrsDecoder)
         (field "data_vars" (dict dataVarDecoder))
         (field "dataset_id" datasetIDDecoder)
 
@@ -325,7 +349,7 @@ dataVarDecoder =
     Json.Decode.map2
         DataVar
         (field "dims" (list string))
-        (field "attrs" (dict string))
+        (field "attrs" attrsDecoder)
 
 
 selectDataVarDecoder : Decoder SelectDataVar
@@ -343,6 +367,11 @@ datasetIDDecoder =
         int
 
 
+attrsDecoder : Decoder (Dict String String)
+attrsDecoder =
+    dict (Json.Decode.oneOf [ string, Json.Decode.succeed "" ])
+
+
 datasetLabelDecoder : Decoder DatasetLabel
 datasetLabelDecoder =
     Json.Decode.map
@@ -355,7 +384,7 @@ selectPointDecoder =
     Json.Decode.map2
         SelectPoint
         (field "dim_name" string)
-        (field "point" int)
+        (field "point" datumDecoder)
 
 
 
@@ -442,23 +471,34 @@ update msg model =
                     in
                     case maybeDatasetLabel of
                         Just dataset_label ->
-                            ( model
-                                |> insertDimension axis
-                                |> initPoint axis
-                            , Cmd.batch
-                                [ SetItems
-                                    { path =
-                                        [ "navigate"
-                                        , labelToString dataset_label
-                                        , axis.data_var
-                                        , axis.dim_name
+                            case parseDimensionKind axis.dim_name of
+                                -- NOTE do not send action for lon/lat
+                                Horizontal ->
+                                    ( model
+                                        |> insertDimension axis
+                                        |> initPoint axis
+                                    , Cmd.none
+                                    )
+
+                                -- Send action for other dims
+                                _ ->
+                                    ( model
+                                        |> insertDimension axis
+                                        |> initPoint axis
+                                    , Cmd.batch
+                                        [ SetItems
+                                            { path =
+                                                [ "navigate"
+                                                , labelToString dataset_label
+                                                , axis.data_var
+                                                , axis.dim_name
+                                                ]
+                                            , items = axis.data
+                                            }
+                                            |> encodeAction
+                                            |> sendAction
                                         ]
-                                    , items = axis.data
-                                    }
-                                    |> encodeAction
-                                    |> sendAction
-                                ]
-                            )
+                                    )
 
                         Nothing ->
                             ( model
@@ -700,7 +740,7 @@ getDatasetDescription baseURL datasetId =
         }
 
 
-getAxis : String -> DatasetID -> DataVarLabel -> String -> Maybe Int -> Cmd Msg
+getAxis : String -> DatasetID -> DataVarLabel -> String -> Maybe Datum -> Cmd Msg
 getAxis baseURL dataset_id data_var dim maybeStartTime =
     Http.get
         { url = formatAxisURL baseURL dataset_id data_var dim maybeStartTime
@@ -708,7 +748,7 @@ getAxis baseURL dataset_id data_var dim maybeStartTime =
         }
 
 
-formatAxisURL : String -> DatasetID -> String -> String -> Maybe Int -> String
+formatAxisURL : String -> DatasetID -> String -> String -> Maybe Datum -> String
 formatAxisURL baseURL dataset_id data_var dim maybeStartTime =
     let
         path =
@@ -745,6 +785,12 @@ parseDimensionKind : String -> DimensionKind
 parseDimensionKind dim_name =
     if String.contains "time" dim_name then
         Temporal
+
+    else if String.contains "latitude" dim_name then
+        Horizontal
+
+    else if String.contains "longitude" dim_name then
+        Horizontal
 
     else
         Numeric
@@ -855,20 +901,33 @@ viewSelectedPoint maybePoint =
             div [] []
 
 
-viewKeyValue : ( String, Int ) -> Html Msg
+viewKeyValue : ( String, Datum ) -> Html Msg
 viewKeyValue ( key, value ) =
     case parseDimensionKind key of
         Numeric ->
             div []
                 [ div [] [ text (key ++ ":") ]
-                , div [ style "margin" "0.5em" ] [ text (String.fromInt value) ]
+                , div [ style "margin" "0.5em" ] [ text (datumToString value) ]
                 ]
 
         Temporal ->
             div []
                 [ div [] [ text (key ++ ":") ]
-                , div [ style "margin" "0.5em" ] [ text (formatTime value) ]
+                , div [ style "margin" "0.5em" ] [ text (formatTime (datumToInt value)) ]
                 ]
+
+        Horizontal ->
+            text ""
+
+
+datumToString : Datum -> String
+datumToString datum =
+    case datum of
+        Discrete x ->
+            String.fromInt x
+
+        Continuous x ->
+            String.fromFloat x
 
 
 viewDatasets : List Dataset -> Model -> Html Msg
@@ -1004,11 +1063,11 @@ type alias OnlyActive =
 
 
 type alias Items =
-    { path : List String, items : List Int }
+    { path : List String, items : List Datum }
 
 
 type alias Item =
-    { path : List String, item : Int }
+    { path : List String, item : Datum }
 
 
 encodeAction : Action -> String
@@ -1127,7 +1186,7 @@ encodeItems : Items -> Json.Encode.Value
 encodeItems items =
     Json.Encode.object
         [ ( "path", Json.Encode.list Json.Encode.string items.path )
-        , ( "items", Json.Encode.list Json.Encode.int items.items )
+        , ( "items", Json.Encode.list encodeDatum items.items )
         ]
 
 
@@ -1135,7 +1194,7 @@ encodeItem : Item -> Json.Encode.Value
 encodeItem item =
     Json.Encode.object
         [ ( "path", Json.Encode.list Json.Encode.string item.path )
-        , ( "item", Json.Encode.int item.item )
+        , ( "item", encodeDatum item.item )
         ]
 
 
@@ -1147,7 +1206,7 @@ queryToString : Query -> String
 queryToString query =
     Json.Encode.encode 0
         (Json.Encode.object
-            [ ( "start_time", Json.Encode.int query.start_time )
+            [ ( "start_time", encodeDatum query.start_time )
             ]
         )
 
@@ -1167,9 +1226,19 @@ pointToString props =
     Json.Encode.encode 0
         (Json.Encode.object
             [ ( "dim_name", Json.Encode.string props.dim_name )
-            , ( "point", Json.Encode.int props.point )
+            , ( "point", encodeDatum props.point )
             ]
         )
+
+
+encodeDatum : Datum -> Json.Encode.Value
+encodeDatum datum =
+    case datum of
+        Discrete x ->
+            Json.Encode.int x
+
+        Continuous x ->
+            Json.Encode.float x
 
 
 viewSelected : Model -> Html Msg
@@ -1324,20 +1393,25 @@ viewDims dims =
 
 viewDim : Dimension -> Html Msg
 viewDim dim =
-    div [ class "select__container" ]
-        [ label [ class "select__label" ] [ text ("Dimension: " ++ dim.label) ]
-        , div
-            []
-            [ select
-                [ onSelect PointSelected
-                , class "select__select"
+    case dim.kind of
+        Horizontal ->
+            text ""
+
+        _ ->
+            div [ class "select__container" ]
+                [ label [ class "select__label" ] [ text ("Dimension: " ++ dim.label) ]
+                , div
+                    []
+                    [ select
+                        [ onSelect PointSelected
+                        , class "select__select"
+                        ]
+                        (List.map (viewPoint dim) dim.points)
+                    ]
                 ]
-                (List.map (viewPoint dim) dim.points)
-            ]
-        ]
 
 
-viewPoint : Dimension -> Int -> Html Msg
+viewPoint : Dimension -> Datum -> Html Msg
 viewPoint dim point =
     let
         kind =
@@ -1351,10 +1425,23 @@ viewPoint dim point =
     in
     case kind of
         Numeric ->
-            option [ attribute "value" value ] [ text (String.fromInt point) ]
+            option [ attribute "value" value ] [ text (datumToString point) ]
 
         Temporal ->
-            option [ attribute "value" value ] [ text (formatTime point) ]
+            option [ attribute "value" value ] [ text (formatTime (datumToInt point)) ]
+
+        Horizontal ->
+            option [ attribute "value" value ] [ text (datumToString point) ]
+
+
+datumToInt : Datum -> Int
+datumToInt datum =
+    case datum of
+        Discrete x ->
+            x
+
+        Continuous x ->
+            round x
 
 
 formatTime : Int -> String
