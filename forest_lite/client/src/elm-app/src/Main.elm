@@ -175,6 +175,7 @@ type alias DataVarLabel =
 type DimensionKind
     = Numeric
     | Temporal
+    | Horizontal
 
 
 type Datum
@@ -470,23 +471,34 @@ update msg model =
                     in
                     case maybeDatasetLabel of
                         Just dataset_label ->
-                            ( model
-                                |> insertDimension axis
-                                |> initPoint axis
-                            , Cmd.batch
-                                [ SetItems
-                                    { path =
-                                        [ "navigate"
-                                        , labelToString dataset_label
-                                        , axis.data_var
-                                        , axis.dim_name
+                            case parseDimensionKind axis.dim_name of
+                                -- NOTE do not send action for lon/lat
+                                Horizontal ->
+                                    ( model
+                                        |> insertDimension axis
+                                        |> initPoint axis
+                                    , Cmd.none
+                                    )
+
+                                -- Send action for other dims
+                                _ ->
+                                    ( model
+                                        |> insertDimension axis
+                                        |> initPoint axis
+                                    , Cmd.batch
+                                        [ SetItems
+                                            { path =
+                                                [ "navigate"
+                                                , labelToString dataset_label
+                                                , axis.data_var
+                                                , axis.dim_name
+                                                ]
+                                            , items = axis.data
+                                            }
+                                            |> encodeAction
+                                            |> sendAction
                                         ]
-                                    , items = axis.data
-                                    }
-                                    |> encodeAction
-                                    |> sendAction
-                                ]
-                            )
+                                    )
 
                         Nothing ->
                             ( model
@@ -774,6 +786,12 @@ parseDimensionKind dim_name =
     if String.contains "time" dim_name then
         Temporal
 
+    else if String.contains "latitude" dim_name then
+        Horizontal
+
+    else if String.contains "longitude" dim_name then
+        Horizontal
+
     else
         Numeric
 
@@ -897,6 +915,9 @@ viewKeyValue ( key, value ) =
                 [ div [] [ text (key ++ ":") ]
                 , div [ style "margin" "0.5em" ] [ text (formatTime (datumToInt value)) ]
                 ]
+
+        Horizontal ->
+            text ""
 
 
 datumToString : Datum -> String
@@ -1372,17 +1393,22 @@ viewDims dims =
 
 viewDim : Dimension -> Html Msg
 viewDim dim =
-    div [ class "select__container" ]
-        [ label [ class "select__label" ] [ text ("Dimension: " ++ dim.label) ]
-        , div
-            []
-            [ select
-                [ onSelect PointSelected
-                , class "select__select"
+    case dim.kind of
+        Horizontal ->
+            text ""
+
+        _ ->
+            div [ class "select__container" ]
+                [ label [ class "select__label" ] [ text ("Dimension: " ++ dim.label) ]
+                , div
+                    []
+                    [ select
+                        [ onSelect PointSelected
+                        , class "select__select"
+                        ]
+                        (List.map (viewPoint dim) dim.points)
+                    ]
                 ]
-                (List.map (viewPoint dim) dim.points)
-            ]
-        ]
 
 
 viewPoint : Dimension -> Datum -> Html Msg
@@ -1403,6 +1429,9 @@ viewPoint dim point =
 
         Temporal ->
             option [ attribute "value" value ] [ text (formatTime (datumToInt point)) ]
+
+        Horizontal ->
+            option [ attribute "value" value ] [ text (datumToString point) ]
 
 
 datumToInt : Datum -> Int
