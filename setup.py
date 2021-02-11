@@ -3,7 +3,7 @@ Initial setup script
 """
 import os
 import re
-import yaml
+import json
 import subprocess
 import setuptools
 import setuptools.command.build_py
@@ -18,7 +18,7 @@ PACKAGE_JSON = os.path.join(JS_DIR, "package.json")
 
 # Get package version from package.json
 with open(PACKAGE_JSON) as stream:
-    VERSION = yaml.safe_load(stream)["version"]
+    VERSION = json.load(stream)["version"]
 
 
 def build_js(command_subclass):
