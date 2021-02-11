@@ -21,12 +21,13 @@ import Html
         , text
         , ul
         )
-import Html.Attributes exposing (attribute, checked, class, style)
+import Html.Attributes exposing (attribute, checked, class, style, value)
 import Html.Events
     exposing
         ( on
         , onCheck
         , onClick
+        , onInput
         , targetValue
         )
 import Http
@@ -106,8 +107,18 @@ type alias Model =
     , baseURL : String
     , visible : Bool
     , coastlines : Bool
+    , limits : Limits
     , tab : Tab
     }
+
+
+type Limits
+    = Limits String String
+
+
+type DataLimits
+    = DataLimits Float Float
+    | Undefined
 
 
 type DatasetID
@@ -233,6 +244,8 @@ type Msg
     | HideShowLayer
     | HideShowCoastlines Bool
     | ChooseTab Tab
+    | LowerBound String
+    | UpperBound String
 
 
 
@@ -267,6 +280,7 @@ init flags =
             , baseURL = "http://localhost:8000"
             , visible = True
             , coastlines = True
+            , limits = Limits "0" "1"
             , tab = LayerTab
             }
     in
@@ -663,6 +677,64 @@ update msg model =
         ChooseTab tab ->
             ( { model | tab = tab }, Cmd.none )
 
+        LowerBound inputText ->
+            case model.limits of
+                Limits lower upper ->
+                    let
+                        limits =
+                            Limits inputText upper
+
+                        cmds =
+                            limitsCmd limits model.selected
+                    in
+                    ( { model | limits = limits }, cmds )
+
+        UpperBound inputText ->
+            case model.limits of
+                Limits lower upper ->
+                    let
+                        limits =
+                            Limits lower inputText
+
+                        cmds =
+                            limitsCmd limits model.selected
+                    in
+                    ( { model | limits = limits }, cmds )
+
+
+limitsCmd : Limits -> Maybe SelectDataVar -> Cmd Msg
+limitsCmd limits maybe_select_data_var =
+    case toDataLimits limits of
+        Undefined ->
+            Cmd.none
+
+        DataLimits lower upper ->
+            case maybe_select_data_var of
+                Nothing ->
+                    Cmd.none
+
+                Just selected ->
+                    SetLimits lower upper selected.dataset_id selected.data_var
+                        |> encodeAction
+                        |> sendAction
+
+
+toDataLimits : Limits -> DataLimits
+toDataLimits (Limits lowerText upperText) =
+    let
+        maybeLower =
+            String.toFloat lowerText
+
+        maybeUpper =
+            String.toFloat upperText
+    in
+    case ( maybeLower, maybeUpper ) of
+        ( Just lower, Just upper ) ->
+            DataLimits lower upper
+
+        _ ->
+            Undefined
+
 
 
 -- Logic to request time axis if start_time axis changes
@@ -870,7 +942,46 @@ viewTab model =
 
 viewAdvancedMenu : Model -> Html Msg
 viewAdvancedMenu model =
-    text "TODO: populate this menu system"
+    case model.limits of
+        Limits lower upper ->
+            div [ class "Limits__container" ]
+                [ div [ class "Limits__heading" ] [ text "Data limits" ]
+                , div [ class "Limits__input" ]
+                    [ label [ class "Limits__label" ] [ text "Low:" ]
+                    , input [ value lower, onInput LowerBound ] []
+                    , viewBoundWarning lower
+                    ]
+                , div [ class "Limits__input" ]
+                    [ label [ class "Limits__label" ] [ text "High:" ]
+                    , input [ value upper, onInput UpperBound ] []
+                    , viewBoundWarning upper
+                    ]
+                , viewLimitsWarning model.limits
+                ]
+
+
+viewLimitsWarning : Limits -> Html Msg
+viewLimitsWarning limits =
+    case toDataLimits limits of
+        DataLimits lower upper ->
+            if lower >= upper then
+                div [ class "Limits__warning" ] [ text "high must be greater than low" ]
+
+            else
+                text ""
+
+        Undefined ->
+            text ""
+
+
+viewBoundWarning : String -> Html Msg
+viewBoundWarning bound =
+    case String.toFloat bound of
+        Just value ->
+            text ""
+
+        Nothing ->
+            div [ class "Limits__warning" ] [ text "please enter a valid number" ]
 
 
 viewLayerMenu : Model -> Html Msg
@@ -1056,6 +1167,7 @@ type Action
     | GoToItem Item
     | SetVisible Bool
     | SetFlag Bool
+    | SetLimits Float Float DatasetID DataVarLabel
 
 
 type alias OnlyActive =
@@ -1132,6 +1244,28 @@ encodeAction action =
                       )
                     ]
                 )
+
+        SetLimits lower upper dataset_id datavar ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_LIMITS" )
+                    , ( "payload"
+                      , Json.Encode.object
+                            [ ( "high", Json.Encode.float upper )
+                            , ( "low", Json.Encode.float lower )
+                            , ( "path", encodeLimitPath dataset_id datavar )
+                            ]
+                      )
+                    ]
+                )
+
+
+encodeLimitPath : DatasetID -> DataVarLabel -> Json.Encode.Value
+encodeLimitPath (DatasetID dataset_id) data_var =
+    Json.Encode.list identity
+        [ Json.Encode.int dataset_id
+        , Json.Encode.string data_var
+        ]
 
 
 encodeDataset : Dataset -> Json.Encode.Value
