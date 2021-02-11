@@ -3,6 +3,7 @@ Initial setup script
 """
 import os
 import re
+import yaml
 import subprocess
 import setuptools
 import setuptools.command.build_py
@@ -12,6 +13,12 @@ import setuptools.command.install
 
 NAME = "forest_lite"
 JS_DIR = os.path.join(os.path.dirname(__file__), NAME, r"client")
+PACKAGE_JSON = os.path.join(JS_DIR, "package.json")
+
+
+# Get package version from package.json
+with open(PACKAGE_JSON) as stream:
+    VERSION = yaml.safe_load(stream)["version"]
 
 
 def build_js(command_subclass):
@@ -56,7 +63,7 @@ class BuildJSCommand(setuptools.command.build_py.build_py):
 
 setuptools.setup(
     name=NAME,
-    version="0.16.6",
+    version=VERSION,
     author="Andrew Ryan",
     author_email="andrew.ryan@metoffice.gov.uk",
     cmdclass={
