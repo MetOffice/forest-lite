@@ -92,6 +92,16 @@ type alias User =
     }
 
 
+portMessage : Json.Decode.Value -> Msg
+portMessage value =
+    HashReceived (Json.Decode.decodeValue portMessageDecoder value)
+
+
+portMessageDecoder : Decoder String
+portMessageDecoder =
+    Json.Decode.string
+
+
 
 -- MODEL
 
@@ -235,7 +245,7 @@ type Tab
 
 
 type Msg
-    = HashReceived String
+    = HashReceived (Result Json.Decode.Error String)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -405,7 +415,7 @@ selectPointDecoder =
 -- PORTS
 
 
-port hash : (String -> msg) -> Sub msg
+port hash : (Json.Decode.Value -> msg) -> Sub msg
 
 
 port sendAction : String -> Cmd msg
@@ -474,7 +484,12 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         HashReceived hashRoute ->
-            ( { model | route = parseRoute hashRoute }, Cmd.none )
+            case hashRoute of
+                Ok routeText ->
+                    ( { model | route = parseRoute routeText }, Cmd.none )
+
+                Err _ ->
+                    ( model, Cmd.none )
 
         GotAxis dataset_id result ->
             case result of
@@ -1736,4 +1751,4 @@ viewItem label content =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    hash HashReceived
+    hash portMessage
