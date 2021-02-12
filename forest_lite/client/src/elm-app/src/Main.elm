@@ -164,13 +164,13 @@ type alias Model =
     , baseURL : String
     , visible : Bool
     , coastlines : Bool
-    , limits : Limits
+    , limits : TextLimits
     , tab : Tab
     }
 
 
-type Limits
-    = Limits String String
+type TextLimits
+    = TextLimits String String
 
 
 type DataLimits
@@ -338,7 +338,7 @@ init flags =
             , baseURL = "http://localhost:8000"
             , visible = True
             , coastlines = True
-            , limits = Limits "0" "1"
+            , limits = TextLimits "0" "1"
             , tab = LayerTab
             }
     in
@@ -536,7 +536,7 @@ update msg model =
                 SetLimits low high _ _ ->
                     ( { model
                         | limits =
-                            Limits
+                            TextLimits
                                 (String.fromFloat low)
                                 (String.fromFloat high)
                       }
@@ -763,10 +763,10 @@ update msg model =
 
         LowerBound inputText ->
             case model.limits of
-                Limits lower upper ->
+                TextLimits lower upper ->
                     let
                         limits =
-                            Limits inputText upper
+                            TextLimits inputText upper
 
                         cmds =
                             limitsCmd limits model.selected
@@ -775,10 +775,10 @@ update msg model =
 
         UpperBound inputText ->
             case model.limits of
-                Limits lower upper ->
+                TextLimits lower upper ->
                     let
                         limits =
-                            Limits lower inputText
+                            TextLimits lower inputText
 
                         cmds =
                             limitsCmd limits model.selected
@@ -786,7 +786,7 @@ update msg model =
                     ( { model | limits = limits }, cmds )
 
 
-limitsCmd : Limits -> Maybe SelectDataVar -> Cmd Msg
+limitsCmd : TextLimits -> Maybe SelectDataVar -> Cmd Msg
 limitsCmd limits maybe_select_data_var =
     case toDataLimits limits of
         Undefined ->
@@ -803,8 +803,8 @@ limitsCmd limits maybe_select_data_var =
                         |> sendAction
 
 
-toDataLimits : Limits -> DataLimits
-toDataLimits (Limits lowerText upperText) =
+toDataLimits : TextLimits -> DataLimits
+toDataLimits (TextLimits lowerText upperText) =
     let
         maybeLower =
             String.toFloat lowerText
@@ -1027,7 +1027,7 @@ viewTab model =
 viewAdvancedMenu : Model -> Html Msg
 viewAdvancedMenu model =
     case model.limits of
-        Limits lower upper ->
+        TextLimits lower upper ->
             div [ class "Limits__container" ]
                 [ div [ class "Limits__heading" ] [ text "Data limits" ]
                 , div [ class "Limits__input" ]
@@ -1044,7 +1044,7 @@ viewAdvancedMenu model =
                 ]
 
 
-viewLimitsWarning : Limits -> Html Msg
+viewLimitsWarning : TextLimits -> Html Msg
 viewLimitsWarning limits =
     case toDataLimits limits of
         DataLimits lower upper ->
