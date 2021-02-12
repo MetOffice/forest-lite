@@ -277,7 +277,8 @@ type Tab
 
 
 type Msg
-    = GotDatasets (Result Http.Error (List Dataset))
+    = PortReceived (Result Json.Decode.Error PortMessage)
+    | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
     | DataVarSelected String
@@ -287,7 +288,6 @@ type Msg
     | ChooseTab Tab
     | LowerBound String
     | UpperBound String
-    | PortReceived (Result Json.Decode.Error PortMessage)
 
 
 
