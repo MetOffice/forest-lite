@@ -312,8 +312,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
         ({ low, high }) => {
             const path = [datasetId, dataVar]
             const action = set_limits({ low, high, path })
-            console.log(ports)
-            dispatch(action)
+            ports.receiveData.send({ label: "action", payload: action })
         }, [ datasetId, dataVar ])
 
     // Render component

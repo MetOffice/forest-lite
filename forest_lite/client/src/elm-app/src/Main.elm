@@ -92,14 +92,61 @@ type alias User =
     }
 
 
+type PortMessage
+    = PortHash String
+    | PortAction Action
+
+
 toMsg : Json.Decode.Value -> Msg
 toMsg value =
-    HashReceived (Json.Decode.decodeValue portDecoder value)
+    case Json.Decode.decodeValue portDecoder value of
+        Ok port_message ->
+            case port_message of
+                PortHash hashText ->
+                    HashReceived (Ok hashText)
+
+                PortAction action ->
+                    ActionReceived action
+
+        Err error ->
+            HashReceived (Err error)
 
 
-portDecoder : Decoder String
+portDecoder : Decoder PortMessage
 portDecoder =
-    Json.Decode.field "payload" Json.Decode.string
+    Json.Decode.field "label" Json.Decode.string
+        |> Json.Decode.andThen portBodyDecoder
+
+
+portBodyDecoder : String -> Decoder PortMessage
+portBodyDecoder label =
+    case label of
+        "hashchange" ->
+            Json.Decode.map PortHash
+                (Json.Decode.field "payload" Json.Decode.string)
+
+        _ ->
+            Json.Decode.map PortAction
+                (Json.Decode.field "payload" actionDecoder)
+
+
+actionDecoder : Decoder Action
+actionDecoder =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen actionPayloadDecoder
+
+
+actionPayloadDecoder : String -> Decoder Action
+actionPayloadDecoder label =
+    case label of
+        _ ->
+            Json.Decode.field "payload"
+                (Json.Decode.map4 SetLimits
+                    (Json.Decode.field "low" Json.Decode.float)
+                    (Json.Decode.field "high" Json.Decode.float)
+                    (Json.Decode.field "path" (Json.Decode.index 0 datasetIDDecoder))
+                    (Json.Decode.field "path" (Json.Decode.index 1 Json.Decode.string))
+                )
 
 
 
@@ -256,6 +303,7 @@ type Msg
     | ChooseTab Tab
     | LowerBound String
     | UpperBound String
+    | ActionReceived Action
 
 
 
@@ -483,6 +531,13 @@ initPoint axis model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        ActionReceived action ->
+            ( model
+            , action
+                |> encodeAction
+                |> sendAction
+            )
+
         HashReceived hashRoute ->
             case hashRoute of
                 Ok routeText ->
