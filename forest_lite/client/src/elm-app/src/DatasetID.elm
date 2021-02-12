@@ -9,8 +9,8 @@ type DatasetID
 
 
 encode : DatasetID -> Json.Encode.Value
-encode id =
-    Json.Encode.int (toInt id)
+encode (DatasetID id) =
+    Json.Encode.int id
 
 
 decoder : Json.Decode.Decoder DatasetID
