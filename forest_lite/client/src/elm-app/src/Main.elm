@@ -1,6 +1,7 @@
 port module Main exposing (..)
 
 import Browser
+import DatasetID exposing (DatasetID)
 import Dict exposing (Dict)
 import Html
     exposing
@@ -129,7 +130,7 @@ actionPayloadDecoder label =
                 (Json.Decode.map4 SetLimits
                     (Json.Decode.field "low" Json.Decode.float)
                     (Json.Decode.field "high" Json.Decode.float)
-                    (Json.Decode.field "path" (Json.Decode.index 0 datasetIDDecoder))
+                    (Json.Decode.field "path" (Json.Decode.index 0 DatasetID.decoder))
                     (Json.Decode.field "path" (Json.Decode.index 1 Json.Decode.string))
                 )
 
@@ -163,17 +164,8 @@ type DataLimits
     | Undefined
 
 
-type DatasetID
-    = DatasetID Int
-
-
 type DatasetLabel
     = DatasetLabel String
-
-
-idToInt : DatasetID -> Int
-idToInt (DatasetID n) =
-    n
 
 
 labelToString : DatasetLabel -> String
@@ -386,7 +378,7 @@ datasetDecoder : Decoder Dataset
 datasetDecoder =
     Json.Decode.map4 Dataset
         (field "label" datasetLabelDecoder)
-        (field "id" datasetIDDecoder)
+        (field "id" DatasetID.decoder)
         (field "driver" string)
         (field "view" string)
 
@@ -397,7 +389,7 @@ datasetDescriptionDecoder =
         DatasetDescription
         (field "attrs" attrsDecoder)
         (field "data_vars" (dict dataVarDecoder))
-        (field "dataset_id" datasetIDDecoder)
+        (field "dataset_id" DatasetID.decoder)
 
 
 dataVarDecoder : Decoder DataVar
@@ -412,15 +404,8 @@ selectDataVarDecoder : Decoder SelectDataVar
 selectDataVarDecoder =
     Json.Decode.map2
         SelectDataVar
-        (field "dataset_id" datasetIDDecoder)
+        (field "dataset_id" DatasetID.decoder)
         (field "data_var" string)
-
-
-datasetIDDecoder : Decoder DatasetID
-datasetIDDecoder =
-    Json.Decode.map
-        DatasetID
-        int
 
 
 attrsDecoder : Decoder (Dict String String)
@@ -606,7 +591,7 @@ update msg model =
                 Ok desc ->
                     let
                         key =
-                            idToInt dataset_id
+                            DatasetID.toInt dataset_id
 
                         datasetDescriptions =
                             Dict.insert key (Success desc) model.datasetDescriptions
@@ -886,7 +871,7 @@ getDatasets baseURL =
 getDatasetDescription : String -> DatasetID -> Cmd Msg
 getDatasetDescription baseURL datasetId =
     Http.get
-        { url = baseURL ++ "/datasets/" ++ String.fromInt (idToInt datasetId)
+        { url = baseURL ++ "/datasets/" ++ DatasetID.toString datasetId
         , expect = Http.expectJson (GotDatasetDescription datasetId) datasetDescriptionDecoder
         }
 
@@ -906,7 +891,7 @@ formatAxisURL baseURL dataset_id data_var dim maybeStartTime =
             String.join "/"
                 [ baseURL
                 , "datasets"
-                , String.fromInt (idToInt dataset_id)
+                , DatasetID.toString dataset_id
                 , data_var
                 , "axis"
                 , dim
@@ -1154,7 +1139,7 @@ viewDataset model dataset =
             labelToString dataset.label
 
         maybeDescription =
-            Dict.get (idToInt dataset.id) model.datasetDescriptions
+            Dict.get (DatasetID.toInt dataset.id) model.datasetDescriptions
     in
     case maybeDescription of
         Just description ->
@@ -1340,9 +1325,9 @@ encodeAction action =
 
 
 encodeLimitPath : DatasetID -> DataVarLabel -> Json.Encode.Value
-encodeLimitPath (DatasetID dataset_id) data_var =
+encodeLimitPath dataset_id data_var =
     Json.Encode.list identity
-        [ Json.Encode.int dataset_id
+        [ DatasetID.encode dataset_id
         , Json.Encode.string data_var
         ]
 
@@ -1350,7 +1335,7 @@ encodeLimitPath (DatasetID dataset_id) data_var =
 encodeDataset : Dataset -> Json.Encode.Value
 encodeDataset dataset =
     Json.Encode.object
-        [ ( "id", Json.Encode.int (idToInt dataset.id) )
+        [ ( "id", DatasetID.encode dataset.id )
         , ( "driver", Json.Encode.string dataset.driver )
         , ( "label", Json.Encode.string (labelToString dataset.label) )
         , ( "view", Json.Encode.string dataset.view )
@@ -1360,7 +1345,7 @@ encodeDataset dataset =
 encodeDatasetDescription : DatasetDescription -> Json.Encode.Value
 encodeDatasetDescription description =
     Json.Encode.object
-        [ ( "datasetId", Json.Encode.int (idToInt description.dataset_id) )
+        [ ( "datasetId", DatasetID.encode description.dataset_id )
         , ( "data", encodeData description )
         ]
 
@@ -1369,7 +1354,7 @@ encodeData : DatasetDescription -> Json.Encode.Value
 encodeData desc =
     Json.Encode.object
         [ ( "attrs", encodeAttrs desc.attrs )
-        , ( "dataset_id", Json.Encode.int (idToInt desc.dataset_id) )
+        , ( "dataset_id", DatasetID.encode desc.dataset_id )
         , ( "data_vars", Json.Encode.dict identity encodeDataVar desc.data_vars )
         ]
 
@@ -1428,7 +1413,7 @@ dataVarToString : SelectDataVar -> String
 dataVarToString props =
     Json.Encode.encode 0
         (Json.Encode.object
-            [ ( "dataset_id", Json.Encode.int (idToInt props.dataset_id) )
+            [ ( "dataset_id", DatasetID.encode props.dataset_id )
             , ( "data_var", Json.Encode.string props.data_var )
             ]
         )
@@ -1460,7 +1445,7 @@ viewSelected model =
         Just payload ->
             let
                 dataset_id =
-                    idToInt payload.dataset_id
+                    DatasetID.toInt payload.dataset_id
 
                 maybeDesc =
                     Dict.get dataset_id model.datasetDescriptions
@@ -1569,7 +1554,7 @@ selectedDims : Model -> DatasetID -> String -> Maybe (List String)
 selectedDims model dataset_id data_var =
     let
         key =
-            idToInt dataset_id
+            DatasetID.toInt dataset_id
 
         maybeDesc =
             Dict.get key model.datasetDescriptions
