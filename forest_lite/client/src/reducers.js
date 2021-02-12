@@ -30,7 +30,8 @@ import {
     PREVIOUS_ITEM,
     SET_ITEMS,
     FETCH_IMAGE,
-    FETCH_IMAGE_SUCCESS
+    FETCH_IMAGE_SUCCESS,
+    SET_PORTS
 } from "./action-types.js"
 import * as R from "ramda"
 import {
@@ -176,8 +177,25 @@ export const rootReducer = (state = "", action) => {
         case PREVIOUS_ITEM:
         case SET_ITEMS:
             return navigateReducer(state, action)
+        case SET_PORTS:
+            return portsReducer(state, action)
         default:
             return state
+    }
+}
+
+
+/**
+ * Elm interop reducer
+ *
+ * Assign ports object to state to allow components to communicate with Elm
+ */
+const portsReducer = (state, action) => {
+    const { type, payload } = action
+    if (type === SET_PORTS) {
+        return Object.assign({}, state, { ports: payload })
+    } else {
+        return state
     }
 }
 
