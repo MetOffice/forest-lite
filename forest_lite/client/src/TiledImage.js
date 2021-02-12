@@ -25,6 +25,7 @@ import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 import AutoLimits from "./AutoLimits.js"
 import { findById } from "./helpers.js"
+import { selectPorts } from "./ports-selector.js"
 
 
 /**
@@ -234,6 +235,7 @@ const URLPrinter = ({ template, ranges }) => {
  * Tile images from application state
  */
 const TiledImage = ({ figure, datasetId, baseURL }) => {
+    const ports = useSelector(selectPorts)
     const dispatch = useDispatch()
     const [source, setSource] = useState(null)
     const [renderer, setRenderer] = useState(null)
@@ -310,6 +312,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
         ({ low, high }) => {
             const path = [datasetId, dataVar]
             const action = set_limits({ low, high, path })
+            console.log(ports)
             dispatch(action)
         }, [ datasetId, dataVar ])
 
