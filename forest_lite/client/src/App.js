@@ -40,9 +40,15 @@ import {
 const setupPorts = dispatch => ports => {
 
     // Simple nav system while using Elm/React hybrid app
-    ports.hash.send(window.location.hash)
+    ports.receiveData.send({
+        label: "hashchange",
+        payload: window.location.hash
+    })
     window.addEventListener("hashchange", () => {
-        ports.hash.send(window.location.hash)
+        ports.receiveData.send({
+            label: "hashchange",
+            payload: window.location.hash
+        })
     })
 
     // Connect Elm app to React app

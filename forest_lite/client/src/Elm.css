@@ -58,3 +58,24 @@ fieldset {
     margin-top: 20px;
     margin-left: 6px;
 }
+
+/** Limits menu system **/
+.Limits__container {
+    font-family: Helvetica, Arial, sans-serif;
+    margin-top: 1em;
+}
+.Limits__heading {
+    font-weight: bold;
+}
+.Limits__label {
+    display: block;
+    font-size: 0.9em;
+}
+.Limits__input {
+    margin-top: 1em;
+}
+.Limits__warning {
+    margin: 0.1em;
+    color: red;
+    font-size: 0.8em;
+}

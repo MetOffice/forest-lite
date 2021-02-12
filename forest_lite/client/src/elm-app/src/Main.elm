@@ -21,12 +21,13 @@ import Html
         , text
         , ul
         )
-import Html.Attributes exposing (attribute, checked, class, style)
+import Html.Attributes exposing (attribute, checked, class, style, value)
 import Html.Events
     exposing
         ( on
         , onCheck
         , onClick
+        , onInput
         , targetValue
         )
 import Http
@@ -91,6 +92,48 @@ type alias User =
     }
 
 
+type PortMessage
+    = PortHash String
+    | PortAction Action
+
+
+portDecoder : Decoder PortMessage
+portDecoder =
+    Json.Decode.field "label" Json.Decode.string
+        |> Json.Decode.andThen portPayloadDecoder
+
+
+portPayloadDecoder : String -> Decoder PortMessage
+portPayloadDecoder label =
+    case label of
+        "hashchange" ->
+            Json.Decode.map PortHash
+                (Json.Decode.field "payload" Json.Decode.string)
+
+        _ ->
+            Json.Decode.map PortAction
+                (Json.Decode.field "payload" actionDecoder)
+
+
+actionDecoder : Decoder Action
+actionDecoder =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen actionPayloadDecoder
+
+
+actionPayloadDecoder : String -> Decoder Action
+actionPayloadDecoder label =
+    case label of
+        _ ->
+            Json.Decode.field "payload"
+                (Json.Decode.map4 SetLimits
+                    (Json.Decode.field "low" Json.Decode.float)
+                    (Json.Decode.field "high" Json.Decode.float)
+                    (Json.Decode.field "path" (Json.Decode.index 0 datasetIDDecoder))
+                    (Json.Decode.field "path" (Json.Decode.index 1 Json.Decode.string))
+                )
+
+
 
 -- MODEL
 
@@ -106,8 +149,18 @@ type alias Model =
     , baseURL : String
     , visible : Bool
     , coastlines : Bool
+    , limits : TextLimits
     , tab : Tab
     }
+
+
+type TextLimits
+    = TextLimits String String
+
+
+type DataLimits
+    = DataLimits Float Float
+    | Undefined
 
 
 type DatasetID
@@ -224,7 +277,7 @@ type Tab
 
 
 type Msg
-    = HashReceived String
+    = PortReceived (Result Json.Decode.Error PortMessage)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -233,6 +286,8 @@ type Msg
     | HideShowLayer
     | HideShowCoastlines Bool
     | ChooseTab Tab
+    | LowerBound String
+    | UpperBound String
 
 
 
@@ -267,6 +322,7 @@ init flags =
             , baseURL = "http://localhost:8000"
             , visible = True
             , coastlines = True
+            , limits = TextLimits "0" "1"
             , tab = LayerTab
             }
     in
@@ -391,7 +447,7 @@ selectPointDecoder =
 -- PORTS
 
 
-port hash : (String -> msg) -> Sub msg
+port receiveData : (Json.Decode.Value -> msg) -> Sub msg
 
 
 port sendAction : String -> Cmd msg
@@ -459,8 +515,18 @@ initPoint axis model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        HashReceived hashRoute ->
-            ( { model | route = parseRoute hashRoute }, Cmd.none )
+        PortReceived result ->
+            case result of
+                Ok port_message ->
+                    case port_message of
+                        PortAction action ->
+                            updateAction model action
+
+                        PortHash routeText ->
+                            ( { model | route = parseRoute routeText }, Cmd.none )
+
+                Err _ ->
+                    ( model, Cmd.none )
 
         GotAxis dataset_id result ->
             case result of
@@ -662,6 +728,91 @@ update msg model =
 
         ChooseTab tab ->
             ( { model | tab = tab }, Cmd.none )
+
+        LowerBound inputText ->
+            case model.limits of
+                TextLimits lower upper ->
+                    let
+                        limits =
+                            TextLimits inputText upper
+
+                        cmds =
+                            limitsCmd limits model.selected
+                    in
+                    ( { model | limits = limits }, cmds )
+
+        UpperBound inputText ->
+            case model.limits of
+                TextLimits lower upper ->
+                    let
+                        limits =
+                            TextLimits lower inputText
+
+                        cmds =
+                            limitsCmd limits model.selected
+                    in
+                    ( { model | limits = limits }, cmds )
+
+
+limitsCmd : TextLimits -> Maybe SelectDataVar -> Cmd Msg
+limitsCmd limits maybe_select_data_var =
+    case toDataLimits limits of
+        Undefined ->
+            Cmd.none
+
+        DataLimits lower upper ->
+            case maybe_select_data_var of
+                Nothing ->
+                    Cmd.none
+
+                Just selected ->
+                    SetLimits lower upper selected.dataset_id selected.data_var
+                        |> encodeAction
+                        |> sendAction
+
+
+toDataLimits : TextLimits -> DataLimits
+toDataLimits (TextLimits lowerText upperText) =
+    let
+        maybeLower =
+            String.toFloat lowerText
+
+        maybeUpper =
+            String.toFloat upperText
+    in
+    case ( maybeLower, maybeUpper ) of
+        ( Just lower, Just upper ) ->
+            DataLimits lower upper
+
+        _ ->
+            Undefined
+
+
+
+-- Interpret Redux actions
+
+
+updateAction : Model -> Action -> ( Model, Cmd Msg )
+updateAction model action =
+    case action of
+        SetLimits low high _ _ ->
+            ( { model
+                | limits =
+                    TextLimits
+                        (String.fromFloat low)
+                        (String.fromFloat high)
+              }
+            , action
+                |> encodeAction
+                |> sendAction
+            )
+
+        _ ->
+            ( model
+            , action
+                |> encodeAction
+                |> sendAction
+            )
 
 
 
@@ -870,7 +1021,46 @@ viewTab model =
 
 viewAdvancedMenu : Model -> Html Msg
 viewAdvancedMenu model =
-    text "TODO: populate this menu system"
+    case model.limits of
+        TextLimits lower upper ->
+            div [ class "Limits__container" ]
+                [ div [ class "Limits__heading" ] [ text "Data limits" ]
+                , div [ class "Limits__input" ]
+                    [ label [ class "Limits__label" ] [ text "Low:" ]
+                    , input [ value lower, onInput LowerBound ] []
+                    , viewBoundWarning lower
+                    ]
+                , div [ class "Limits__input" ]
+                    [ label [ class "Limits__label" ] [ text "High:" ]
+                    , input [ value upper, onInput UpperBound ] []
+                    , viewBoundWarning upper
+                    ]
+                , viewLimitsWarning model.limits
+                ]
+
+
+viewLimitsWarning : TextLimits -> Html Msg
+viewLimitsWarning limits =
+    case toDataLimits limits of
+        DataLimits lower upper ->
+            if lower >= upper then
+                div [ class "Limits__warning" ] [ text "high must be greater than low" ]
+
+            else
+                text ""
+
+        Undefined ->
+            text ""
+
+
+viewBoundWarning : String -> Html Msg
+viewBoundWarning bound =
+    case String.toFloat bound of
+        Just value ->
+            text ""
+
+        Nothing ->
+            div [ class "Limits__warning" ] [ text "please enter a valid number" ]
 
 
 viewLayerMenu : Model -> Html Msg
@@ -1056,6 +1246,7 @@ type Action
     | GoToItem Item
     | SetVisible Bool
     | SetFlag Bool
+    | SetLimits Float Float DatasetID DataVarLabel
 
 
 type alias OnlyActive =
@@ -1132,6 +1323,28 @@ encodeAction action =
                       )
                     ]
                 )
+
+        SetLimits lower upper dataset_id datavar ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_LIMITS" )
+                    , ( "payload"
+                      , Json.Encode.object
+                            [ ( "high", Json.Encode.float upper )
+                            , ( "low", Json.Encode.float lower )
+                            , ( "path", encodeLimitPath dataset_id datavar )
+                            ]
+                      )
+                    ]
+                )
+
+
+encodeLimitPath : DatasetID -> DataVarLabel -> Json.Encode.Value
+encodeLimitPath (DatasetID dataset_id) data_var =
+    Json.Encode.list identity
+        [ Json.Encode.int dataset_id
+        , Json.Encode.string data_var
+        ]
 
 
 encodeDataset : Dataset -> Json.Encode.Value
@@ -1602,4 +1815,4 @@ viewItem label content =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    hash HashReceived
+    receiveData (Json.Decode.decodeValue portDecoder >> PortReceived)
