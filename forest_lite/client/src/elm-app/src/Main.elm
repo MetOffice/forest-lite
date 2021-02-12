@@ -97,11 +97,6 @@ type PortMessage
     | PortAction Action
 
 
-toMsg : Json.Decode.Value -> Msg
-toMsg value =
-    PortReceived (Json.Decode.decodeValue portDecoder value)
-
-
 portDecoder : Decoder PortMessage
 portDecoder =
     Json.Decode.field "label" Json.Decode.string
@@ -1820,4 +1815,4 @@ viewItem label content =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    receiveData toMsg
+    receiveData (Json.Decode.decodeValue portDecoder >> PortReceived)
