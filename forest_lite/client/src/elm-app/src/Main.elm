@@ -92,14 +92,14 @@ type alias User =
     }
 
 
-portMessage : Json.Decode.Value -> Msg
-portMessage value =
-    HashReceived (Json.Decode.decodeValue portMessageDecoder value)
+toMsg : Json.Decode.Value -> Msg
+toMsg value =
+    HashReceived (Json.Decode.decodeValue portDecoder value)
 
 
-portMessageDecoder : Decoder String
-portMessageDecoder =
-    Json.Decode.string
+portDecoder : Decoder String
+portDecoder =
+    Json.Decode.field "payload" Json.Decode.string
 
 
 
@@ -415,7 +415,7 @@ selectPointDecoder =
 -- PORTS
 
 
-port hash : (Json.Decode.Value -> msg) -> Sub msg
+port receiveData : (Json.Decode.Value -> msg) -> Sub msg
 
 
 port sendAction : String -> Cmd msg
@@ -1751,4 +1751,4 @@ viewItem label content =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    hash portMessage
+    receiveData toMsg
