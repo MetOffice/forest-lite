@@ -1,4 +1,4 @@
-module DatasetID exposing (DatasetID(..), decoder, encode, toInt, toString)
+module DatasetID exposing (DatasetID, decoder, encode, toInt, toString)
 
 import Json.Decode
 import Json.Encode
