@@ -32,7 +32,8 @@ import {
     TOGGLE_FLAG,
     UPDATE_NAVIGATE,
     ZOOM_IN,
-    ZOOM_OUT
+    ZOOM_OUT,
+    SET_PORTS
 } from "./action-types"
 
 // Action creators
@@ -105,3 +106,7 @@ export const updateNavigate = payload => ({ type: UPDATE_NAVIGATE, payload })
 // Zoom control actions
 export const zoomIn = () => ({ type: ZOOM_IN })
 export const zoomOut = () => ({ type: ZOOM_OUT })
+
+
+// Elm interop
+export const setPorts = ports => ({ type: SET_PORTS, payload: ports })

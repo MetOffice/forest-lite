@@ -24,6 +24,7 @@ import { useJWTClaim } from "./jwt.js"
 import Elm from "react-elm-components"
 import ElmApp from "./elm-app/src/Main.elm"
 import "./Elm.css"
+import { setPorts } from "./actions.js"
 
 
 // React router
@@ -37,6 +38,8 @@ import {
 
 // Elm ports
 const setupPorts = dispatch => ports => {
+
+    // Simple nav system while using Elm/React hybrid app
     ports.hash.send(window.location.hash)
     window.addEventListener("hashchange", () => {
         ports.hash.send(window.location.hash)
@@ -47,6 +50,9 @@ const setupPorts = dispatch => ports => {
         const action = JSON.parse(message)
         dispatch(action)
     })
+
+    // Connect React components to Elm
+    dispatch(setPorts(ports))
 }
 
 

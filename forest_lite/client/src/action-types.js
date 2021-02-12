@@ -35,3 +35,7 @@ export const GOTO_ITEM = 'GOTO_ITEM'
 export const NEXT_ITEM = 'NEXT_ITEM'
 export const PREVIOUS_ITEM = 'PREVIOUS_ITEM'
 export const SET_ITEMS = 'SET_ITEMS'
+
+
+// Elm interop
+export const SET_PORTS = "SET_PORTS"
