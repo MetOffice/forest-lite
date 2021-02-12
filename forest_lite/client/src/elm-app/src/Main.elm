@@ -532,11 +532,25 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ActionReceived action ->
-            ( model
-            , action
-                |> encodeAction
-                |> sendAction
-            )
+            case action of
+                SetLimits low high _ _ ->
+                    ( { model
+                        | limits =
+                            Limits
+                                (String.fromFloat low)
+                                (String.fromFloat high)
+                      }
+                    , action
+                        |> encodeAction
+                        |> sendAction
+                    )
+
+                _ ->
+                    ( model
+                    , action
+                        |> encodeAction
+                        |> sendAction
+                    )
 
         HashReceived hashRoute ->
             case hashRoute of
