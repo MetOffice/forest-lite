@@ -99,27 +99,17 @@ type PortMessage
 
 toMsg : Json.Decode.Value -> Msg
 toMsg value =
-    case Json.Decode.decodeValue portDecoder value of
-        Ok port_message ->
-            case port_message of
-                PortHash hashText ->
-                    HashReceived (Ok hashText)
-
-                PortAction action ->
-                    ActionReceived action
-
-        Err error ->
-            HashReceived (Err error)
+    PortReceived (Json.Decode.decodeValue portDecoder value)
 
 
 portDecoder : Decoder PortMessage
 portDecoder =
     Json.Decode.field "label" Json.Decode.string
-        |> Json.Decode.andThen portBodyDecoder
+        |> Json.Decode.andThen portPayloadDecoder
 
 
-portBodyDecoder : String -> Decoder PortMessage
-portBodyDecoder label =
+portPayloadDecoder : String -> Decoder PortMessage
+portPayloadDecoder label =
     case label of
         "hashchange" ->
             Json.Decode.map PortHash
@@ -292,8 +282,7 @@ type Tab
 
 
 type Msg
-    = HashReceived (Result Json.Decode.Error String)
-    | GotDatasets (Result Http.Error (List Dataset))
+    = GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
     | DataVarSelected String
@@ -303,7 +292,7 @@ type Msg
     | ChooseTab Tab
     | LowerBound String
     | UpperBound String
-    | ActionReceived Action
+    | PortReceived (Result Json.Decode.Error PortMessage)
 
 
 
@@ -531,31 +520,15 @@ initPoint axis model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ActionReceived action ->
-            case action of
-                SetLimits low high _ _ ->
-                    ( { model
-                        | limits =
-                            TextLimits
-                                (String.fromFloat low)
-                                (String.fromFloat high)
-                      }
-                    , action
-                        |> encodeAction
-                        |> sendAction
-                    )
+        PortReceived result ->
+            case result of
+                Ok port_message ->
+                    case port_message of
+                        PortAction action ->
+                            updateAction model action
 
-                _ ->
-                    ( model
-                    , action
-                        |> encodeAction
-                        |> sendAction
-                    )
-
-        HashReceived hashRoute ->
-            case hashRoute of
-                Ok routeText ->
-                    ( { model | route = parseRoute routeText }, Cmd.none )
+                        PortHash routeText ->
+                            ( { model | route = parseRoute routeText }, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -818,6 +791,33 @@ toDataLimits (TextLimits lowerText upperText) =
 
         _ ->
             Undefined
+
+
+
+-- Interpret Redux actions
+
+
+updateAction : Model -> Action -> ( Model, Cmd Msg )
+updateAction model action =
+    case action of
+        SetLimits low high _ _ ->
+            ( { model
+                | limits =
+                    TextLimits
+                        (String.fromFloat low)
+                        (String.fromFloat high)
+              }
+            , action
+                |> encodeAction
+                |> sendAction
+            )
+
+        _ ->
+            ( model
+            , action
+                |> encodeAction
+                |> sendAction
+            )
 
 
 
