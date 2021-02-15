@@ -151,9 +151,21 @@ type alias Model =
     , baseURL : String
     , visible : Bool
     , coastlines : Bool
-    , limits : TextLimits
+    , limits : Limits
     , tab : Tab
     }
+
+
+type alias Limits =
+    { user_input : TextLimits
+    , data_source : DataLimits
+    , origin : LimitOrigin
+    }
+
+
+type LimitOrigin
+    = UserInput
+    | DataSource
 
 
 type TextLimits
@@ -277,6 +289,8 @@ type Msg
     | ChooseTab Tab
     | LowerBound String
     | UpperBound String
+    | SetLimitOrigin Bool
+    | CopyDataLimits
 
 
 
@@ -311,7 +325,11 @@ init flags =
             , baseURL = "http://localhost:8000"
             , visible = True
             , coastlines = True
-            , limits = TextLimits "0" "1"
+            , limits =
+                { user_input = TextLimits "0" "1"
+                , data_source = Undefined
+                , origin = DataSource
+                }
             , tab = LayerTab
             }
     in
@@ -712,45 +730,137 @@ update msg model =
             ( { model | tab = tab }, Cmd.none )
 
         LowerBound inputText ->
-            case model.limits of
+            case model.limits.user_input of
                 TextLimits lower upper ->
                     let
-                        limits =
+                        origin =
+                            model.limits.origin
+
+                        user_input =
                             TextLimits inputText upper
 
                         cmds =
-                            limitsCmd limits model.selected
+                            limitsCmd origin user_input model.selected
+
+                        model_limits =
+                            model.limits
                     in
-                    ( { model | limits = limits }, cmds )
+                    ( { model
+                        | limits =
+                            { model_limits
+                                | user_input =
+                                    user_input
+                            }
+                      }
+                    , cmds
+                    )
 
         UpperBound inputText ->
-            case model.limits of
+            case model.limits.user_input of
                 TextLimits lower upper ->
                     let
-                        limits =
+                        origin =
+                            model.limits.origin
+
+                        user_input =
                             TextLimits lower inputText
 
                         cmds =
-                            limitsCmd limits model.selected
+                            limitsCmd origin user_input model.selected
+
+                        model_limits =
+                            model.limits
                     in
-                    ( { model | limits = limits }, cmds )
+                    ( { model
+                        | limits =
+                            { model_limits
+                                | user_input =
+                                    user_input
+                            }
+                      }
+                    , cmds
+                    )
+
+        SetLimitOrigin flag ->
+            let
+                model_limits =
+                    model.limits
+            in
+            if flag then
+                ( { model | limits = { model_limits | origin = UserInput } }
+                , setLimitOriginCmd UserInput model.limits model.selected
+                )
+
+            else
+                ( { model | limits = { model_limits | origin = DataSource } }
+                , setLimitOriginCmd DataSource model.limits model.selected
+                )
+
+        CopyDataLimits ->
+            let
+                model_limits =
+                    model.limits
+
+                user_input =
+                    toUserInput model.limits.data_source
+            in
+            ( { model | limits = { model_limits | user_input = user_input } }, Cmd.none )
 
 
-limitsCmd : TextLimits -> Maybe SelectDataVar -> Cmd Msg
-limitsCmd limits maybe_select_data_var =
-    case toDataLimits limits of
-        Undefined ->
-            Cmd.none
-
-        DataLimits lower upper ->
-            case maybe_select_data_var of
-                Nothing ->
+setLimitOriginCmd : LimitOrigin -> Limits -> Maybe SelectDataVar -> Cmd Msg
+setLimitOriginCmd origin limits maybe_select_data_var =
+    case origin of
+        DataSource ->
+            case limits.data_source of
+                Undefined ->
                     Cmd.none
 
-                Just selected ->
-                    SetLimits lower upper selected.dataset_id selected.data_var
-                        |> encodeAction
-                        |> sendAction
+                DataLimits lower upper ->
+                    case maybe_select_data_var of
+                        Nothing ->
+                            Cmd.none
+
+                        Just selected ->
+                            SetLimits lower upper selected.dataset_id selected.data_var
+                                |> encodeAction
+                                |> sendAction
+
+        UserInput ->
+            case toDataLimits limits.user_input of
+                Undefined ->
+                    Cmd.none
+
+                DataLimits lower upper ->
+                    case maybe_select_data_var of
+                        Nothing ->
+                            Cmd.none
+
+                        Just selected ->
+                            SetLimits lower upper selected.dataset_id selected.data_var
+                                |> encodeAction
+                                |> sendAction
+
+
+limitsCmd : LimitOrigin -> TextLimits -> Maybe SelectDataVar -> Cmd Msg
+limitsCmd origin text_limits maybe_select_data_var =
+    case origin of
+        DataSource ->
+            Cmd.none
+
+        UserInput ->
+            case toDataLimits text_limits of
+                Undefined ->
+                    Cmd.none
+
+                DataLimits lower upper ->
+                    case maybe_select_data_var of
+                        Nothing ->
+                            Cmd.none
+
+                        Just selected ->
+                            SetLimits lower upper selected.dataset_id selected.data_var
+                                |> encodeAction
+                                |> sendAction
 
 
 toDataLimits : TextLimits -> DataLimits
@@ -770,6 +880,16 @@ toDataLimits (TextLimits lowerText upperText) =
             Undefined
 
 
+toUserInput : DataLimits -> TextLimits
+toUserInput data_source =
+    case data_source of
+        Undefined ->
+            TextLimits "0" "1"
+
+        DataLimits low high ->
+            TextLimits (String.fromFloat low) (String.fromFloat high)
+
+
 
 -- Interpret Redux actions
 
@@ -778,15 +898,15 @@ updateAction : Model -> Action -> ( Model, Cmd Msg )
 updateAction model action =
     case action of
         SetLimits low high _ _ ->
-            ( { model
-                | limits =
-                    TextLimits
-                        (String.fromFloat low)
-                        (String.fromFloat high)
-              }
-            , action
-                |> encodeAction
-                |> sendAction
+            let
+                model_limits =
+                    model.limits
+
+                cmds =
+                    setLimitsCmds model.limits.origin action
+            in
+            ( { model | limits = { model_limits | data_source = DataLimits low high } }
+            , cmds
             )
 
         _ ->
@@ -795,6 +915,18 @@ updateAction model action =
                 |> encodeAction
                 |> sendAction
             )
+
+
+setLimitsCmds : LimitOrigin -> Action -> Cmd Msg
+setLimitsCmds origin action =
+    case origin of
+        UserInput ->
+            Cmd.none
+
+        DataSource ->
+            action
+                |> encodeAction
+                |> sendAction
 
 
 
@@ -1007,22 +1139,63 @@ viewTab model =
 
 viewAdvancedMenu : Model -> Html Msg
 viewAdvancedMenu model =
-    case model.limits of
-        TextLimits lower upper ->
-            div [ class "Limits__container" ]
-                [ div [ class "Limits__heading" ] [ text "Data limits" ]
-                , div [ class "Limits__input" ]
-                    [ label [ class "Limits__label" ] [ text "Low:" ]
-                    , input [ value lower, onInput LowerBound ] []
-                    , viewBoundWarning lower
-                    ]
-                , div [ class "Limits__input" ]
-                    [ label [ class "Limits__label" ] [ text "High:" ]
-                    , input [ value upper, onInput UpperBound ] []
-                    , viewBoundWarning upper
-                    ]
-                , viewLimitsWarning model.limits
+    div [ class "Limits__container" ]
+        [ div [ class "Limits__heading" ] [ text "Adjustable limits" ]
+        , label [ style "display" "block" ]
+            [ input
+                [ attribute "type" "checkbox"
+                , onCheck SetLimitOrigin
                 ]
+                []
+            , text "Use input limits"
+            ]
+        , viewLimits model.limits
+        ]
+
+
+viewLimits : Limits -> Html Msg
+viewLimits limits =
+    case limits.origin of
+        UserInput ->
+            viewUserLimits limits.user_input
+
+        DataSource ->
+            viewSourceLimits limits.data_source
+
+
+viewSourceLimits : DataLimits -> Html Msg
+viewSourceLimits limits =
+    case limits of
+        DataLimits lower upper ->
+            div [ class "Limits__container" ]
+                [ div [ class "Limits__label" ] [ text "Low:" ]
+                , div [] [ text (String.fromFloat lower) ]
+                , div [ class "Limits__label" ] [ text "High:" ]
+                , div [] [ text (String.fromFloat upper) ]
+                ]
+
+        Undefined ->
+            div [ class "Limits__container" ]
+                [ div [] [ text "Data extent not available" ]
+                ]
+
+
+viewUserLimits : TextLimits -> Html Msg
+viewUserLimits (TextLimits lower upper) =
+    div []
+        [ div [ class "Limits__input" ]
+            [ label [ class "Limits__label" ] [ text "Low:" ]
+            , input [ value lower, onInput LowerBound ] []
+            , viewBoundWarning lower
+            ]
+        , div [ class "Limits__input" ]
+            [ label [ class "Limits__label" ] [ text "High:" ]
+            , input [ value upper, onInput UpperBound ] []
+            , viewBoundWarning upper
+            ]
+        , viewLimitsWarning (TextLimits lower upper)
+        , button [ onClick CopyDataLimits ] [ text "Copy data limits" ]
+        ]
 
 
 viewLimitsWarning : TextLimits -> Html Msg
