@@ -131,7 +131,7 @@ actionPayloadDecoder label =
                     (Json.Decode.field "low" Json.Decode.float)
                     (Json.Decode.field "high" Json.Decode.float)
                     (Json.Decode.field "path" (Json.Decode.index 0 DatasetID.decoder))
-                    (Json.Decode.field "path" (Json.Decode.index 1 Json.Decode.string))
+                    (Json.Decode.field "path" (Json.Decode.index 1 dataVarLabelDecoder))
                 )
 
 
@@ -213,8 +213,8 @@ type alias DimensionLabel =
     String
 
 
-type alias DataVarLabel =
-    String
+type DataVarLabel
+    = DataVarLabel String
 
 
 type DimensionKind
@@ -361,6 +361,11 @@ axisDecoder =
         (field "dim_name" string)
 
 
+dataVarLabelDecoder : Decoder DataVarLabel
+dataVarLabelDecoder =
+    Json.Decode.map DataVarLabel string
+
+
 datumDecoder : Decoder Datum
 datumDecoder =
     Json.Decode.oneOf
@@ -405,7 +410,7 @@ selectDataVarDecoder =
     Json.Decode.map2
         SelectDataVar
         (field "dataset_id" DatasetID.decoder)
-        (field "data_var" string)
+        (field "data_var" dataVarLabelDecoder)
 
 
 attrsDecoder : Decoder (Dict String String)
@@ -613,7 +618,7 @@ update msg model =
                             selected.dataset_id
 
                         data_var =
-                            selected.data_var
+                            dataVarLabelToString selected.data_var
 
                         maybeDatasetLabel =
                             selectDatasetLabelById model dataset_id
@@ -642,7 +647,7 @@ update msg model =
                                             getAxis
                                                 model.baseURL
                                                 dataset_id
-                                                data_var
+                                                (DataVarLabel data_var)
                                                 dim
                                                 Nothing
                                         )
@@ -672,7 +677,7 @@ update msg model =
                                 path =
                                     [ "navigate"
                                     , labelToString dataset_label
-                                    , data_var
+                                    , dataVarLabelToString data_var
                                     , selectPoint.dim_name
                                     ]
 
@@ -877,7 +882,11 @@ getDatasetDescription baseURL datasetId =
 
 
 getAxis : String -> DatasetID -> DataVarLabel -> String -> Maybe Datum -> Cmd Msg
-getAxis baseURL dataset_id data_var dim maybeStartTime =
+getAxis baseURL dataset_id data_var_label dim maybeStartTime =
+    let
+        data_var =
+            dataVarLabelToString data_var_label
+    in
     Http.get
         { url = formatAxisURL baseURL dataset_id data_var dim maybeStartTime
         , expect = Http.expectJson (GotAxis dataset_id) axisDecoder
@@ -1151,7 +1160,7 @@ viewDataset model dataset =
                                 option
                                     [ attribute "value"
                                         (dataVarToString
-                                            { data_var = v
+                                            { data_var = DataVarLabel v
                                             , dataset_id = dataset.id
                                             }
                                         )
@@ -1328,8 +1337,13 @@ encodeLimitPath : DatasetID -> DataVarLabel -> Json.Encode.Value
 encodeLimitPath dataset_id data_var =
     Json.Encode.list identity
         [ DatasetID.encode dataset_id
-        , Json.Encode.string data_var
+        , encodeDataVarLabel data_var
         ]
+
+
+encodeDataVarLabel : DataVarLabel -> Json.Encode.Value
+encodeDataVarLabel (DataVarLabel str) =
+    Json.Encode.string str
 
 
 encodeDataset : Dataset -> Json.Encode.Value
@@ -1414,7 +1428,7 @@ dataVarToString props =
     Json.Encode.encode 0
         (Json.Encode.object
             [ ( "dataset_id", DatasetID.encode props.dataset_id )
-            , ( "data_var", Json.Encode.string props.data_var )
+            , ( "data_var", encodeDataVarLabel props.data_var )
             ]
         )
 
@@ -1439,6 +1453,11 @@ encodeDatum datum =
             Json.Encode.float x
 
 
+dataVarLabelToString : DataVarLabel -> String
+dataVarLabelToString (DataVarLabel str) =
+    str
+
+
 viewSelected : Model -> Html Msg
 viewSelected model =
     case model.selected of
@@ -1455,8 +1474,11 @@ viewSelected model =
                     case request of
                         Success desc ->
                             let
+                                key =
+                                    dataVarLabelToString payload.data_var
+
                                 maybeVar =
-                                    Dict.get payload.data_var desc.data_vars
+                                    Dict.get key desc.data_vars
                             in
                             case maybeVar of
                                 Just var ->
