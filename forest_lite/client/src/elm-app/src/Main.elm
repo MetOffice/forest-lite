@@ -1,6 +1,7 @@
 port module Main exposing (..)
 
 import Browser
+import DataVarLabel exposing (DataVarLabel)
 import DatasetID exposing (DatasetID)
 import Dict exposing (Dict)
 import Html
@@ -131,7 +132,7 @@ actionPayloadDecoder label =
                     (Json.Decode.field "low" Json.Decode.float)
                     (Json.Decode.field "high" Json.Decode.float)
                     (Json.Decode.field "path" (Json.Decode.index 0 DatasetID.decoder))
-                    (Json.Decode.field "path" (Json.Decode.index 1 Json.Decode.string))
+                    (Json.Decode.field "path" (Json.Decode.index 1 DataVarLabel.decoder))
                 )
 
 
@@ -210,10 +211,6 @@ type alias Dimension =
 
 
 type alias DimensionLabel =
-    String
-
-
-type alias DataVarLabel =
     String
 
 
@@ -405,7 +402,7 @@ selectDataVarDecoder =
     Json.Decode.map2
         SelectDataVar
         (field "dataset_id" DatasetID.decoder)
-        (field "data_var" string)
+        (field "data_var" DataVarLabel.decoder)
 
 
 attrsDecoder : Decoder (Dict String String)
@@ -613,7 +610,7 @@ update msg model =
                             selected.dataset_id
 
                         data_var =
-                            selected.data_var
+                            DataVarLabel.toString selected.data_var
 
                         maybeDatasetLabel =
                             selectDatasetLabelById model dataset_id
@@ -642,7 +639,7 @@ update msg model =
                                             getAxis
                                                 model.baseURL
                                                 dataset_id
-                                                data_var
+                                                (DataVarLabel.DataVarLabel data_var)
                                                 dim
                                                 Nothing
                                         )
@@ -672,7 +669,7 @@ update msg model =
                                 path =
                                     [ "navigate"
                                     , labelToString dataset_label
-                                    , data_var
+                                    , DataVarLabel.toString data_var
                                     , selectPoint.dim_name
                                     ]
 
@@ -877,7 +874,11 @@ getDatasetDescription baseURL datasetId =
 
 
 getAxis : String -> DatasetID -> DataVarLabel -> String -> Maybe Datum -> Cmd Msg
-getAxis baseURL dataset_id data_var dim maybeStartTime =
+getAxis baseURL dataset_id data_var_label dim maybeStartTime =
+    let
+        data_var =
+            DataVarLabel.toString data_var_label
+    in
     Http.get
         { url = formatAxisURL baseURL dataset_id data_var dim maybeStartTime
         , expect = Http.expectJson (GotAxis dataset_id) axisDecoder
@@ -1151,7 +1152,7 @@ viewDataset model dataset =
                                 option
                                     [ attribute "value"
                                         (dataVarToString
-                                            { data_var = v
+                                            { data_var = DataVarLabel.DataVarLabel v
                                             , dataset_id = dataset.id
                                             }
                                         )
@@ -1328,7 +1329,7 @@ encodeLimitPath : DatasetID -> DataVarLabel -> Json.Encode.Value
 encodeLimitPath dataset_id data_var =
     Json.Encode.list identity
         [ DatasetID.encode dataset_id
-        , Json.Encode.string data_var
+        , DataVarLabel.encode data_var
         ]
 
 
@@ -1414,7 +1415,7 @@ dataVarToString props =
     Json.Encode.encode 0
         (Json.Encode.object
             [ ( "dataset_id", DatasetID.encode props.dataset_id )
-            , ( "data_var", Json.Encode.string props.data_var )
+            , ( "data_var", DataVarLabel.encode props.data_var )
             ]
         )
 
@@ -1455,8 +1456,11 @@ viewSelected model =
                     case request of
                         Success desc ->
                             let
+                                key =
+                                    DataVarLabel.toString payload.data_var
+
                                 maybeVar =
-                                    Dict.get payload.data_var desc.data_vars
+                                    Dict.get key desc.data_vars
                             in
                             case maybeVar of
                                 Just var ->
