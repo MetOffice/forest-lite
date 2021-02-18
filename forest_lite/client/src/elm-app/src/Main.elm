@@ -290,7 +290,12 @@ type Msg
     | LowerBound String
     | UpperBound String
     | SetLimitOrigin Bool
-    | CopyDataLimits
+    | CopyDataLimits Bound
+
+
+type Bound
+    = Upper
+    | Lower
 
 
 
@@ -787,24 +792,56 @@ update msg model =
                     model.limits
             in
             if flag then
-                ( { model | limits = { model_limits | origin = UserInput } }
-                , setLimitOriginCmd UserInput model.limits model.selected
-                )
-
-            else
                 ( { model | limits = { model_limits | origin = DataSource } }
                 , setLimitOriginCmd DataSource model.limits model.selected
                 )
 
-        CopyDataLimits ->
-            let
-                model_limits =
-                    model.limits
+            else
+                ( { model | limits = { model_limits | origin = UserInput } }
+                , setLimitOriginCmd UserInput model.limits model.selected
+                )
 
+        CopyDataLimits bound ->
+            let
                 user_input =
-                    toUserInput model.limits.data_source
+                    setBound bound model.limits.data_source model.limits.user_input
+
+                cmds =
+                    limitsCmd UserInput user_input model.selected
             in
-            ( { model | limits = { model_limits | user_input = user_input } }, Cmd.none )
+            ( model
+                |> setLimits
+                    (model.limits
+                        |> setUserInput user_input
+                    )
+            , cmds
+            )
+
+
+setLimits : Limits -> Model -> Model
+setLimits limits model =
+    { model | limits = limits }
+
+
+setUserInput : TextLimits -> Limits -> Limits
+setUserInput user_input limits =
+    { limits | user_input = user_input }
+
+
+setBound : Bound -> DataLimits -> TextLimits -> TextLimits
+setBound bound data_limits (TextLimits user_low user_high) =
+    let
+        data_input =
+            toUserInput data_limits
+    in
+    case data_input of
+        TextLimits data_low data_high ->
+            case bound of
+                Upper ->
+                    TextLimits user_low data_high
+
+                Lower ->
+                    TextLimits data_low user_high
 
 
 setLimitOriginCmd : LimitOrigin -> Limits -> Maybe SelectDataVar -> Cmd Msg
@@ -1141,14 +1178,6 @@ viewAdvancedMenu : Model -> Html Msg
 viewAdvancedMenu model =
     div [ class "Limits__container" ]
         [ div [ class "Limits__heading" ] [ text "Adjustable limits" ]
-        , label [ style "display" "block" ]
-            [ input
-                [ attribute "type" "checkbox"
-                , onCheck SetLimitOrigin
-                ]
-                []
-            , text "Use input limits"
-            ]
         , viewLimits model.limits
         ]
 
@@ -1163,15 +1192,37 @@ viewLimits limits =
             viewSourceLimits limits.data_source
 
 
+viewFollowCheckbox : LimitOrigin -> Html Msg
+viewFollowCheckbox origin =
+    let
+        flag =
+            origin == DataSource
+    in
+    label [ style "display" "block" ]
+        [ input
+            [ attribute "type" "checkbox"
+            , checked flag
+            , onCheck SetLimitOrigin
+            ]
+            []
+        , text "Follow data limits"
+        ]
+
+
 viewSourceLimits : DataLimits -> Html Msg
 viewSourceLimits limits =
     case limits of
         DataLimits lower upper ->
             div [ class "Limits__container" ]
-                [ div [ class "Limits__label" ] [ text "Low:" ]
+                [ div [ class "Limits__label" ] [ text "Lower limit:" ]
                 , div [] [ text (String.fromFloat lower) ]
-                , div [ class "Limits__label" ] [ text "High:" ]
-                , div [] [ text (String.fromFloat upper) ]
+                , div [ class "Limits__section" ]
+                    [ div [ class "Limits__label" ]
+                        [ text "Upper limit:"
+                        ]
+                    , div [] [ text (String.fromFloat upper) ]
+                    ]
+                , viewFollowCheckbox DataSource
                 ]
 
         Undefined ->
@@ -1186,15 +1237,24 @@ viewUserLimits (TextLimits lower upper) =
         [ div [ class "Limits__input" ]
             [ label [ class "Limits__label" ] [ text "Low:" ]
             , input [ value lower, onInput LowerBound ] []
+            , viewCopyDataButton (CopyDataLimits Lower)
             , viewBoundWarning lower
             ]
         , div [ class "Limits__input" ]
             [ label [ class "Limits__label" ] [ text "High:" ]
             , input [ value upper, onInput UpperBound ] []
+            , viewCopyDataButton (CopyDataLimits Upper)
             , viewBoundWarning upper
             ]
         , viewLimitsWarning (TextLimits lower upper)
-        , button [ onClick CopyDataLimits ] [ text "Copy data limits" ]
+        , viewFollowCheckbox UserInput
+        ]
+
+
+viewCopyDataButton : Msg -> Html Msg
+viewCopyDataButton tagger =
+    button [ onClick tagger ]
+        [ i [ class "far fa-chart-bar" ] []
         ]
 
 
