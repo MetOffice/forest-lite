@@ -1,7 +1,6 @@
 port module Main exposing (..)
 
 import Browser
-import DataVar exposing (SelectDataVar)
 import DataVarLabel exposing (DataVarLabel)
 import DatasetID exposing (DatasetID)
 import Dict exposing (Dict)
@@ -144,7 +143,7 @@ actionPayloadDecoder label =
 type alias Model =
     { user : Maybe User
     , route : Maybe Route
-    , selected : Maybe DataVar.SelectDataVar
+    , selected : Maybe SelectDataVar
     , datasets : Request (List Dataset)
     , datasetDescriptions : Dict Int (Request DatasetDescription)
     , dimensions : Dict String Dimension
@@ -224,6 +223,12 @@ type DimensionKind
 type Datum
     = Discrete Int
     | Continuous Float
+
+
+type alias SelectDataVar =
+    { dataset_id : DatasetID
+    , data_var : DataVarLabel
+    }
 
 
 type alias SelectPoint =
@@ -392,10 +397,10 @@ dataVarDecoder =
         (field "attrs" attrsDecoder)
 
 
-selectDataVarDecoder : Decoder DataVar.SelectDataVar
+selectDataVarDecoder : Decoder SelectDataVar
 selectDataVarDecoder =
     Json.Decode.map2
-        DataVar.SelectDataVar
+        SelectDataVar
         (field "dataset_id" DatasetID.decoder)
         (field "data_var" DataVarLabel.decoder)
 
@@ -731,7 +736,7 @@ update msg model =
                     ( { model | limits = limits }, cmds )
 
 
-limitsCmd : TextLimits -> Maybe DataVar.SelectDataVar -> Cmd Msg
+limitsCmd : TextLimits -> Maybe SelectDataVar -> Cmd Msg
 limitsCmd limits maybe_select_data_var =
     case toDataLimits limits of
         Undefined ->
@@ -1405,7 +1410,7 @@ queryToString query =
         )
 
 
-dataVarToString : DataVar.SelectDataVar -> String
+dataVarToString : SelectDataVar -> String
 dataVarToString props =
     Json.Encode.encode 0
         (Json.Encode.object
