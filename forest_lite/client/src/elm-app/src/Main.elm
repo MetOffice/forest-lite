@@ -1176,22 +1176,9 @@ viewTab model =
 
 viewAdvancedMenu : Model -> Html Msg
 viewAdvancedMenu model =
-    let
-        flag =
-            model.limits.origin == DataSource
-    in
     div [ class "Limits__container" ]
         [ div [ class "Limits__heading" ] [ text "Adjustable limits" ]
         , viewLimits model.limits
-        , label [ style "display" "block" ]
-            [ input
-                [ attribute "type" "checkbox"
-                , checked flag
-                , onCheck SetLimitOrigin
-                ]
-                []
-            , text "Follow data limits"
-            ]
         ]
 
 
@@ -1203,6 +1190,23 @@ viewLimits limits =
 
         DataSource ->
             viewSourceLimits limits.data_source
+
+
+viewFollowCheckbox : LimitOrigin -> Html Msg
+viewFollowCheckbox origin =
+    let
+        flag =
+            origin == DataSource
+    in
+    label [ style "display" "block" ]
+        [ input
+            [ attribute "type" "checkbox"
+            , checked flag
+            , onCheck SetLimitOrigin
+            ]
+            []
+        , text "Follow data limits"
+        ]
 
 
 viewSourceLimits : DataLimits -> Html Msg
@@ -1218,6 +1222,7 @@ viewSourceLimits limits =
                         ]
                     , div [] [ text (String.fromFloat upper) ]
                     ]
+                , viewFollowCheckbox DataSource
                 ]
 
         Undefined ->
@@ -1242,6 +1247,7 @@ viewUserLimits (TextLimits lower upper) =
             , viewBoundWarning upper
             ]
         , viewLimitsWarning (TextLimits lower upper)
+        , viewFollowCheckbox UserInput
         ]
 
 
