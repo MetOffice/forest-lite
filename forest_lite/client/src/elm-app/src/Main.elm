@@ -12,6 +12,8 @@ import Html
         , div
         , fieldset
         , h1
+        , h2
+        , h3
         , i
         , input
         , label
@@ -1128,7 +1130,7 @@ view model =
 
 viewHome : Model -> Html Msg
 viewHome model =
-    viewTab model
+    viewLayerMenu model
 
 
 
@@ -1292,11 +1294,30 @@ viewLayerMenu model =
     case model.datasets of
         Success datasets ->
             div []
-                [ viewDatasets datasets model
+                -- Select collection
+                [ div [ class "Sidebar__section" ]
+                    [ h3 [] [ text "Forecast/Observations" ]
+                    , viewDatasets datasets model
+                    ]
 
-                -- , viewSelectedPoint model.point
-                , viewHideShowIcon model.visible
-                , viewCoastlineCheckbox model.coastlines
+                -- Navigate dimensions
+                , div [ class "Sidebar__section" ]
+                    [ h3 [] [ text "Navigation" ]
+                    , div [] [ viewSelected model ]
+                    ]
+
+                -- Configure display
+                , div [ class "Sidebar__section" ]
+                    [ h3 [] [ text "Display settings" ]
+                    , viewHideShowIcon model.visible
+                    , viewCoastlineCheckbox model.coastlines
+                    ]
+
+                -- Configure colorbar
+                , div [ class "Sidebar__section" ]
+                    [ h3 [] [ text "Colorbar settings" ]
+                    , viewLimits model.limits
+                    ]
                 ]
 
         Loading ->
@@ -1356,7 +1377,6 @@ viewDatasets datasets model =
                 ]
                 (List.map (viewDataset model) datasets)
             ]
-        , div [] [ viewSelected model ]
         ]
 
 
