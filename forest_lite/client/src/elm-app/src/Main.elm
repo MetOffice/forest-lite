@@ -30,6 +30,7 @@ import Html.Attributes
         ( attribute
         , checked
         , class
+        , classList
         , for
         , id
         , style
@@ -163,6 +164,7 @@ type alias Model =
     , visible : Bool
     , coastlines : Bool
     , limits : Limits
+    , collapsed : Dict String Bool
     }
 
 
@@ -282,6 +284,14 @@ type alias Flags =
     Json.Decode.Value
 
 
+type alias Collapsible =
+    { head : Html Msg
+    , body : Html Msg
+    , onClick : Msg
+    , active : Bool
+    }
+
+
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
     | GotDatasets (Result Http.Error (List Dataset))
@@ -295,6 +305,14 @@ type Msg
     | UpperBound String
     | SetLimitOrigin Bool
     | CopyDataLimits Bound
+    | ExpandCollapse SubMenu
+
+
+type SubMenu
+    = DatasetMenu
+    | DimensionMenu
+    | DisplayMenu
+    | ColorbarMenu
 
 
 type Bound
@@ -339,6 +357,8 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
+            , collapsed =
+                Dict.empty
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -813,6 +833,16 @@ update msg model =
             , cmds
             )
 
+        ExpandCollapse menu ->
+            let
+                flag =
+                    getCollapsed menu model.collapsed
+
+                collapsed =
+                    setCollapsed menu (not flag) model.collapsed
+            in
+            ( { model | collapsed = collapsed }, Cmd.none )
+
 
 setLimits : Limits -> Model -> Model
 setLimits limits model =
@@ -1228,29 +1258,40 @@ viewLayerMenu model =
         Success datasets ->
             div []
                 -- Select collection
-                [ div [ class "Sidebar__section" ]
-                    [ h3 [] [ text "Forecast/Observations" ]
-                    , viewDatasets datasets model
-                    ]
+                [ viewCollapse
+                    { active = getCollapsed DatasetMenu model.collapsed
+                    , head = text "Forecast/Observations"
+                    , body = viewDatasets datasets model
+                    , onClick = ExpandCollapse DatasetMenu
+                    }
 
                 -- Navigate dimensions
-                , div [ class "Sidebar__section" ]
-                    [ h3 [] [ text "Navigation" ]
-                    , div [] [ viewSelected model ]
-                    ]
+                , viewCollapse
+                    { active = getCollapsed DimensionMenu model.collapsed
+                    , head = text "Navigation"
+                    , body = viewSelected model
+                    , onClick = ExpandCollapse DimensionMenu
+                    }
 
                 -- Configure display
-                , div [ class "Sidebar__section" ]
-                    [ h3 [] [ text "Display settings" ]
-                    , viewHideShowIcon model.visible
-                    , viewCoastlineCheckbox model.coastlines
-                    ]
+                , viewCollapse
+                    { active = getCollapsed DisplayMenu model.collapsed
+                    , head = text "Display settings"
+                    , body =
+                        div []
+                            [ viewHideShowIcon model.visible
+                            , viewCoastlineCheckbox model.coastlines
+                            ]
+                    , onClick = ExpandCollapse DisplayMenu
+                    }
 
                 -- Configure colorbar
-                , div [ class "Sidebar__section" ]
-                    [ h3 [] [ text "Colorbar settings" ]
-                    , viewLimits model.limits
-                    ]
+                , viewCollapse
+                    { active = getCollapsed ColorbarMenu model.collapsed
+                    , head = text "Colorbar settings"
+                    , body = viewLimits model.limits
+                    , onClick = ExpandCollapse ColorbarMenu
+                    }
                 ]
 
         Loading ->
@@ -1258,6 +1299,73 @@ viewLayerMenu model =
 
         Failure ->
             div [] [ text "failed to fetch datasets" ]
+
+
+getCollapsed : SubMenu -> Dict String Bool -> Bool
+getCollapsed menu collapsed =
+    let
+        key =
+            subMenuToString menu
+    in
+    Maybe.withDefault False (Dict.get key collapsed)
+
+
+setCollapsed : SubMenu -> Bool -> Dict String Bool -> Dict String Bool
+setCollapsed menu flag collapsed =
+    let
+        key =
+            subMenuToString menu
+    in
+    Dict.insert key flag collapsed
+
+
+subMenuToString : SubMenu -> String
+subMenuToString menu =
+    case menu of
+        DatasetMenu ->
+            "dataset"
+
+        DimensionMenu ->
+            "dimension"
+
+        DisplayMenu ->
+            "display"
+
+        ColorbarMenu ->
+            "colorbar"
+
+
+viewCollapse : Collapsible -> Html Msg
+viewCollapse collapse =
+    div
+        [ classList
+            [ ( "Sidebar__section", True )
+            ]
+        ]
+        [ div
+            [ onClick collapse.onClick
+            , classList
+                [ ( "Collapse__trigger", True )
+                , ( "Collapse__trigger--active", collapse.active )
+                ]
+            ]
+            [ h3
+                [ classList
+                    [ ( "Collapse__anchor", True )
+                    , ( "Collapse__anchor--active", collapse.active )
+                    ]
+                ]
+                [ collapse.head ]
+            ]
+        , div
+            [ classList
+                [ ( "Collapse__target--active", collapse.active )
+                , ( "Collapse__target", True )
+                ]
+            ]
+            [ collapse.body
+            ]
+        ]
 
 
 viewSelectedPoint : Maybe Point -> Html Msg
