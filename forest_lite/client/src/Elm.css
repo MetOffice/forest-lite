@@ -98,3 +98,42 @@ fieldset {
 .Limits__section {
     margin: 1em 0;
 }
+
+/* Collapsible */
+.Collapse__target {
+    max-height: 100vh;
+    opacity: 1;
+    transition: max-height 0.2s ease-in-out;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.Collapse__trigger {
+    cursor: pointer;
+}
+
+.Collapse__anchor {
+    display: inline;
+    vertical-align: center;
+    line-height: 2em;
+}
+
+.Collapse__anchor:after {
+    content: '\2212';
+    float: right;
+    font-size: 26px;
+    font-weight: bold;
+    margin-right: 5px;
+}
+.Collapse__anchor--active:after {
+    content: '\002B';
+}
+
+.Collapse__anchor:hover {
+    color: #45a9d0;
+}
+
+.Collapse__target--active {
+    overflow: hidden;
+    max-height: 0 !important;
+    opacity: 0;
+}

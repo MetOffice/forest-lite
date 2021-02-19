@@ -30,6 +30,7 @@ import Html.Attributes
         ( attribute
         , checked
         , class
+        , classList
         , for
         , id
         , style
@@ -163,6 +164,7 @@ type alias Model =
     , visible : Bool
     , coastlines : Bool
     , limits : Limits
+    , collapsed : Bool
     }
 
 
@@ -295,6 +297,7 @@ type Msg
     | UpperBound String
     | SetLimitOrigin Bool
     | CopyDataLimits Bound
+    | ExpandCollapse
 
 
 type Bound
@@ -339,6 +342,7 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
+            , collapsed = False
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -813,6 +817,13 @@ update msg model =
             , cmds
             )
 
+        ExpandCollapse ->
+            let
+                collapsed =
+                    not model.collapsed
+            in
+            ( { model | collapsed = collapsed }, Cmd.none )
+
 
 setLimits : Limits -> Model -> Model
 setLimits limits model =
@@ -1247,9 +1258,34 @@ viewLayerMenu model =
                     ]
 
                 -- Configure colorbar
-                , div [ class "Sidebar__section" ]
-                    [ h3 [] [ text "Colorbar settings" ]
-                    , viewLimits model.limits
+                , div
+                    [ classList
+                        [ ( "Sidebar__section", True )
+                        ]
+                    ]
+                    [ div
+                        [ onClick ExpandCollapse
+                        , classList
+                            [ ( "Collapse__trigger", True )
+                            , ( "Collapse__trigger--active", model.collapsed )
+                            ]
+                        ]
+                        [ h3
+                            [ classList
+                                [ ( "Collapse__anchor", True )
+                                , ( "Collapse__anchor--active", model.collapsed )
+                                ]
+                            ]
+                            [ text "Colorbar settings" ]
+                        ]
+                    , div
+                        [ classList
+                            [ ( "Collapse__target--active", model.collapsed )
+                            , ( "Collapse__target", True )
+                            ]
+                        ]
+                        [ viewLimits model.limits
+                        ]
                     ]
                 ]
 
