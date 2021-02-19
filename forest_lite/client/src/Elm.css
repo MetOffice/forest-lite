@@ -47,8 +47,7 @@
 /** CoastlineMenu.css **/
 fieldset {
     font-family: Helvetica, Arial, sans-serif;
-    margin: 4px;
-    padding: 4px;
+    padding: 0;
     border: none;
 }
 

@@ -23,7 +23,16 @@ import Html
         , text
         , ul
         )
-import Html.Attributes exposing (attribute, checked, class, style, value)
+import Html.Attributes
+    exposing
+        ( attribute
+        , checked
+        , class
+        , for
+        , id
+        , style
+        , value
+        )
 import Html.Events
     exposing
         ( on
@@ -1434,20 +1443,25 @@ viewEye visible =
 
 viewCoastlineCheckbox : Bool -> Html Msg
 viewCoastlineCheckbox flag =
+    let
+        inputId =
+            "coastline"
+    in
     div []
-        [ div [ class "label" ] [ text "Coastlines, borders and lakes" ]
-        , div []
-            [ fieldset []
-                [ label []
-                    [ input
-                        [ attribute "type" "checkbox"
-                        , checked flag
-                        , onCheck HideShowCoastlines
-                        ]
-                        []
-                    , text "Coastlines"
-                    ]
+        [ fieldset []
+            [ input
+                [ attribute "type" "checkbox"
+                , checked flag
+                , onCheck HideShowCoastlines
+                , id inputId
                 ]
+                []
+            , label
+                [ for inputId
+                , style "cursor" "pointer"
+                , style "padding-left" "0.4em"
+                ]
+                [ text "Show coastlines" ]
             ]
         ]
 
