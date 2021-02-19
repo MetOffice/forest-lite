@@ -1293,7 +1293,8 @@ viewLayerMenu model =
         Success datasets ->
             div []
                 [ viewDatasets datasets model
-                , viewSelectedPoint model.point
+
+                -- , viewSelectedPoint model.point
                 , viewHideShowIcon model.visible
                 , viewCoastlineCheckbox model.coastlines
                 ]
