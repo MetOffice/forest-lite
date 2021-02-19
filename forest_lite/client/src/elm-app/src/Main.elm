@@ -163,7 +163,6 @@ type alias Model =
     , visible : Bool
     , coastlines : Bool
     , limits : Limits
-    , tab : Tab
     }
 
 
@@ -283,11 +282,6 @@ type alias Flags =
     Json.Decode.Value
 
 
-type Tab
-    = LayerTab
-    | AdvancedTab
-
-
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
     | GotDatasets (Result Http.Error (List Dataset))
@@ -297,7 +291,6 @@ type Msg
     | PointSelected String
     | HideShowLayer Bool
     | HideShowCoastlines Bool
-    | ChooseTab Tab
     | LowerBound String
     | UpperBound String
     | SetLimitOrigin Bool
@@ -346,7 +339,6 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
-            , tab = LayerTab
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -738,9 +730,6 @@ update msg model =
                 |> sendAction
             )
 
-        ChooseTab tab ->
-            ( { model | tab = tab }, Cmd.none )
-
         LowerBound inputText ->
             case model.limits.user_input of
                 TextLimits lower upper ->
@@ -1131,62 +1120,6 @@ view model =
 viewHome : Model -> Html Msg
 viewHome model =
     viewLayerMenu model
-
-
-
--- TAB LAYOUT
-
-
-viewTab : Model -> Html Msg
-viewTab model =
-    case model.tab of
-        LayerTab ->
-            div []
-                [ div [ class "tab__header" ]
-                    [ div
-                        [ class "tab__choice"
-                        , class "tab__choice--active"
-                        , onClick (ChooseTab LayerTab)
-                        ]
-                        [ text "Layer" ]
-                    , div
-                        [ class "tab__choice"
-                        , onClick (ChooseTab AdvancedTab)
-                        ]
-                        [ text "Advanced"
-                        ]
-                    ]
-                , div [] [ viewLayerMenu model ]
-                , div [ class "hidden" ] [ viewAdvancedMenu model ]
-                ]
-
-        AdvancedTab ->
-            div []
-                [ div [ class "tab__header" ]
-                    [ div
-                        [ class "tab__choice"
-                        , onClick (ChooseTab LayerTab)
-                        ]
-                        [ text "Layer" ]
-                    , div
-                        [ class "tab__choice"
-                        , class "tab__choice--active"
-                        , onClick (ChooseTab AdvancedTab)
-                        ]
-                        [ text "Advanced"
-                        ]
-                    ]
-                , div [ class "hidden" ] [ viewLayerMenu model ]
-                , div [] [ viewAdvancedMenu model ]
-                ]
-
-
-viewAdvancedMenu : Model -> Html Msg
-viewAdvancedMenu model =
-    div [ class "Limits__container" ]
-        [ div [ class "Limits__heading" ] [ text "Adjustable limits" ]
-        , viewLimits model.limits
-        ]
 
 
 viewLimits : Limits -> Html Msg
