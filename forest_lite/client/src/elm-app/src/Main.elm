@@ -12,6 +12,8 @@ import Html
         , div
         , fieldset
         , h1
+        , h2
+        , h3
         , i
         , input
         , label
@@ -23,7 +25,16 @@ import Html
         , text
         , ul
         )
-import Html.Attributes exposing (attribute, checked, class, style, value)
+import Html.Attributes
+    exposing
+        ( attribute
+        , checked
+        , class
+        , for
+        , id
+        , style
+        , value
+        )
 import Html.Events
     exposing
         ( on
@@ -284,7 +295,7 @@ type Msg
     | GotAxis DatasetID (Result Http.Error Axis)
     | DataVarSelected String
     | PointSelected String
-    | HideShowLayer
+    | HideShowLayer Bool
     | HideShowCoastlines Bool
     | ChooseTab Tab
     | LowerBound String
@@ -713,11 +724,7 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        HideShowLayer ->
-            let
-                visible =
-                    not model.visible
-            in
+        HideShowLayer visible ->
             ( { model | visible = visible }
             , SetVisible visible
                 |> encodeAction
@@ -1123,7 +1130,7 @@ view model =
 
 viewHome : Model -> Html Msg
 viewHome model =
-    viewTab model
+    viewLayerMenu model
 
 
 
@@ -1287,10 +1294,30 @@ viewLayerMenu model =
     case model.datasets of
         Success datasets ->
             div []
-                [ viewDatasets datasets model
-                , viewSelectedPoint model.point
-                , viewHideShowIcon model.visible
-                , viewCoastlineCheckbox model.coastlines
+                -- Select collection
+                [ div [ class "Sidebar__section" ]
+                    [ h3 [] [ text "Forecast/Observations" ]
+                    , viewDatasets datasets model
+                    ]
+
+                -- Navigate dimensions
+                , div [ class "Sidebar__section" ]
+                    [ h3 [] [ text "Navigation" ]
+                    , div [] [ viewSelected model ]
+                    ]
+
+                -- Configure display
+                , div [ class "Sidebar__section" ]
+                    [ h3 [] [ text "Display settings" ]
+                    , viewHideShowIcon model.visible
+                    , viewCoastlineCheckbox model.coastlines
+                    ]
+
+                -- Configure colorbar
+                , div [ class "Sidebar__section" ]
+                    [ h3 [] [ text "Colorbar settings" ]
+                    , viewLimits model.limits
+                    ]
                 ]
 
         Loading ->
@@ -1350,7 +1377,6 @@ viewDatasets datasets model =
                 ]
                 (List.map (viewDataset model) datasets)
             ]
-        , div [] [ viewSelected model ]
         ]
 
 
@@ -1410,44 +1436,51 @@ viewDataset model dataset =
 
 
 viewHideShowIcon : Bool -> Html Msg
-viewHideShowIcon visible =
-    div [ class "Sidebar__row" ]
-        [ span [] [ text "Hide or show layer:" ]
-        , button
-            [ class "ShowLayer__button"
-            , attribute "aria-label" "visible"
-            , onClick HideShowLayer
-            ]
-            [ viewEye visible
+viewHideShowIcon flag =
+    let
+        inputId =
+            "layer-visibility"
+    in
+    div []
+        [ fieldset []
+            [ input
+                [ attribute "type" "checkbox"
+                , checked flag
+                , onCheck HideShowLayer
+                , id inputId
+                ]
+                []
+            , label
+                [ for inputId
+                , style "cursor" "pointer"
+                , style "padding-left" "0.4em"
+                ]
+                [ text "Show layer" ]
             ]
         ]
 
 
-viewEye : Bool -> Html Msg
-viewEye visible =
-    if visible then
-        i [ class "fas fa-eye" ] []
-
-    else
-        i [ class "fas fa-eye-slash" ] []
-
-
 viewCoastlineCheckbox : Bool -> Html Msg
 viewCoastlineCheckbox flag =
+    let
+        inputId =
+            "coastline"
+    in
     div []
-        [ div [ class "label" ] [ text "Coastlines, borders and lakes" ]
-        , div []
-            [ fieldset []
-                [ label []
-                    [ input
-                        [ attribute "type" "checkbox"
-                        , checked flag
-                        , onCheck HideShowCoastlines
-                        ]
-                        []
-                    , text "Coastlines"
-                    ]
+        [ fieldset []
+            [ input
+                [ attribute "type" "checkbox"
+                , checked flag
+                , onCheck HideShowCoastlines
+                , id inputId
                 ]
+                []
+            , label
+                [ for inputId
+                , style "cursor" "pointer"
+                , style "padding-left" "0.4em"
+                ]
+                [ text "Show coastlines" ]
             ]
         ]
 
