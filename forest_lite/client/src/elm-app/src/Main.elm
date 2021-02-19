@@ -293,7 +293,7 @@ type Msg
     | GotAxis DatasetID (Result Http.Error Axis)
     | DataVarSelected String
     | PointSelected String
-    | HideShowLayer
+    | HideShowLayer Bool
     | HideShowCoastlines Bool
     | ChooseTab Tab
     | LowerBound String
@@ -722,11 +722,7 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        HideShowLayer ->
-            let
-                visible =
-                    not model.visible
-            in
+        HideShowLayer visible ->
             ( { model | visible = visible }
             , SetVisible visible
                 |> encodeAction
@@ -1419,26 +1415,28 @@ viewDataset model dataset =
 
 
 viewHideShowIcon : Bool -> Html Msg
-viewHideShowIcon visible =
-    div [ class "Sidebar__row" ]
-        [ span [] [ text "Hide or show layer:" ]
-        , button
-            [ class "ShowLayer__button"
-            , attribute "aria-label" "visible"
-            , onClick HideShowLayer
-            ]
-            [ viewEye visible
+viewHideShowIcon flag =
+    let
+        inputId =
+            "layer-visibility"
+    in
+    div []
+        [ fieldset []
+            [ input
+                [ attribute "type" "checkbox"
+                , checked flag
+                , onCheck HideShowLayer
+                , id inputId
+                ]
+                []
+            , label
+                [ for inputId
+                , style "cursor" "pointer"
+                , style "padding-left" "0.4em"
+                ]
+                [ text "Show layer" ]
             ]
         ]
-
-
-viewEye : Bool -> Html Msg
-viewEye visible =
-    if visible then
-        i [ class "fas fa-eye" ] []
-
-    else
-        i [ class "fas fa-eye-slash" ] []
 
 
 viewCoastlineCheckbox : Bool -> Html Msg
