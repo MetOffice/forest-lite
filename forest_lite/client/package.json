@@ -1,6 +1,6 @@
 {
   "name": "forest-lite",
-  "version": "0.16.8",
+  "version": "0.16.9",
   "description": "Minimal implementation of FOREST",
   "private": true,
   "scripts": {
