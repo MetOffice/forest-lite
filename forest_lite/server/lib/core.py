@@ -37,6 +37,10 @@ def _data_tile(path, data_var, z, x, y, query):
             array = nc[data_var]
         else:
             idx = dict(query)
+
+            # Map miliseconds to datetime
+            idx = { key: convert_ms(key, value) for key, value in idx.items() }
+
             try:
                 array = nc[data_var].sel(**idx, method="nearest")
             except ValueError:
@@ -58,6 +62,16 @@ def _data_tile(path, data_var, z, x, y, query):
         "values": values,
         "units": units
     }, z, x, y)
+
+
+def convert_ms(dim, value):
+    if "time" in dim.lower():
+        if isinstance(value, str):
+            return value
+        else:
+            return dt.datetime.fromtimestamp(value / 1000)
+    else:
+        return value
 
 
 def _tile(tilable, z, x, y):
