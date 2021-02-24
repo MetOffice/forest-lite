@@ -50,6 +50,35 @@ def test_tile_endpoint(tmpdir):
     # assert np.shape(actual["data"]["image"][0]) == (64, 64)
 
 
+def test_tile_endpoint_given_timestamp_in_miliseconds(tmpdir):
+    netcdf_path = str(tmpdir / "test-netcdf.nc")
+
+    # Config file
+    data = sample_config(netcdf_path)
+
+    # NetCDF file
+    sample_h5netcdf(netcdf_path)
+
+    # Time stamp
+    # datetime.datetime(2021, 2, 23, 12, 2, 29, 999991)
+    stamp_ms = 1614081749999.991
+
+    # System under test
+    settings = config.Settings(**data)
+    main.app.dependency_overrides[config.get_settings] = lambda: settings
+    query = json.dumps({"time": stamp_ms})
+    response = client.get(f"/datasets/0/data/tiles/0/0/0?query={query}")
+    actual = response.json()
+
+    # Assert response
+    assert actual["tile"] == [0, 0, 0]
+    assert actual["data"]["x"] == [-20037508.342789244]
+    assert actual["data"]["y"] == [-20037508.342789255]
+    assert actual["data"]["dw"] == [40075016.68557849]
+    assert actual["data"]["dh"] == [40075016.685578495]
+    # assert np.shape(actual["data"]["image"][0]) == (64, 64)
+
+
 def override_get_settings(data):
     settings = config.Settings(**data)
     main.app.dependency_overrides[config.get_settings] = lambda: settings
