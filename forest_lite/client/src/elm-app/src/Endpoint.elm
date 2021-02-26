@@ -13,28 +13,31 @@ type Endpoint
     = Datasets
     | DatasetDescription DatasetID
     | Axis DatasetID String String (Maybe Datum)
+    | Coastlines
 
 
 toString : Endpoint -> String
 toString endpoint =
     case endpoint of
+        Coastlines ->
+            format [ "atlas", "coastlines" ]
+
         Datasets ->
-            "/datasets"
+            format [ "datasets" ]
 
         DatasetDescription id ->
-            "/datasets/" ++ DatasetID.toString id
+            format [ "datasets", DatasetID.toString id ]
 
         Axis dataset_id data_var dim maybeStartTime ->
             let
                 path =
-                    "/"
-                        ++ String.join "/"
-                            [ "datasets"
-                            , DatasetID.toString dataset_id
-                            , data_var
-                            , "axis"
-                            , dim
-                            ]
+                    format
+                        [ "datasets"
+                        , DatasetID.toString dataset_id
+                        , data_var
+                        , "axis"
+                        , dim
+                        ]
             in
             case maybeStartTime of
                 Just start_time ->
@@ -42,6 +45,11 @@ toString endpoint =
 
                 Nothing ->
                     path
+
+
+format : List String -> String
+format paths =
+    "/" ++ String.join "/" paths
 
 
 queryToString : Query -> String
