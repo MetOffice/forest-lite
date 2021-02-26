@@ -3,7 +3,9 @@ port module Main exposing (..)
 import Browser
 import DataVarLabel exposing (DataVarLabel)
 import DatasetID exposing (DatasetID)
+import Datum exposing (Datum)
 import Dict exposing (Dict)
+import Endpoint
 import Html
     exposing
         ( Attribute
@@ -244,11 +246,6 @@ type DimensionKind
     | Horizontal
 
 
-type Datum
-    = Discrete Int
-    | Continuous Float
-
-
 type alias SelectDataVar =
     { dataset_id : DatasetID
     , data_var : DataVarLabel
@@ -263,10 +260,6 @@ type alias SelectPoint =
 
 type alias Point =
     Dict String Datum
-
-
-type alias Query =
-    { start_time : Datum }
 
 
 type Request a
@@ -399,17 +392,9 @@ axisDecoder : Decoder Axis
 axisDecoder =
     Json.Decode.map4 Axis
         (field "attrs" attrsDecoder)
-        (field "data" (list datumDecoder))
+        (field "data" (list Datum.decoder))
         (field "data_var" string)
         (field "dim_name" string)
-
-
-datumDecoder : Decoder Datum
-datumDecoder =
-    Json.Decode.oneOf
-        [ Json.Decode.map Discrete int
-        , Json.Decode.map Continuous float
-        ]
 
 
 datasetsDecoder : Decoder (List Dataset)
@@ -468,7 +453,7 @@ selectPointDecoder =
     Json.Decode.map2
         SelectPoint
         (field "dim_name" string)
-        (field "point" datumDecoder)
+        (field "point" Datum.decoder)
 
 
 
@@ -1054,17 +1039,25 @@ updatePoint model selectPoint =
 
 getDatasets : String -> Cmd Msg
 getDatasets baseURL =
+    let
+        endpoint =
+            Endpoint.Datasets
+    in
     Http.get
-        { url = baseURL ++ "/datasets"
+        { url = baseURL ++ Endpoint.toString endpoint
         , expect = Http.expectJson GotDatasets datasetsDecoder
         }
 
 
 getDatasetDescription : String -> DatasetID -> Cmd Msg
-getDatasetDescription baseURL datasetId =
+getDatasetDescription baseURL id =
+    let
+        endpoint =
+            Endpoint.DatasetDescription id
+    in
     Http.get
-        { url = baseURL ++ "/datasets/" ++ DatasetID.toString datasetId
-        , expect = Http.expectJson (GotDatasetDescription datasetId) datasetDescriptionDecoder
+        { url = baseURL ++ Endpoint.toString endpoint
+        , expect = Http.expectJson (GotDatasetDescription id) datasetDescriptionDecoder
         }
 
 
@@ -1073,32 +1066,14 @@ getAxis baseURL dataset_id data_var_label dim maybeStartTime =
     let
         data_var =
             DataVarLabel.toString data_var_label
+
+        endpoint =
+            Endpoint.Axis dataset_id data_var dim maybeStartTime
     in
     Http.get
-        { url = formatAxisURL baseURL dataset_id data_var dim maybeStartTime
+        { url = baseURL ++ Endpoint.toString endpoint
         , expect = Http.expectJson (GotAxis dataset_id) axisDecoder
         }
-
-
-formatAxisURL : String -> DatasetID -> String -> String -> Maybe Datum -> String
-formatAxisURL baseURL dataset_id data_var dim maybeStartTime =
-    let
-        path =
-            String.join "/"
-                [ baseURL
-                , "datasets"
-                , DatasetID.toString dataset_id
-                , data_var
-                , "axis"
-                , dim
-                ]
-    in
-    case maybeStartTime of
-        Just start_time ->
-            path ++ "?query=" ++ queryToString { start_time = start_time }
-
-        Nothing ->
-            path
 
 
 parseRoute : String -> Maybe Route
@@ -1384,27 +1359,17 @@ viewKeyValue ( key, value ) =
         Numeric ->
             div []
                 [ div [] [ text (key ++ ":") ]
-                , div [ style "margin" "0.5em" ] [ text (datumToString value) ]
+                , div [ style "margin" "0.5em" ] [ text (Datum.toString value) ]
                 ]
 
         Temporal ->
             div []
                 [ div [] [ text (key ++ ":") ]
-                , div [ style "margin" "0.5em" ] [ text (formatTime (datumToInt value)) ]
+                , div [ style "margin" "0.5em" ] [ text (formatTime (Datum.toInt value)) ]
                 ]
 
         Horizontal ->
             text ""
-
-
-datumToString : Datum -> String
-datumToString datum =
-    case datum of
-        Discrete x ->
-            String.fromInt x
-
-        Continuous x ->
-            String.fromFloat x
 
 
 viewDatasets : List Dataset -> Model -> Html Msg
@@ -1692,7 +1657,7 @@ encodeItems : Items -> Json.Encode.Value
 encodeItems items =
     Json.Encode.object
         [ ( "path", Json.Encode.list Json.Encode.string items.path )
-        , ( "items", Json.Encode.list encodeDatum items.items )
+        , ( "items", Json.Encode.list Datum.encode items.items )
         ]
 
 
@@ -1700,21 +1665,12 @@ encodeItem : Item -> Json.Encode.Value
 encodeItem item =
     Json.Encode.object
         [ ( "path", Json.Encode.list Json.Encode.string item.path )
-        , ( "item", encodeDatum item.item )
+        , ( "item", Datum.encode item.item )
         ]
 
 
 
 -- JSON ENCODERS
-
-
-queryToString : Query -> String
-queryToString query =
-    Json.Encode.encode 0
-        (Json.Encode.object
-            [ ( "start_time", encodeDatum query.start_time )
-            ]
-        )
 
 
 dataVarToString : SelectDataVar -> String
@@ -1732,19 +1688,9 @@ pointToString props =
     Json.Encode.encode 0
         (Json.Encode.object
             [ ( "dim_name", Json.Encode.string props.dim_name )
-            , ( "point", encodeDatum props.point )
+            , ( "point", Datum.encode props.point )
             ]
         )
-
-
-encodeDatum : Datum -> Json.Encode.Value
-encodeDatum datum =
-    case datum of
-        Discrete x ->
-            Json.Encode.int x
-
-        Continuous x ->
-            Json.Encode.float x
 
 
 viewSelected : Model -> Html Msg
@@ -1934,23 +1880,13 @@ viewPoint dim point =
     in
     case kind of
         Numeric ->
-            option [ attribute "value" value ] [ text (datumToString point) ]
+            option [ attribute "value" value ] [ text (Datum.toString point) ]
 
         Temporal ->
-            option [ attribute "value" value ] [ text (formatTime (datumToInt point)) ]
+            option [ attribute "value" value ] [ text (formatTime (Datum.toInt point)) ]
 
         Horizontal ->
-            option [ attribute "value" value ] [ text (datumToString point) ]
-
-
-datumToInt : Datum -> Int
-datumToInt datum =
-    case datum of
-        Discrete x ->
-            x
-
-        Continuous x ->
-            round x
+            option [ attribute "value" value ] [ text (Datum.toString point) ]
 
 
 formatTime : Int -> String
