@@ -1,7 +1,64 @@
-import React from "react"
-import { connect } from "react-redux"
+import React, { useEffect, useState } from "react"
+import { connect, useSelector } from "react-redux"
 import { ColumnDataSource } from "@bokeh/bokehjs/build/js/lib/models"
 
+
+export const Coastlines = ({ figure, line_color = "black" }) => {
+    const [ source, setSource ] = useState(null)
+    const [ renderer, setRenderer ] = useState(null)
+
+    const active = useSelector(selectActive)
+    const data = useSelector(selectData)
+
+    useEffect(() => {
+        const source = new ColumnDataSource({
+            data: {
+                xs: [[]],
+                ys: [[]]
+            }
+        })
+        const renderer = figure.multi_line({
+            xs: { field: "xs" },
+            ys: { field: "ys" },
+            line_color: line_color,
+            source: source,
+        })
+        renderer.level = "overlay" // NOTE: only prop assignment works
+
+        // Update component state
+        setSource(source)
+        setRenderer(renderer)
+
+    }, [])
+
+    // Render application state
+    if (renderer != null) {
+        renderer.visible = active
+    }
+    if (source != null) {
+        source.data = data
+    }
+    return null
+}
+
+
+const selectActive = state => {
+    const { coastlines: active = true } = state
+    return active
+}
+
+
+const selectData = state => {
+    const { coastlines_data = null } = state
+    if (coastlines_data == null) {
+        return {
+            xs: [[]],
+            ys: [[]]
+        }
+    } else {
+        return coastlines_data
+    }
+}
 
 
 /**

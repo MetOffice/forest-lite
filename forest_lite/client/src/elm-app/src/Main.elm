@@ -1,6 +1,7 @@
 port module Main exposing (..)
 
 import Browser
+import Coastlines exposing (Coastlines)
 import DataVarLabel exposing (DataVarLabel)
 import DatasetID exposing (DatasetID)
 import Datum exposing (Datum)
@@ -165,6 +166,7 @@ type alias Model =
     , baseURL : String
     , visible : Bool
     , coastlines : Bool
+    , coastlines_request : Request Coastlines
     , limits : Limits
     , collapsed : Dict String Bool
     }
@@ -263,7 +265,8 @@ type alias Point =
 
 
 type Request a
-    = Failure
+    = NotStarted
+    | Failure
     | Loading
     | Success a
 
@@ -287,6 +290,7 @@ type alias Collapsible =
 
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
+    | GotCoastlines (Result Http.Error Coastlines)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -345,6 +349,7 @@ init flags =
             , baseURL = "http://localhost:8000"
             , visible = True
             , coastlines = True
+            , coastlines_request = NotStarted
             , limits =
                 { user_input = TextLimits "0" "1"
                 , data_source = Undefined
@@ -359,6 +364,12 @@ init flags =
             let
                 baseURL =
                     settings.baseURL
+
+                cmd =
+                    Cmd.batch
+                        [ getDatasets baseURL
+                        , getCoastlines baseURL
+                        ]
             in
             case settings.claim of
                 Just claim ->
@@ -370,15 +381,17 @@ init flags =
                                 , groups = claim.groups
                                 }
                         , baseURL = baseURL
+                        , coastlines_request = Loading
                       }
-                    , getDatasets baseURL
+                    , cmd
                     )
 
                 Nothing ->
                     ( { default
                         | baseURL = baseURL
+                        , coastlines_request = Loading
                       }
-                    , getDatasets baseURL
+                    , cmd
                     )
 
         Err err ->
@@ -540,6 +553,20 @@ update msg model =
 
                 Err _ ->
                     ( model, Cmd.none )
+
+        GotCoastlines result ->
+            case result of
+                Ok coastlines ->
+                    let
+                        cmd =
+                            SetCoastlines coastlines
+                                |> encodeAction
+                                |> sendAction
+                    in
+                    ( { model | coastlines_request = Success coastlines }, cmd )
+
+                Err _ ->
+                    ( { model | coastlines_request = Failure }, Cmd.none )
 
         GotAxis dataset_id result ->
             case result of
@@ -1037,6 +1064,14 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
+getCoastlines : String -> Cmd Msg
+getCoastlines baseURL =
+    Http.get
+        { url = baseURL ++ Endpoint.toString Endpoint.Coastlines
+        , expect = Http.expectJson GotCoastlines Coastlines.decoder
+        }
+
+
 getDatasets : String -> Cmd Msg
 getDatasets baseURL =
     let
@@ -1275,6 +1310,9 @@ viewLayerMenu model =
         Failure ->
             div [] [ text "failed to fetch datasets" ]
 
+        NotStarted ->
+            div [] [ text "..." ]
+
 
 getCollapsed : SubMenu -> Dict String Bool -> Bool
 getCollapsed menu collapsed =
@@ -1437,6 +1475,11 @@ viewDataset model dataset =
                         [ option [] [ text "..." ]
                         ]
 
+                NotStarted ->
+                    optgroup [ attribute "label" dataset_label ]
+                        [ option [] [ text "..." ]
+                        ]
+
         Nothing ->
             optgroup [ attribute "label" dataset_label ] []
 
@@ -1505,6 +1548,7 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
+    | SetCoastlines Coastlines
 
 
 type alias OnlyActive =
@@ -1522,6 +1566,14 @@ type alias Item =
 encodeAction : Action -> String
 encodeAction action =
     case action of
+        SetCoastlines coastlines ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_COASTLINES" )
+                    , ( "payload", Coastlines.encode coastlines )
+                    ]
+                )
+
         SetDatasets datasets ->
             Json.Encode.encode 0
                 (Json.Encode.object
@@ -1722,6 +1774,9 @@ viewSelected model =
                                 Nothing ->
                                     text "No dims found"
 
+                        NotStarted ->
+                            text "..."
+
                         Loading ->
                             text "..."
 
@@ -1830,6 +1885,9 @@ selectedDims model dataset_id data_var =
 
                         Nothing ->
                             Nothing
+
+                NotStarted ->
+                    Nothing
 
                 Loading ->
                     Nothing

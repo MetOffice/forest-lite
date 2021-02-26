@@ -8,6 +8,7 @@ import {
     SET_ONLY_ACTIVE,
     SET_FLAG,
     SET_FIGURE,
+    SET_COASTLINES,
     SET_DATASET,
     SET_DATASETS,
     SET_DATASET_DESCRIPTION,
@@ -179,6 +180,8 @@ export const rootReducer = (state = "", action) => {
             return navigateReducer(state, action)
         case SET_PORTS:
             return portsReducer(state, action)
+        case SET_COASTLINES:
+            return coastlinesReducer(state, action)
         default:
             return state
     }
@@ -194,6 +197,20 @@ const portsReducer = (state, action) => {
     const { type, payload } = action
     if (type === SET_PORTS) {
         return Object.assign({}, state, { ports: payload })
+    } else {
+        return state
+    }
+}
+
+
+
+/**
+ * API coastlines reducer
+ */
+const coastlinesReducer = (state, action) => {
+    const { type, payload } = action
+    if (type === SET_COASTLINES) {
+        return Object.assign({}, state, { coastlines_data: payload })
     } else {
         return state
     }
