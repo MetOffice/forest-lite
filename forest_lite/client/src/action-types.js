@@ -29,6 +29,9 @@ export const TOGGLE_FLAG = "TOGGLE_FLAG"
 export const ZOOM_IN = "ZOOM_IN"
 export const ZOOM_OUT = "ZOOM_OUT"
 
+// Elm-only action types
+export const SET_COASTLINES = 'SET_COASTLINES'
+
 // Navigation action types
 export const UPDATE_NAVIGATE = "UPDATE_NAVIGATE"
 export const GOTO_ITEM = 'GOTO_ITEM'

@@ -364,6 +364,12 @@ init flags =
             let
                 baseURL =
                     settings.baseURL
+
+                cmd =
+                    Cmd.batch
+                        [ getDatasets baseURL
+                        , getCoastlines baseURL
+                        ]
             in
             case settings.claim of
                 Just claim ->
@@ -375,18 +381,17 @@ init flags =
                                 , groups = claim.groups
                                 }
                         , baseURL = baseURL
+                        , coastlines_request = Loading
                       }
-                    , getDatasets baseURL
+                    , cmd
                     )
 
                 Nothing ->
                     ( { default
                         | baseURL = baseURL
+                        , coastlines_request = Loading
                       }
-                    , Cmd.batch
-                        [ getDatasets baseURL
-                        , getCoastlines baseURL
-                        ]
+                    , cmd
                     )
 
         Err err ->
@@ -551,14 +556,14 @@ update msg model =
 
         GotCoastlines result ->
             case result of
-                Ok data ->
+                Ok coastlines ->
                     let
                         cmd =
-                            Coastlines.encode data
-                                |> Json.Encode.encode 0
+                            SetCoastlines coastlines
+                                |> encodeAction
                                 |> sendAction
                     in
-                    ( { model | coastlines_request = Success data }, cmd )
+                    ( { model | coastlines_request = Success coastlines }, cmd )
 
                 Err _ ->
                     ( { model | coastlines_request = Failure }, Cmd.none )
@@ -1543,6 +1548,7 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
+    | SetCoastlines Coastlines
 
 
 type alias OnlyActive =
@@ -1560,6 +1566,14 @@ type alias Item =
 encodeAction : Action -> String
 encodeAction action =
     case action of
+        SetCoastlines coastlines ->
+            Json.Encode.encode 0
+                (Json.Encode.object
+                    [ ( "type", Json.Encode.string "SET_COASTLINES" )
+                    , ( "payload", Coastlines.encode coastlines )
+                    ]
+                )
+
         SetDatasets datasets ->
             Json.Encode.encode 0
                 (Json.Encode.object
