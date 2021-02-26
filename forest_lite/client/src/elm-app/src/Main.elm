@@ -1567,86 +1567,58 @@ encodeAction : Action -> String
 encodeAction action =
     case action of
         SetCoastlines coastlines ->
-            Json.Encode.encode 0
-                (Json.Encode.object
-                    [ ( "type", Json.Encode.string "SET_COASTLINES" )
-                    , ( "payload", Coastlines.encode coastlines )
-                    ]
-                )
+            buildAction "SET_COASTLINES"
+                (Coastlines.encode coastlines)
 
         SetDatasets datasets ->
-            Json.Encode.encode 0
-                (Json.Encode.object
-                    [ ( "type", Json.Encode.string "SET_DATASETS" )
-                    , ( "payload", Json.Encode.list encodeDataset datasets )
-                    ]
-                )
+            buildAction "SET_DATASETS"
+                (Json.Encode.list encodeDataset datasets)
 
         SetDatasetDescription payload ->
-            Json.Encode.encode 0
-                (Json.Encode.object
-                    [ ( "type", Json.Encode.string "SET_DATASET_DESCRIPTION" )
-                    , ( "payload", encodeDatasetDescription payload )
-                    ]
-                )
+            buildAction "SET_DATASET_DESCRIPTION"
+                (encodeDatasetDescription payload)
 
         SetOnlyActive active ->
-            Json.Encode.encode 0
-                (Json.Encode.object
-                    [ ( "type", Json.Encode.string "SET_ONLY_ACTIVE" )
-                    , ( "payload", encodeOnlyActive active )
-                    ]
-                )
+            buildAction "SET_ONLY_ACTIVE"
+                (encodeOnlyActive active)
 
         SetItems items ->
-            Json.Encode.encode 0
-                (Json.Encode.object
-                    [ ( "type", Json.Encode.string "SET_ITEMS" )
-                    , ( "payload", encodeItems items )
-                    ]
-                )
+            buildAction "SET_ITEMS"
+                (encodeItems items)
 
         GoToItem item ->
-            Json.Encode.encode 0
-                (Json.Encode.object
-                    [ ( "type", Json.Encode.string "GOTO_ITEM" )
-                    , ( "payload", encodeItem item )
-                    ]
-                )
+            buildAction "GOTO_ITEM"
+                (encodeItem item)
 
         SetVisible flag ->
-            Json.Encode.encode 0
-                (Json.Encode.object
-                    [ ( "type", Json.Encode.string "SET_VISIBLE" )
-                    , ( "payload", Json.Encode.bool flag )
-                    ]
-                )
+            buildAction "SET_VISIBLE"
+                (Json.Encode.bool flag)
 
         SetFlag flag ->
-            Json.Encode.encode 0
+            buildAction "SET_FLAG"
                 (Json.Encode.object
-                    [ ( "type", Json.Encode.string "SET_FLAG" )
-                    , ( "payload"
-                      , Json.Encode.object
-                            [ ( "coastlines", Json.Encode.bool flag )
-                            ]
-                      )
+                    [ ( "coastlines", Json.Encode.bool flag )
                     ]
                 )
 
         SetLimits lower upper dataset_id datavar ->
-            Json.Encode.encode 0
+            buildAction "SET_LIMITS"
                 (Json.Encode.object
-                    [ ( "type", Json.Encode.string "SET_LIMITS" )
-                    , ( "payload"
-                      , Json.Encode.object
-                            [ ( "high", Json.Encode.float upper )
-                            , ( "low", Json.Encode.float lower )
-                            , ( "path", encodeLimitPath dataset_id datavar )
-                            ]
-                      )
+                    [ ( "high", Json.Encode.float upper )
+                    , ( "low", Json.Encode.float lower )
+                    , ( "path", encodeLimitPath dataset_id datavar )
                     ]
                 )
+
+
+buildAction : String -> Json.Encode.Value -> String
+buildAction key payload =
+    Json.Encode.encode 0
+        (Json.Encode.object
+            [ ( "type", Json.Encode.string key )
+            , ( "payload", payload )
+            ]
+        )
 
 
 encodeLimitPath : DatasetID -> DataVarLabel -> Json.Encode.Value
