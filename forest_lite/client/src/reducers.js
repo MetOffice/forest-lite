@@ -9,6 +9,7 @@ import {
     SET_FLAG,
     SET_FIGURE,
     SET_COASTLINES,
+    SET_COASTLINES_COLOR,
     SET_DATASET,
     SET_DATASETS,
     SET_DATASET_DESCRIPTION,
@@ -181,6 +182,7 @@ export const rootReducer = (state = "", action) => {
         case SET_PORTS:
             return portsReducer(state, action)
         case SET_COASTLINES:
+        case SET_COASTLINES_COLOR:
             return coastlinesReducer(state, action)
         default:
             return state
@@ -211,6 +213,8 @@ const coastlinesReducer = (state, action) => {
     const { type, payload } = action
     if (type === SET_COASTLINES) {
         return Object.assign({}, state, { coastlines_data: payload })
+    } else if (type === SET_COASTLINES_COLOR) {
+        return Object.assign({}, state, { coastlines_color: payload })
     } else {
         return state
     }
