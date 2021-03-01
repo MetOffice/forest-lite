@@ -61,6 +61,7 @@ import Json.Decode
         )
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
+import MapExtent exposing (MapExtent)
 import Time
 
 
@@ -141,6 +142,23 @@ actionDecoder =
 actionPayloadDecoder : String -> Decoder Action
 actionPayloadDecoder label =
     case label of
+        "SET_FIGURE" ->
+            Json.Decode.field "payload"
+                (Json.Decode.map4 SetFigure
+                    (Json.Decode.field "x_range"
+                        (Json.Decode.field "start" Json.Decode.float)
+                    )
+                    (Json.Decode.field "x_range"
+                        (Json.Decode.field "end" Json.Decode.float)
+                    )
+                    (Json.Decode.field "y_range"
+                        (Json.Decode.field "start" Json.Decode.float)
+                    )
+                    (Json.Decode.field "y_range"
+                        (Json.Decode.field "end" Json.Decode.float)
+                    )
+                )
+
         _ ->
             Json.Decode.field "payload"
                 (Json.Decode.map4 SetLimits
@@ -169,6 +187,7 @@ type alias Model =
     , coastlines_request : Request Coastlines
     , coastlines_color : String
     , limits : Limits
+    , map_extent : MapExtent
     , collapsed : Dict String Bool
     }
 
@@ -358,6 +377,7 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
+            , map_extent = MapExtent.init
             , collapsed =
                 Dict.empty
             }
@@ -986,6 +1006,13 @@ toUserInput data_source =
 updateAction : Model -> Action -> ( Model, Cmd Msg )
 updateAction model action =
     case action of
+        SetFigure x_start x_end y_start y_end ->
+            let
+                map_extent =
+                    MapExtent.MapExtent x_start x_end y_start y_end
+            in
+            ( { model | map_extent = map_extent }, Cmd.none )
+
         SetLimits low high _ _ ->
             let
                 model_limits =
@@ -1606,6 +1633,7 @@ type Action
     | SetLimits Float Float DatasetID DataVarLabel
     | SetCoastlines Coastlines
     | SetCoastlineColor String
+    | SetFigure Float Float Float Float
 
 
 type alias OnlyActive =
@@ -1623,6 +1651,24 @@ type alias Item =
 encodeAction : Action -> String
 encodeAction action =
     case action of
+        SetFigure x_start x_end y_start y_end ->
+            buildAction "SET_FIGURE"
+                (Json.Encode.object
+                    [ ( "x_range"
+                      , Json.Encode.object
+                            [ ( "start", Json.Encode.float x_start )
+                            , ( "end", Json.Encode.float x_end )
+                            ]
+                      )
+                    , ( "y_range"
+                      , Json.Encode.object
+                            [ ( "start", Json.Encode.float y_start )
+                            , ( "end", Json.Encode.float y_end )
+                            ]
+                      )
+                    ]
+                )
+
         SetCoastlines coastlines ->
             buildAction "SET_COASTLINES"
                 (Coastlines.encode coastlines)
