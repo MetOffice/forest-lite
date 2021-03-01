@@ -1,15 +1,13 @@
-import React from "react"
-import { connect } from "react-redux"
+import React, { useEffect } from "react"
+import { useDispatch } from "react-redux"
 import debounce from "lodash/debounce"
 import { makeOnPanZoom } from "./on-pan-zoom.js"
 import { setFigure } from "./actions.js"
-import * as R from "ramda"
 
 
-class OnPanZoom extends React.Component {
-    componentDidMount() {
-        const { figure, dispatch } = this.props
-
+const OnPanZoom = ({ figure }) => {
+    const dispatch = useDispatch()
+    useEffect(() => {
         // Listen to x_range.start changes
         let eventHandler = makeOnPanZoom(figure.x_range)
         let fn = () => {
@@ -29,14 +27,9 @@ class OnPanZoom extends React.Component {
             dispatch(action)
         }
         eventHandler(debounce(fn, 400))
-    }
-    render() {
-        return null
-    }
+    }, [])
+    return null
 }
 
 
-const mapStateToProps = R.pick([]) // Always return empty object
-
-
-export default connect(mapStateToProps)(OnPanZoom)
+export default OnPanZoom
