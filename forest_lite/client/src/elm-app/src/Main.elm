@@ -1551,14 +1551,42 @@ viewCoastlineCheckbox flag =
 
 viewCoastlineColorPicker : String -> Html Msg
 viewCoastlineColorPicker str =
-    div []
-        [ input
-            [ attribute "type" "color"
-            , value str
-            , onSelect SelectCoastlineColor
+    let
+        inputId =
+            "coastline-color"
+    in
+    div
+        [ style "margin-top" "0.3em"
+        ]
+        [ div
+            [ style "border-radius" "4px"
+            , style "overflow" "hidden"
+            , style "width" "13px"
+            , style "height" "13px"
+            , style "display" "inline-block"
+            , style "margin" "0 0.5em"
+            , style "border" "1px solid #333"
             ]
-            []
-        , label [] []
+            [ input
+                [ attribute "type" "color"
+                , value str
+                , onSelect SelectCoastlineColor
+                , id inputId
+                , style "background-color" "white"
+                , style "border" "none"
+                , style "padding" "0"
+                , style "cursor" "pointer"
+                , style "width" "200%"
+                , style "height" "200%"
+                , style "transform" "translate(-25%,-25%)"
+                ]
+                []
+            ]
+        , label
+            [ for inputId
+            , style "cursor" "pointer"
+            ]
+            [ text "Choose coastline color" ]
         ]
 
 
