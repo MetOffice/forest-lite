@@ -3,12 +3,13 @@ import { connect, useSelector } from "react-redux"
 import { ColumnDataSource } from "@bokeh/bokehjs/build/js/lib/models"
 
 
-export const Coastlines = ({ figure, line_color = "black" }) => {
+export const Coastlines = ({ figure }) => {
     const [ source, setSource ] = useState(null)
     const [ renderer, setRenderer ] = useState(null)
 
     const active = useSelector(selectActive)
     const data = useSelector(selectData)
+    const line_color = useSelector(selectLineColor)
 
     useEffect(() => {
         const source = new ColumnDataSource({
@@ -34,10 +35,12 @@ export const Coastlines = ({ figure, line_color = "black" }) => {
     // Render application state
     if (renderer != null) {
         renderer.visible = active
+        renderer.glyph.line_color = line_color
     }
     if (source != null) {
         source.data = data
     }
+
     return null
 }
 
@@ -58,6 +61,11 @@ const selectData = state => {
     } else {
         return coastlines_data
     }
+}
+
+const selectLineColor = state => {
+    const { coastlines_color = "black" } = state
+    return coastlines_color
 }
 
 

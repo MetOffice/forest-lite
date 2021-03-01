@@ -167,6 +167,7 @@ type alias Model =
     , visible : Bool
     , coastlines : Bool
     , coastlines_request : Request Coastlines
+    , coastlines_color : String
     , limits : Limits
     , collapsed : Dict String Bool
     }
@@ -303,6 +304,7 @@ type Msg
     | SetLimitOrigin Bool
     | CopyDataLimits Bound
     | ExpandCollapse SubMenu
+    | SelectCoastlineColor String
 
 
 type SubMenu
@@ -350,6 +352,7 @@ init flags =
             , visible = True
             , coastlines = True
             , coastlines_request = NotStarted
+            , coastlines_color = "black"
             , limits =
                 { user_input = TextLimits "0" "1"
                 , data_source = Undefined
@@ -554,6 +557,7 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
+        -- COASTLINES
         GotCoastlines result ->
             case result of
                 Ok coastlines ->
@@ -568,6 +572,16 @@ update msg model =
                 Err _ ->
                     ( { model | coastlines_request = Failure }, Cmd.none )
 
+        SelectCoastlineColor str ->
+            let
+                cmd =
+                    SetCoastlineColor str
+                        |> encodeAction
+                        |> sendAction
+            in
+            ( { model | coastlines_color = str }, cmd )
+
+        -- DIMENSIONS
         GotAxis dataset_id result ->
             case result of
                 Ok axis ->
@@ -1291,6 +1305,7 @@ viewLayerMenu model =
                         div []
                             [ viewHideShowIcon model.visible
                             , viewCoastlineCheckbox model.coastlines
+                            , viewCoastlineColorPicker model.coastlines_color
                             ]
                     , onClick = ExpandCollapse DisplayMenu
                     }
@@ -1534,6 +1549,47 @@ viewCoastlineCheckbox flag =
         ]
 
 
+viewCoastlineColorPicker : String -> Html Msg
+viewCoastlineColorPicker str =
+    let
+        inputId =
+            "coastline-color"
+    in
+    div
+        [ style "margin-top" "0.3em"
+        ]
+        [ div
+            [ style "border-radius" "4px"
+            , style "overflow" "hidden"
+            , style "width" "13px"
+            , style "height" "13px"
+            , style "display" "inline-block"
+            , style "margin" "0 0.5em"
+            , style "border" "1px solid #333"
+            ]
+            [ input
+                [ attribute "type" "color"
+                , value str
+                , onSelect SelectCoastlineColor
+                , id inputId
+                , style "background-color" "white"
+                , style "border" "none"
+                , style "padding" "0"
+                , style "cursor" "pointer"
+                , style "width" "200%"
+                , style "height" "200%"
+                , style "transform" "translate(-25%,-25%)"
+                ]
+                []
+            ]
+        , label
+            [ for inputId
+            , style "cursor" "pointer"
+            ]
+            [ text "Choose coastline color" ]
+        ]
+
+
 
 -- ACTIONS (React-Redux JS interop)
 -- JSON encoders to simulate action creators, only needed while migrating
@@ -1549,6 +1605,7 @@ type Action
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
     | SetCoastlines Coastlines
+    | SetCoastlineColor String
 
 
 type alias OnlyActive =
@@ -1569,6 +1626,10 @@ encodeAction action =
         SetCoastlines coastlines ->
             buildAction "SET_COASTLINES"
                 (Coastlines.encode coastlines)
+
+        SetCoastlineColor color ->
+            buildAction "SET_COASTLINES_COLOR"
+                (Json.Encode.string color)
 
         SetDatasets datasets ->
             buildAction "SET_DATASETS"
