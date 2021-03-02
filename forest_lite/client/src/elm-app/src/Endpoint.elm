@@ -3,6 +3,8 @@ module Endpoint exposing (..)
 import DatasetID exposing (DatasetID)
 import Datum exposing (Datum)
 import Json.Encode
+import MapExtent exposing (MapExtent)
+import Scale
 
 
 type alias Query =
@@ -13,14 +15,14 @@ type Endpoint
     = Datasets
     | DatasetDescription DatasetID
     | Axis DatasetID String String (Maybe Datum)
-    | Coastlines
+    | Coastlines MapExtent
 
 
 toString : Endpoint -> String
 toString endpoint =
     case endpoint of
-        Coastlines ->
-            format [ "atlas", "coastlines" ]
+        Coastlines map_extent ->
+            coastlines map_extent
 
         Datasets ->
             format [ "datasets" ]
@@ -47,9 +49,45 @@ toString endpoint =
                     path
 
 
+coastlines : MapExtent -> String
+coastlines map_extent =
+    let
+        path =
+            format [ "atlas", "coastlines" ]
+    in
+    case map_extent of
+        MapExtent.MapExtent x_start x_end y_start y_end ->
+            let
+                scale =
+                    Scale.fromExtent x_start x_end y_start y_end
+            in
+            path
+                ++ "?"
+                ++ paramsToString
+                    [ ( "minlon", String.fromFloat x_start )
+                    , ( "maxlon", String.fromFloat x_end )
+                    , ( "minlat", String.fromFloat y_start )
+                    , ( "maxlat", String.fromFloat y_end )
+                    , ( "scale", Scale.toString scale )
+                    ]
+
+        MapExtent.NotReady ->
+            path
+
+
 format : List String -> String
 format paths =
     "/" ++ String.join "/" paths
+
+
+paramsToString : List ( String, String ) -> String
+paramsToString params =
+    String.join "&" (List.map eqnToString params)
+
+
+eqnToString : ( String, String ) -> String
+eqnToString ( key, value ) =
+    String.join "=" [ key, value ]
 
 
 queryToString : Query -> String
