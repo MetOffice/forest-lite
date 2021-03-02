@@ -310,7 +310,7 @@ type alias Collapsible =
 
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
-    | GotCoastlines (Result Http.Error MultiLine)
+    | GotNaturalEarthFeature (Result Http.Error MultiLine)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -391,7 +391,7 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
-                        , getCoastlines baseURL default.map_extent
+                        , getNaturalEarthFeature baseURL default.map_extent
                         ]
             in
             case settings.claim of
@@ -578,16 +578,16 @@ update msg model =
                     ( model, Cmd.none )
 
         -- COASTLINES
-        GotCoastlines result ->
+        GotNaturalEarthFeature result ->
             case result of
-                Ok coastlines ->
+                Ok data ->
                     let
                         cmd =
-                            SetCoastlines coastlines
+                            SetNaturalEarthFeature data
                                 |> encodeAction
                                 |> sendAction
                     in
-                    ( { model | coastlines_request = Success coastlines }, cmd )
+                    ( { model | coastlines_request = Success data }, cmd )
 
                 Err _ ->
                     ( { model | coastlines_request = Failure }, Cmd.none )
@@ -1013,7 +1013,7 @@ updateAction model action =
 
                 cmd =
                     Cmd.batch
-                        [ getCoastlines model.baseURL map_extent
+                        [ getNaturalEarthFeature model.baseURL map_extent
                         ]
             in
             ( { model | map_extent = map_extent }, cmd )
@@ -1110,11 +1110,11 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getCoastlines : String -> MapExtent -> Cmd Msg
-getCoastlines baseURL map_extent =
+getNaturalEarthFeature : String -> MapExtent -> Cmd Msg
+getNaturalEarthFeature baseURL map_extent =
     Http.get
         { url = baseURL ++ Endpoint.borders map_extent
-        , expect = Http.expectJson GotCoastlines MultiLine.decoder
+        , expect = Http.expectJson GotNaturalEarthFeature MultiLine.decoder
         }
 
 
@@ -1636,7 +1636,7 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
-    | SetCoastlines MultiLine
+    | SetNaturalEarthFeature MultiLine
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
 
@@ -1674,7 +1674,7 @@ encodeAction action =
                     ]
                 )
 
-        SetCoastlines coastlines ->
+        SetNaturalEarthFeature coastlines ->
             buildAction "SET_COASTLINES"
                 (MultiLine.encode coastlines)
 
