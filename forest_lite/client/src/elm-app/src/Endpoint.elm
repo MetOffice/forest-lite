@@ -15,14 +15,19 @@ type Endpoint
     = Datasets
     | DatasetDescription DatasetID
     | Axis DatasetID String String (Maybe Datum)
-    | Coastlines MapExtent
+    | Atlas NaturalEarthFeature MapExtent
+
+
+coastlines : MapExtent -> String
+coastlines map_extent =
+    Atlas Coastline map_extent |> toString
 
 
 toString : Endpoint -> String
 toString endpoint =
     case endpoint of
-        Coastlines map_extent ->
-            coastlines map_extent
+        Atlas feature map_extent ->
+            natural_earth_feature feature map_extent
 
         Datasets ->
             format [ "datasets" ]
@@ -66,11 +71,6 @@ featureToString feature =
 
         Lake ->
             "lakes"
-
-
-coastlines : MapExtent -> String
-coastlines map_extent =
-    natural_earth_feature Coastline map_extent
 
 
 natural_earth_feature : NaturalEarthFeature -> MapExtent -> String
