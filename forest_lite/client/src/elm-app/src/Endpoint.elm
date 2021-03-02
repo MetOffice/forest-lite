@@ -2,14 +2,13 @@ module Endpoint exposing (..)
 
 import DatasetID exposing (DatasetID)
 import Datum exposing (Datum)
-import Dict exposing (Dict)
 import Json.Encode
 import MapExtent exposing (MapExtent)
 import Scale
 
 
 type alias Query =
-    Dict String Json.Encode.Value
+    { start_time : Datum }
 
 
 type Endpoint
@@ -44,13 +43,7 @@ toString endpoint =
             in
             case maybeStartTime of
                 Just start_time ->
-                    path
-                        ++ "?query="
-                        ++ queryToString
-                            (Dict.fromList
-                                [ ( "start_time", Datum.encode start_time )
-                                ]
-                            )
+                    path ++ "?query=" ++ queryToString { start_time = start_time }
 
                 Nothing ->
                     path
@@ -100,4 +93,7 @@ eqnToString ( key, value ) =
 queryToString : Query -> String
 queryToString query =
     Json.Encode.encode 0
-        (Json.Encode.dict identity identity query)
+        (Json.Encode.object
+            [ ( "start_time", Datum.encode query.start_time )
+            ]
+        )
