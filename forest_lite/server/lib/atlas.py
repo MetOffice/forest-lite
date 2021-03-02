@@ -6,9 +6,9 @@ from forest.data import xs_ys, cut, iterlines
 
 def load_feature(feature, scale, extent):
     if feature.lower() == "borders":
-        return borders()
+        return multiline(border(scale), extent)
     elif feature.lower() == "coastlines":
-        return coastlines(scale, extent)
+        return multiline(coastline(scale), extent)
     elif feature.lower() == "lakes":
         # Lake Victoria
         extent = (-10, 50, -20, 10)
@@ -19,20 +19,24 @@ def load_feature(feature, scale, extent):
         raise Exception(f"Unrecognised feature: {feature}")
 
 
-def borders():
+def border(scale="50m"):
     """Country borders"""
-    return xs_ys(iterlines(
-        cartopy.feature.NaturalEarthFeature(
+    return cartopy.feature.NaturalEarthFeature(
             'cultural',
             'admin_0_boundary_lines_land',
-            '50m').geometries()))
+            scale)
 
 
-def coastlines(scale="110m", extent=None):
+def coastline(scale="110m"):
     """Continent and island coastlines"""
-    feature = cartopy.feature.NaturalEarthFeature('physical',
-                                                  'coastline',
-                                                  scale)
+    return cartopy.feature.NaturalEarthFeature(
+            'physical',
+            'coastline',
+            scale)
+
+
+def multiline(feature, extent=None):
+    """Process cartopy feature"""
     if extent is None:
         geometries = feature.geometries()
     else:

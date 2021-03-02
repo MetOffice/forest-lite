@@ -1113,7 +1113,7 @@ updatePoint model selectPoint =
 getCoastlines : String -> MapExtent -> Cmd Msg
 getCoastlines baseURL map_extent =
     Http.get
-        { url = baseURL ++ Endpoint.coastlines map_extent
+        { url = baseURL ++ Endpoint.borders map_extent
         , expect = Http.expectJson GotCoastlines MultiLine.decoder
         }
 
