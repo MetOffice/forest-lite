@@ -13,13 +13,18 @@ export const Borders = ({ figure }) => {
 }
 
 
+export const Lakes = ({ figure }) => {
+    return <NaturalEarthFeature figure={ figure } feature="lakes" />
+}
+
+
 export const NaturalEarthFeature = ({ figure, feature }) => {
     const [ source, setSource ] = useState(null)
     const [ renderer, setRenderer ] = useState(null)
 
     const active = useSelector(selectActive)
     const data = useSelector(selectData(feature))
-    const line_color = useSelector(selectLineColor)
+    const line_color = useSelector(selectLineColor(feature))
 
     useEffect(() => {
         const source = new ColumnDataSource({
@@ -74,7 +79,10 @@ const selectData = feature => state => {
     }
 }
 
-const selectLineColor = state => {
+const selectLineColor = feature => state => {
+    if (feature === "lakes") {
+        return "LightBlue"
+    }
     const { coastlines_color = "black" } = state
     return coastlines_color
 }
