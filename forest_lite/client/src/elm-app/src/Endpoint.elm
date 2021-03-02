@@ -49,11 +49,35 @@ toString endpoint =
                     path
 
 
+type NaturalEarthFeature
+    = Coastline
+    | Border
+    | Lake
+
+
+featureToString : NaturalEarthFeature -> String
+featureToString feature =
+    case feature of
+        Coastline ->
+            "coastlines"
+
+        Border ->
+            "borders"
+
+        Lake ->
+            "lakes"
+
+
 coastlines : MapExtent -> String
 coastlines map_extent =
+    natural_earth_feature Coastline map_extent
+
+
+natural_earth_feature : NaturalEarthFeature -> MapExtent -> String
+natural_earth_feature feature map_extent =
     let
         path =
-            format [ "atlas", "coastlines" ]
+            format [ "atlas", featureToString feature ]
     in
     case map_extent of
         MapExtent.MapExtent x_start x_end y_start y_end ->

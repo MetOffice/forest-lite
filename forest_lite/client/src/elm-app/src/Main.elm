@@ -1,7 +1,6 @@
 port module Main exposing (..)
 
 import Browser
-import Coastlines exposing (Coastlines)
 import DataVarLabel exposing (DataVarLabel)
 import DatasetID exposing (DatasetID)
 import Datum exposing (Datum)
@@ -62,6 +61,7 @@ import Json.Decode
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import MapExtent exposing (MapExtent)
+import MultiLine exposing (MultiLine)
 import Time
 
 
@@ -184,7 +184,7 @@ type alias Model =
     , baseURL : String
     , visible : Bool
     , coastlines : Bool
-    , coastlines_request : Request Coastlines
+    , coastlines_request : Request MultiLine
     , coastlines_color : String
     , limits : Limits
     , map_extent : MapExtent
@@ -310,7 +310,7 @@ type alias Collapsible =
 
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
-    | GotCoastlines (Result Http.Error Coastlines)
+    | GotCoastlines (Result Http.Error MultiLine)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -1114,7 +1114,7 @@ getCoastlines : String -> MapExtent -> Cmd Msg
 getCoastlines baseURL map_extent =
     Http.get
         { url = baseURL ++ Endpoint.toString (Endpoint.Coastlines map_extent)
-        , expect = Http.expectJson GotCoastlines Coastlines.decoder
+        , expect = Http.expectJson GotCoastlines MultiLine.decoder
         }
 
 
@@ -1636,7 +1636,7 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
-    | SetCoastlines Coastlines
+    | SetCoastlines MultiLine
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
 
@@ -1676,7 +1676,7 @@ encodeAction action =
 
         SetCoastlines coastlines ->
             buildAction "SET_COASTLINES"
-                (Coastlines.encode coastlines)
+                (MultiLine.encode coastlines)
 
         SetCoastlineColor color ->
             buildAction "SET_COASTLINES_COLOR"
