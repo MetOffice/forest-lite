@@ -60,7 +60,6 @@ const OnPanZoom = ({ figure }) => {
                         end: lat_end
                     }
                 })
-                console.log(actionLonLat)
                 ports.receiveData.send({ label: "action", payload: actionLonLat })
 
                 // Send figure extent to React-Redux
@@ -68,7 +67,7 @@ const OnPanZoom = ({ figure }) => {
             }
             eventHandler(debounce(fn, 400))
         }
-    }, [ ports ])
+    }, [ JSON.stringify(ports) ])
     return null
 }
 
