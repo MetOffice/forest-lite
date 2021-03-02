@@ -12,21 +12,6 @@ type NaturalEarthFeature
     | Lake
 
 
-coastlines : MapExtent -> String
-coastlines map_extent =
-    endpoint Coastline map_extent
-
-
-borders : MapExtent -> String
-borders map_extent =
-    endpoint Border map_extent
-
-
-lakes : MapExtent -> String
-lakes map_extent =
-    endpoint Lake map_extent
-
-
 encode : NaturalEarthFeature -> Json.Encode.Value
 encode feature =
     Json.Encode.string (toString feature)
