@@ -62,6 +62,7 @@ import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import MapExtent exposing (MapExtent)
 import MultiLine exposing (MultiLine)
+import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Time
 
 
@@ -310,7 +311,7 @@ type alias Collapsible =
 
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
-    | GotNaturalEarthFeature (Result Http.Error MultiLine)
+    | GotNaturalEarthFeature NaturalEarthFeature (Result Http.Error MultiLine)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -391,7 +392,9 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
-                        , getNaturalEarthFeature baseURL default.map_extent
+                        , getNaturalEarthFeature baseURL
+                            NaturalEarthFeature.Coastline
+                            default.map_extent
                         ]
             in
             case settings.claim of
@@ -577,8 +580,8 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        -- COASTLINES
-        GotNaturalEarthFeature result ->
+        -- NATURAL EARTH FEATURE
+        GotNaturalEarthFeature feature result ->
             case result of
                 Ok data ->
                     let
@@ -1013,7 +1016,10 @@ updateAction model action =
 
                 cmd =
                     Cmd.batch
-                        [ getNaturalEarthFeature model.baseURL map_extent
+                        [ getNaturalEarthFeature
+                            model.baseURL
+                            NaturalEarthFeature.Coastline
+                            map_extent
                         ]
             in
             ( { model | map_extent = map_extent }, cmd )
@@ -1110,11 +1116,18 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> MapExtent -> Cmd Msg
-getNaturalEarthFeature baseURL map_extent =
+getNaturalEarthFeature : String -> NaturalEarthFeature -> MapExtent -> Cmd Msg
+getNaturalEarthFeature baseURL feature map_extent =
+    let
+        endpoint =
+            NaturalEarthFeature.endpoint feature map_extent
+
+        tagger =
+            GotNaturalEarthFeature feature
+    in
     Http.get
-        { url = baseURL ++ Endpoint.borders map_extent
-        , expect = Http.expectJson GotNaturalEarthFeature MultiLine.decoder
+        { url = baseURL ++ endpoint
+        , expect = Http.expectJson tagger MultiLine.decoder
         }
 
 
