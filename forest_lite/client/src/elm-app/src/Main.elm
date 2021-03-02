@@ -395,6 +395,9 @@ init flags =
                         , getNaturalEarthFeature baseURL
                             NaturalEarthFeature.Coastline
                             default.map_extent
+                        , getNaturalEarthFeature baseURL
+                            NaturalEarthFeature.Border
+                            default.map_extent
                         ]
             in
             case settings.claim of
@@ -1019,6 +1022,10 @@ updateAction model action =
                         [ getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Coastline
+                            map_extent
+                        , getNaturalEarthFeature
+                            model.baseURL
+                            NaturalEarthFeature.Border
                             map_extent
                         ]
             in
