@@ -2,7 +2,7 @@ import React, { useEffect } from "react"
 import * as Bokeh from "@bokeh/bokehjs"
 import Contours from "./Contours.js"
 import Layers from "./Layers.js"
-import Lines, { Coastlines } from "./Lines.js"
+import Lines, { Coastlines, Borders } from "./Lines.js"
 import OnPanZoom from "./OnPanZoom.js"
 import WMTS from "./WMTS.js"
 import XYRange from "./XYRange.js"
@@ -42,8 +42,7 @@ class MapFigure extends React.Component {
                 <Layers baseURL={ baseURL } figure={ figure } />
                 <Contours baseURL={ baseURL } figure={ figure } />
                 <Coastlines figure={ figure } />
-                <Lines url={ baseURL + '/atlas/borders' }
-                    figure={ figure } />
+                <Borders figure={ figure } />
                 <Lines url={ baseURL + '/atlas/disputed' }
                     figure={ figure } line_color="red" />
                 <Lines url={ baseURL + '/atlas/lakes' }

@@ -8,7 +8,7 @@ import {
     SET_ONLY_ACTIVE,
     SET_FLAG,
     SET_FIGURE,
-    SET_COASTLINES,
+    SET_NATURAL_EARTH_FEATURE,
     SET_COASTLINES_COLOR,
     SET_DATASET,
     SET_DATASETS,
@@ -181,7 +181,7 @@ export const rootReducer = (state = "", action) => {
             return navigateReducer(state, action)
         case SET_PORTS:
             return portsReducer(state, action)
-        case SET_COASTLINES:
+        case SET_NATURAL_EARTH_FEATURE:
         case SET_COASTLINES_COLOR:
             return coastlinesReducer(state, action)
         default:
@@ -211,8 +211,11 @@ const portsReducer = (state, action) => {
  */
 const coastlinesReducer = (state, action) => {
     const { type, payload } = action
-    if (type === SET_COASTLINES) {
-        return Object.assign({}, state, { coastlines_data: payload })
+    if (type === SET_NATURAL_EARTH_FEATURE) {
+        const { feature, data } = payload
+        const update = state.natural_earth_features || {}
+        update[feature] = data
+        return Object.assign({}, state, { natural_earth_features: update })
     } else if (type === SET_COASTLINES_COLOR) {
         return Object.assign({}, state, { coastlines_color: payload })
     } else {

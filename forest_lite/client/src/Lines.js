@@ -4,11 +4,21 @@ import { ColumnDataSource } from "@bokeh/bokehjs/build/js/lib/models"
 
 
 export const Coastlines = ({ figure }) => {
+    return <NaturalEarthFeature figure={ figure } feature="coastlines" />
+}
+
+
+export const Borders = ({ figure }) => {
+    return <NaturalEarthFeature figure={ figure } feature="borders" />
+}
+
+
+export const NaturalEarthFeature = ({ figure, feature }) => {
     const [ source, setSource ] = useState(null)
     const [ renderer, setRenderer ] = useState(null)
 
     const active = useSelector(selectActive)
-    const data = useSelector(selectData)
+    const data = useSelector(selectData(feature))
     const line_color = useSelector(selectLineColor)
 
     useEffect(() => {
@@ -51,15 +61,16 @@ const selectActive = state => {
 }
 
 
-const selectData = state => {
-    const { coastlines_data = null } = state
-    if (coastlines_data == null) {
-        return {
-            xs: [[]],
-            ys: [[]]
-        }
+const selectData = feature => state => {
+    const empty = {
+        xs: [[]],
+        ys: [[]]
+    }
+    const { natural_earth_features = null } = state
+    if (natural_earth_features == null) {
+        return empty
     } else {
-        return coastlines_data
+        return natural_earth_features[feature] || empty
     }
 }
 

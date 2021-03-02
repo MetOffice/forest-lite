@@ -1,6 +1,7 @@
-module NaturalEarthFeature exposing (NaturalEarthFeature(..), endpoint)
+module NaturalEarthFeature exposing (NaturalEarthFeature(..), encode, endpoint)
 
 import Endpoint
+import Json.Encode
 import MapExtent exposing (MapExtent)
 import Scale
 
@@ -24,6 +25,11 @@ borders map_extent =
 lakes : MapExtent -> String
 lakes map_extent =
     endpoint Lake map_extent
+
+
+encode : NaturalEarthFeature -> Json.Encode.Value
+encode feature =
+    Json.Encode.string (toString feature)
 
 
 toString : NaturalEarthFeature -> String

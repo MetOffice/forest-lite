@@ -586,7 +586,7 @@ update msg model =
                 Ok data ->
                     let
                         cmd =
-                            SetNaturalEarthFeature data
+                            SetNaturalEarthFeature feature data
                                 |> encodeAction
                                 |> sendAction
                     in
@@ -1649,7 +1649,7 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
-    | SetNaturalEarthFeature MultiLine
+    | SetNaturalEarthFeature NaturalEarthFeature MultiLine
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
 
@@ -1687,9 +1687,13 @@ encodeAction action =
                     ]
                 )
 
-        SetNaturalEarthFeature coastlines ->
-            buildAction "SET_COASTLINES"
-                (MultiLine.encode coastlines)
+        SetNaturalEarthFeature feature data ->
+            buildAction "SET_NATURAL_EARTH_FEATURE"
+                (Json.Encode.object
+                    [ ( "feature", NaturalEarthFeature.encode feature )
+                    , ( "data", MultiLine.encode data )
+                    ]
+                )
 
         SetCoastlineColor color ->
             buildAction "SET_COASTLINES_COLOR"
