@@ -30,6 +30,7 @@ def borders():
 
 def coastlines(scale="110m", extent=None):
     """Continent and island coastlines"""
+    print(scale[0])
     feature = cartopy.feature.NaturalEarthFeature('physical',
                                                   'coastline',
                                                   scale)

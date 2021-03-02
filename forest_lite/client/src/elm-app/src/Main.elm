@@ -391,7 +391,7 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
-                        , getCoastlines baseURL
+                        , getCoastlines baseURL default.map_extent
                         ]
             in
             case settings.claim of
@@ -1010,8 +1010,13 @@ updateAction model action =
             let
                 map_extent =
                     MapExtent.MapExtent x_start x_end y_start y_end
+
+                cmd =
+                    Cmd.batch
+                        [ getCoastlines model.baseURL map_extent
+                        ]
             in
-            ( { model | map_extent = map_extent }, Cmd.none )
+            ( { model | map_extent = map_extent }, cmd )
 
         SetLimits low high _ _ ->
             let
@@ -1105,10 +1110,10 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getCoastlines : String -> Cmd Msg
-getCoastlines baseURL =
+getCoastlines : String -> MapExtent -> Cmd Msg
+getCoastlines baseURL map_extent =
     Http.get
-        { url = baseURL ++ Endpoint.toString Endpoint.Coastlines
+        { url = baseURL ++ Endpoint.toString (Endpoint.Coastlines map_extent)
         , expect = Http.expectJson GotCoastlines Coastlines.decoder
         }
 
