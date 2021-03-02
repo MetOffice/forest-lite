@@ -185,7 +185,6 @@ type alias Model =
     , baseURL : String
     , visible : Bool
     , coastlines : Bool
-    , coastlines_request : Request MultiLine
     , coastlines_color : String
     , limits : Limits
     , map_extent : MapExtent
@@ -371,7 +370,6 @@ init flags =
             , baseURL = "http://localhost:8000"
             , visible = True
             , coastlines = True
-            , coastlines_request = NotStarted
             , coastlines_color = "black"
             , limits =
                 { user_input = TextLimits "0" "1"
@@ -410,7 +408,6 @@ init flags =
                                 , groups = claim.groups
                                 }
                         , baseURL = baseURL
-                        , coastlines_request = Loading
                       }
                     , cmd
                     )
@@ -418,7 +415,6 @@ init flags =
                 Nothing ->
                     ( { default
                         | baseURL = baseURL
-                        , coastlines_request = Loading
                       }
                     , cmd
                     )
@@ -593,10 +589,10 @@ update msg model =
                                 |> encodeAction
                                 |> sendAction
                     in
-                    ( { model | coastlines_request = Success data }, cmd )
+                    ( model, cmd )
 
                 Err _ ->
-                    ( { model | coastlines_request = Failure }, Cmd.none )
+                    ( model, Cmd.none )
 
         SelectCoastlineColor str ->
             let
