@@ -7,6 +7,10 @@ import OnPanZoom from "./OnPanZoom.js"
 import WMTS from "./WMTS.js"
 import XYRange from "./XYRange.js"
 
+/**
+                <Lines url={ baseURL + '/atlas/disputed' }
+                    figure={ figure } line_color="red" />
+*/
 
 class MapFigure extends React.Component {
     constructor(props) {
@@ -43,8 +47,6 @@ class MapFigure extends React.Component {
                 <Contours baseURL={ baseURL } figure={ figure } />
                 <Coastlines figure={ figure } />
                 <Borders figure={ figure } />
-                <Lines url={ baseURL + '/atlas/disputed' }
-                    figure={ figure } line_color="red" />
                 <Lakes figure={ figure } />
                 <OnPanZoom figure={ figure } />
                 <XYRange figure={ figure } />
