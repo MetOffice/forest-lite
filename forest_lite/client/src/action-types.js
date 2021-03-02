@@ -30,8 +30,8 @@ export const ZOOM_IN = "ZOOM_IN"
 export const ZOOM_OUT = "ZOOM_OUT"
 
 // Elm-only action types
-export const SET_COASTLINES = 'SET_COASTLINES'
 export const SET_COASTLINES_COLOR = 'SET_COASTLINES_COLOR'
+export const SET_NATURAL_EARTH_FEATURE = 'SET_NATURAL_EARTH_FEATURE'
 
 // Navigation action types
 export const UPDATE_NAVIGATE = "UPDATE_NAVIGATE"

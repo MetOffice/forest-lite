@@ -1,7 +1,6 @@
 port module Main exposing (..)
 
 import Browser
-import Coastlines exposing (Coastlines)
 import DataVarLabel exposing (DataVarLabel)
 import DatasetID exposing (DatasetID)
 import Datum exposing (Datum)
@@ -62,6 +61,8 @@ import Json.Decode
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import MapExtent exposing (MapExtent)
+import MultiLine exposing (MultiLine)
+import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Time
 
 
@@ -184,7 +185,6 @@ type alias Model =
     , baseURL : String
     , visible : Bool
     , coastlines : Bool
-    , coastlines_request : Request Coastlines
     , coastlines_color : String
     , limits : Limits
     , map_extent : MapExtent
@@ -310,7 +310,7 @@ type alias Collapsible =
 
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
-    | GotCoastlines (Result Http.Error Coastlines)
+    | GotNaturalEarthFeature NaturalEarthFeature (Result Http.Error MultiLine)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -370,7 +370,6 @@ init flags =
             , baseURL = "http://localhost:8000"
             , visible = True
             , coastlines = True
-            , coastlines_request = NotStarted
             , coastlines_color = "black"
             , limits =
                 { user_input = TextLimits "0" "1"
@@ -391,7 +390,15 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
-                        , getCoastlines baseURL default.map_extent
+                        , getNaturalEarthFeature baseURL
+                            NaturalEarthFeature.Coastline
+                            default.map_extent
+                        , getNaturalEarthFeature baseURL
+                            NaturalEarthFeature.Border
+                            default.map_extent
+                        , getNaturalEarthFeature baseURL
+                            NaturalEarthFeature.Lake
+                            default.map_extent
                         ]
             in
             case settings.claim of
@@ -404,7 +411,6 @@ init flags =
                                 , groups = claim.groups
                                 }
                         , baseURL = baseURL
-                        , coastlines_request = Loading
                       }
                     , cmd
                     )
@@ -412,7 +418,6 @@ init flags =
                 Nothing ->
                     ( { default
                         | baseURL = baseURL
-                        , coastlines_request = Loading
                       }
                     , cmd
                     )
@@ -577,20 +582,20 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        -- COASTLINES
-        GotCoastlines result ->
+        -- NATURAL EARTH FEATURE
+        GotNaturalEarthFeature feature result ->
             case result of
-                Ok coastlines ->
+                Ok data ->
                     let
                         cmd =
-                            SetCoastlines coastlines
+                            SetNaturalEarthFeature feature data
                                 |> encodeAction
                                 |> sendAction
                     in
-                    ( { model | coastlines_request = Success coastlines }, cmd )
+                    ( model, cmd )
 
                 Err _ ->
-                    ( { model | coastlines_request = Failure }, Cmd.none )
+                    ( model, Cmd.none )
 
         SelectCoastlineColor str ->
             let
@@ -1013,7 +1018,18 @@ updateAction model action =
 
                 cmd =
                     Cmd.batch
-                        [ getCoastlines model.baseURL map_extent
+                        [ getNaturalEarthFeature
+                            model.baseURL
+                            NaturalEarthFeature.Coastline
+                            map_extent
+                        , getNaturalEarthFeature
+                            model.baseURL
+                            NaturalEarthFeature.Border
+                            map_extent
+                        , getNaturalEarthFeature
+                            model.baseURL
+                            NaturalEarthFeature.Lake
+                            map_extent
                         ]
             in
             ( { model | map_extent = map_extent }, cmd )
@@ -1110,11 +1126,18 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getCoastlines : String -> MapExtent -> Cmd Msg
-getCoastlines baseURL map_extent =
+getNaturalEarthFeature : String -> NaturalEarthFeature -> MapExtent -> Cmd Msg
+getNaturalEarthFeature baseURL feature map_extent =
+    let
+        endpoint =
+            NaturalEarthFeature.endpoint feature map_extent
+
+        tagger =
+            GotNaturalEarthFeature feature
+    in
     Http.get
-        { url = baseURL ++ Endpoint.toString (Endpoint.Coastlines map_extent)
-        , expect = Http.expectJson GotCoastlines Coastlines.decoder
+        { url = baseURL ++ endpoint
+        , expect = Http.expectJson tagger MultiLine.decoder
         }
 
 
@@ -1636,7 +1659,7 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
-    | SetCoastlines Coastlines
+    | SetNaturalEarthFeature NaturalEarthFeature MultiLine
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
 
@@ -1674,9 +1697,13 @@ encodeAction action =
                     ]
                 )
 
-        SetCoastlines coastlines ->
-            buildAction "SET_COASTLINES"
-                (Coastlines.encode coastlines)
+        SetNaturalEarthFeature feature data ->
+            buildAction "SET_NATURAL_EARTH_FEATURE"
+                (Json.Encode.object
+                    [ ( "feature", NaturalEarthFeature.encode feature )
+                    , ( "data", MultiLine.encode data )
+                    ]
+                )
 
         SetCoastlineColor color ->
             buildAction "SET_COASTLINES_COLOR"
