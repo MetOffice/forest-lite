@@ -397,6 +397,9 @@ init flags =
                             NaturalEarthFeature.Border
                             default.map_extent
                         , getNaturalEarthFeature baseURL
+                            NaturalEarthFeature.DisputedBorder
+                            default.map_extent
+                        , getNaturalEarthFeature baseURL
                             NaturalEarthFeature.Lake
                             default.map_extent
                         ]
@@ -1025,6 +1028,10 @@ updateAction model action =
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Border
+                            map_extent
+                        , getNaturalEarthFeature
+                            model.baseURL
+                            NaturalEarthFeature.DisputedBorder
                             map_extent
                         , getNaturalEarthFeature
                             model.baseURL
