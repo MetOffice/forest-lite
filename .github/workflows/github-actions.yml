@@ -24,7 +24,7 @@ jobs:
 
   test-server:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     env:
       python-version: 3.8
       working-directory: forest_lite/test
