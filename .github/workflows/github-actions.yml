@@ -21,6 +21,20 @@ jobs:
       - name: npm test
         run: npm test
         working-directory: ${{env.working-directory}}
+
+  test-server-cache:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      python-version: 3.8
+    steps:
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{env.python-version}}
+      - name: conda info
+        shell: bash -l {0}
+        run: conda info
+
   test-server:
     runs-on: ubuntu-latest
     timeout-minutes: 10
