@@ -19,8 +19,8 @@ type Viewport
     = Viewport WebMercator WebMercator
 
 
-viewport : Float -> Float -> Float -> Float -> Viewport
-viewport x_start x_end y_start y_end =
+viewportFromFloat : Float -> Float -> Float -> Float -> Viewport
+viewportFromFloat x_start y_start x_end y_end =
     let
         start =
             { x = x_start, y = y_start }
@@ -32,8 +32,12 @@ viewport x_start x_end y_start y_end =
 
 
 zoomLevel : Viewport -> Int
-zoomLevel window =
-    ceiling (logBase 2 ((2 * pi * earthRadius) / averageLength window))
+zoomLevel viewport =
+    let
+        maximum_length =
+            2 * pi * earthRadius
+    in
+    ceiling (logBase 2 (maximum_length / averageLength viewport))
 
 
 averageLength : Viewport -> Float
@@ -45,8 +49,10 @@ averageLength (Viewport start end) =
 -- WEB MERCATOR
 
 
-type WGS84
-    = WGS84 Float Float
+type alias WGS84 =
+    { longitude : Float
+    , latitude : Float
+    }
 
 
 type alias WebMercator =
@@ -72,7 +78,9 @@ yLimits =
 
 toWGS84 : WebMercator -> WGS84
 toWGS84 coord =
-    WGS84 (toLon coord.x) (toLat coord.y)
+    { longitude = toLon coord.x
+    , latitude = toLat coord.y
+    }
 
 
 toLon : Float -> Float
