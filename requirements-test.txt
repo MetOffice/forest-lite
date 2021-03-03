@@ -1,3 +1,4 @@
 pytest
 pygrib
-cartopy
+passlib
+python-jose
