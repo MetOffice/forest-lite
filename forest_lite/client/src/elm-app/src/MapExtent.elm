@@ -12,6 +12,36 @@ init =
 
 
 
+-- SLIPPY MAP
+
+
+type Viewport
+    = Viewport WebMercator WebMercator
+
+
+viewport : Float -> Float -> Float -> Float -> Viewport
+viewport x_start x_end y_start y_end =
+    let
+        start =
+            { x = x_start, y = y_start }
+
+        end =
+            { x = x_end, y = y_end }
+    in
+    Viewport start end
+
+
+zoomLevel : Viewport -> Int
+zoomLevel window =
+    ceiling (logBase 2 ((2 * pi * earthRadius) / averageLength window))
+
+
+averageLength : Viewport -> Float
+averageLength (Viewport start end) =
+    sqrt ((start.x - end.x) * (start.y - end.y))
+
+
+
 -- WEB MERCATOR
 
 
@@ -19,8 +49,10 @@ type WGS84
     = WGS84 Float Float
 
 
-type WebMercator
-    = WebMercator Float Float
+type alias WebMercator =
+    { x : Float
+    , y : Float
+    }
 
 
 earthRadius : Float
@@ -39,8 +71,8 @@ yLimits =
 
 
 toWGS84 : WebMercator -> WGS84
-toWGS84 (WebMercator x y) =
-    WGS84 (toLon x) (toLat y)
+toWGS84 coord =
+    WGS84 (toLon coord.x) (toLat coord.y)
 
 
 toLon : Float -> Float
