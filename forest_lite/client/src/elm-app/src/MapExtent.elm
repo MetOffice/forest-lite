@@ -15,6 +15,10 @@ init =
 -- SLIPPY MAP
 
 
+type XYZ
+    = XYZ Int Int Int
+
+
 type Viewport
     = Viewport WebMercator WebMercator
 
@@ -43,6 +47,20 @@ zoomLevel viewport =
 averageLength : Viewport -> Float
 averageLength (Viewport start end) =
     sqrt ((start.x - end.x) * (start.y - end.y))
+
+
+toXYZ : Int -> WebMercator -> XYZ
+toXYZ level point =
+    XYZ (tileIndex level point.x) (tileIndex level point.y) level
+
+
+tileIndex : Int -> Float -> Int
+tileIndex level x =
+    let
+        dx =
+            (2 * pi * earthRadius) / toFloat (2 ^ level)
+    in
+    floor (x / dx)
 
 
 
