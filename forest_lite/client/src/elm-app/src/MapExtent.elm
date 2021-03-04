@@ -1,5 +1,7 @@
 module MapExtent exposing (..)
 
+import Binary
+
 
 type MapExtent
     = MapExtent Float Float Float Float
@@ -61,6 +63,49 @@ tileIndex level x =
             (2 * pi * earthRadius) / toFloat (2 ^ level)
     in
     floor (x / dx)
+
+
+
+-- QUADKEY
+
+
+type Quadkey
+    = Quadkey String
+
+
+quadkey : XYZ -> Quadkey
+quadkey (XYZ x y z) =
+    let
+        x_ints =
+            Binary.fromDecimal x
+                |> Binary.toIntegers
+                |> zeroPad z
+
+        y_ints =
+            Binary.fromDecimal y
+                |> Binary.toIntegers
+                |> zeroPad z
+
+        base4_ints =
+            List.map2 (+) x_ints (List.map ((*) 2) y_ints)
+
+        base4_strs =
+            List.map String.fromInt base4_ints
+    in
+    Quadkey (String.join "" base4_strs)
+
+
+zeroPad : Int -> List Int -> List Int
+zeroPad length array =
+    let
+        extra =
+            length - List.length array
+    in
+    if extra > 0 then
+        List.repeat extra 0 ++ array
+
+    else
+        array
 
 
 
