@@ -91,6 +91,11 @@ type Viewport
     = Viewport WebMercator WebMercator
 
 
+startPoint : Viewport -> WebMercator
+startPoint (Viewport s e) =
+    s
+
+
 viewportFromFloat : Float -> Float -> Float -> Float -> Viewport
 viewportFromFloat x_start y_start x_end y_end =
     let
@@ -120,26 +125,39 @@ averageLength (Viewport start end) =
 
 toZXY : ZoomLevel -> WebMercator -> ZXY
 toZXY level point =
+    ZXY level (toXY level point)
+
+
+toXY : ZoomLevel -> WebMercator -> XY
+toXY level point =
     let
-        x =
-            tileIndex level point.x
+        x0 =
+            -pi * earthRadius
 
-        y =
-            tileIndex level point.y
-    in
-    ZXY level (XY x y)
+        y0 =
+            pi * earthRadius
 
-
-tileIndex : ZoomLevel -> Float -> Int
-tileIndex level x =
-    let
         n =
             zoomLevelToInt level
 
         dx =
             (2 * pi * earthRadius) / toFloat (2 ^ n)
+
+        dy =
+            -dx
+
+        x =
+            bucketIndex x0 dx point.x
+
+        y =
+            bucketIndex y0 dy point.y
     in
-    floor (x / dx)
+    XY x y
+
+
+bucketIndex : Float -> Float -> Float -> Int
+bucketIndex x0 dx x =
+    floor ((x - x0) / dx)
 
 
 

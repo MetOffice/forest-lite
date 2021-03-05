@@ -5,9 +5,12 @@ import Fuzz exposing (Fuzzer, int, intRange, list, string)
 import MapExtent
     exposing
         ( WebMercator
+        , ZoomLevel
         , earthRadius
         , quadkey
+        , startPoint
         , toOneIndex
+        , toZXY
         , xy
         , xyRange
         , zxy
@@ -165,3 +168,18 @@ zxyToExtentTests =
                 zxyToExtent (zxy 2 1 0)
                     |> Expect.equal expect
         ]
+
+
+toZXYTests : Test
+toZXYTests =
+    test "toZXY should preserve tile index" <|
+        \_ ->
+            let
+                tile =
+                    zxy 2 1 2
+
+                point =
+                    zxyToExtent tile |> startPoint
+            in
+            toZXY (MapExtent.ZoomLevel 2) point
+                |> Expect.equal tile
