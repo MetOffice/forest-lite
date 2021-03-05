@@ -60,7 +60,7 @@ import Json.Decode
         )
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
-import MapExtent exposing (Viewport, WebMercator)
+import MapExtent exposing (Viewport, WGS84, WebMercator)
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Time
@@ -187,7 +187,7 @@ type alias Model =
     , coastlines : Bool
     , coastlines_color : String
     , limits : Limits
-    , map_extent : Maybe (Viewport WebMercator)
+    , map_extent : Maybe (Viewport WGS84)
     , collapsed : Dict String Bool
     }
 
@@ -1017,13 +1017,13 @@ updateAction model action =
         SetFigure x_start x_end y_start y_end ->
             let
                 start =
-                    { x = x_start
-                    , y = y_start
+                    { longitude = x_start
+                    , latitude = y_start
                     }
 
                 end =
-                    { x = x_end
-                    , y = y_end
+                    { longitude = x_end
+                    , latitude = y_end
                     }
 
                 map_extent =
@@ -1143,7 +1143,7 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> NaturalEarthFeature -> Maybe (Viewport WebMercator) -> Cmd Msg
+getNaturalEarthFeature : String -> NaturalEarthFeature -> Maybe (Viewport WGS84) -> Cmd Msg
 getNaturalEarthFeature baseURL feature map_extent =
     case map_extent of
         Just viewport ->
