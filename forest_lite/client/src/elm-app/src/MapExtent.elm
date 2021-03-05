@@ -45,7 +45,12 @@ zxy z x y =
 
 
 zxyToExtent : ZXY -> Viewport
-zxyToExtent (ZXY (ZoomLevel z) (XY i j)) =
+zxyToExtent (ZXY level point) =
+    xyToExtent level point
+
+
+xyToExtent : ZoomLevel -> XY -> Viewport
+xyToExtent (ZoomLevel z) (XY i j) =
     Viewport
         (vertexLocation z i j)
         (vertexLocation z (i + 1) (j + 1))
@@ -89,6 +94,15 @@ xyRange (XY x_start y_start) (XY x_end y_end) =
 
 type Viewport
     = Viewport WebMercator WebMercator
+
+
+type ViewportLonLat
+    = ViewportLonLat WGS84 WGS84
+
+
+toViewportLonLat : Viewport -> ViewportLonLat
+toViewportLonLat (Viewport start end) =
+    ViewportLonLat (toWGS84 start) (toWGS84 end)
 
 
 startPoint : Viewport -> WebMercator
