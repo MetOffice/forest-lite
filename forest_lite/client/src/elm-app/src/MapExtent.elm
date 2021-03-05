@@ -44,12 +44,12 @@ zxy z x y =
     ZXY (ZoomLevel z) (XY x y)
 
 
-zxyToExtent : ZXY -> Viewport
+zxyToExtent : ZXY -> Viewport WebMercator
 zxyToExtent (ZXY level point) =
     xyToExtent level point
 
 
-xyToExtent : ZoomLevel -> XY -> Viewport
+xyToExtent : ZoomLevel -> XY -> Viewport WebMercator
 xyToExtent (ZoomLevel z) (XY i j) =
     Viewport
         (vertexLocation z i j)
@@ -92,25 +92,21 @@ xyRange (XY x_start y_start) (XY x_end y_end) =
         |> List.concat
 
 
-type Viewport
-    = Viewport WebMercator WebMercator
+type Viewport a
+    = Viewport a a
 
 
-type ViewportLonLat
-    = ViewportLonLat WGS84 WGS84
+mapViewport : (a -> b) -> Viewport a -> Viewport b
+mapViewport f (Viewport start end) =
+    Viewport (f start) (f end)
 
 
-toViewportLonLat : Viewport -> ViewportLonLat
-toViewportLonLat (Viewport start end) =
-    ViewportLonLat (toWGS84 start) (toWGS84 end)
+startPoint : Viewport a -> a
+startPoint (Viewport start _) =
+    start
 
 
-startPoint : Viewport -> WebMercator
-startPoint (Viewport s e) =
-    s
-
-
-viewportFromFloat : Float -> Float -> Float -> Float -> Viewport
+viewportFromFloat : Float -> Float -> Float -> Float -> Viewport WebMercator
 viewportFromFloat x_start y_start x_end y_end =
     let
         start =
@@ -122,7 +118,7 @@ viewportFromFloat x_start y_start x_end y_end =
     Viewport start end
 
 
-zoomLevelFromViewport : Viewport -> ZoomLevel
+zoomLevelFromViewport : Viewport WebMercator -> ZoomLevel
 zoomLevelFromViewport viewport =
     let
         maximum_length =
@@ -132,7 +128,7 @@ zoomLevelFromViewport viewport =
         |> ZoomLevel
 
 
-averageLength : Viewport -> Float
+averageLength : Viewport WebMercator -> Float
 averageLength (Viewport start end) =
     sqrt ((start.x - end.x) * (start.y - end.y))
 
