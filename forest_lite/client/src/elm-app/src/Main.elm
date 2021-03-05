@@ -60,7 +60,14 @@ import Json.Decode
         )
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
-import MapExtent exposing (Viewport, WGS84, WebMercator, toWGS84)
+import MapExtent
+    exposing
+        ( Viewport
+        , WGS84
+        , WebMercator
+        , mapViewport
+        , toWGS84
+        )
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Time
@@ -187,7 +194,7 @@ type alias Model =
     , coastlines : Bool
     , coastlines_color : String
     , limits : Limits
-    , map_extent : Maybe (Viewport WGS84)
+    , map_extent : Maybe (Viewport WebMercator)
     , collapsed : Dict String Bool
     }
 
@@ -1017,16 +1024,14 @@ updateAction model action =
         SetFigure x_start x_end y_start y_end ->
             let
                 start =
-                    toWGS84
-                        { x = x_start
-                        , y = y_start
-                        }
+                    { x = x_start
+                    , y = y_start
+                    }
 
                 end =
-                    toWGS84
-                        { x = x_end
-                        , y = y_end
-                        }
+                    { x = x_end
+                    , y = y_end
+                    }
 
                 map_extent =
                     Just (MapExtent.Viewport start end)
@@ -1145,13 +1150,14 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> NaturalEarthFeature -> Maybe (Viewport WGS84) -> Cmd Msg
+getNaturalEarthFeature : String -> NaturalEarthFeature -> Maybe (Viewport WebMercator) -> Cmd Msg
 getNaturalEarthFeature baseURL feature map_extent =
     case map_extent of
         Just viewport ->
             let
                 endpoint =
-                    NaturalEarthFeature.endpoint feature viewport
+                    NaturalEarthFeature.endpoint feature
+                        (mapViewport toWGS84 viewport)
 
                 tagger =
                     GotNaturalEarthFeature feature
