@@ -60,7 +60,7 @@ import Json.Decode
         )
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
-import MapExtent exposing (Viewport, WGS84, WebMercator)
+import MapExtent exposing (Viewport, WGS84, WebMercator, toWGS84)
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Time
@@ -1017,14 +1017,16 @@ updateAction model action =
         SetFigure x_start x_end y_start y_end ->
             let
                 start =
-                    { longitude = x_start
-                    , latitude = y_start
-                    }
+                    toWGS84
+                        { x = x_start
+                        , y = y_start
+                        }
 
                 end =
-                    { longitude = x_end
-                    , latitude = y_end
-                    }
+                    toWGS84
+                        { x = x_end
+                        , y = y_end
+                        }
 
                 map_extent =
                     Just (MapExtent.Viewport start end)
