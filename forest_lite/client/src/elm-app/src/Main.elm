@@ -60,7 +60,14 @@ import Json.Decode
         )
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
-import MapExtent exposing (MapExtent)
+import MapExtent
+    exposing
+        ( Viewport
+        , WGS84
+        , WebMercator
+        , mapViewport
+        , toWGS84
+        )
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Time
@@ -187,7 +194,7 @@ type alias Model =
     , coastlines : Bool
     , coastlines_color : String
     , limits : Limits
-    , map_extent : MapExtent
+    , map_extent : Maybe (Viewport WebMercator)
     , collapsed : Dict String Bool
     }
 
@@ -376,7 +383,7 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
-            , map_extent = MapExtent.init
+            , map_extent = Nothing
             , collapsed =
                 Dict.empty
             }
@@ -1016,8 +1023,18 @@ updateAction model action =
     case action of
         SetFigure x_start x_end y_start y_end ->
             let
+                start =
+                    { x = x_start
+                    , y = y_start
+                    }
+
+                end =
+                    { x = x_end
+                    , y = y_end
+                    }
+
                 map_extent =
-                    MapExtent.MapExtent x_start x_end y_start y_end
+                    Just (MapExtent.Viewport start end)
 
                 cmd =
                     Cmd.batch
@@ -1133,19 +1150,25 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> NaturalEarthFeature -> MapExtent -> Cmd Msg
+getNaturalEarthFeature : String -> NaturalEarthFeature -> Maybe (Viewport WebMercator) -> Cmd Msg
 getNaturalEarthFeature baseURL feature map_extent =
-    let
-        endpoint =
-            NaturalEarthFeature.endpoint feature map_extent
+    case map_extent of
+        Just viewport ->
+            let
+                endpoint =
+                    NaturalEarthFeature.endpoint feature
+                        (mapViewport toWGS84 viewport)
 
-        tagger =
-            GotNaturalEarthFeature feature
-    in
-    Http.get
-        { url = baseURL ++ endpoint
-        , expect = Http.expectJson tagger MultiLine.decoder
-        }
+                tagger =
+                    GotNaturalEarthFeature feature
+            in
+            Http.get
+                { url = baseURL ++ endpoint
+                , expect = Http.expectJson tagger MultiLine.decoder
+                }
+
+        Nothing ->
+            Cmd.none
 
 
 getDatasets : String -> Cmd Msg

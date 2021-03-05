@@ -2,7 +2,7 @@ module NaturalEarthFeature exposing (NaturalEarthFeature(..), encode, endpoint)
 
 import Endpoint
 import Json.Encode
-import MapExtent exposing (MapExtent)
+import MapExtent exposing (Viewport, WGS84, WebMercator)
 import Scale
 
 
@@ -34,7 +34,7 @@ toString feature =
             "lakes"
 
 
-endpoint : NaturalEarthFeature -> MapExtent -> String
+endpoint : NaturalEarthFeature -> Viewport WGS84 -> String
 endpoint feature map_extent =
     let
         path =
@@ -45,23 +45,24 @@ endpoint feature map_extent =
                 ]
     in
     case map_extent of
-        MapExtent.MapExtent x_start x_end y_start y_end ->
+        MapExtent.Viewport start end ->
             let
                 scale =
-                    Scale.fromExtent x_start x_end y_start y_end
+                    Scale.fromExtent
+                        start.longitude
+                        end.longitude
+                        start.latitude
+                        end.latitude
             in
             path
                 ++ "?"
                 ++ Endpoint.paramsToString
-                    [ ( "minlon", String.fromFloat x_start )
-                    , ( "maxlon", String.fromFloat x_end )
-                    , ( "minlat", String.fromFloat y_start )
-                    , ( "maxlat", String.fromFloat y_end )
+                    [ ( "minlon", String.fromFloat start.longitude )
+                    , ( "maxlon", String.fromFloat end.longitude )
+                    , ( "minlat", String.fromFloat start.latitude )
+                    , ( "maxlat", String.fromFloat end.latitude )
                     , ( "scale", Scale.toString scale )
                     ]
-
-        MapExtent.NotReady ->
-            path
 
 
 category : NaturalEarthFeature -> String
