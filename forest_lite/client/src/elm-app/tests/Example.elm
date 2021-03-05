@@ -9,7 +9,6 @@ import MapExtent
         , earthRadius
         , quadkey
         , startPoint
-        , toOneIndex
         , toZXY
         , xy
         , xyRange
@@ -63,22 +62,6 @@ zoomLevelTests =
             in
             MapExtent.zoomLevelFromViewport viewport
                 |> Expect.equal (MapExtent.ZoomLevel 0)
-
-
-indexTests : Test
-indexTests =
-    describe "One-based index"
-        [ test "toOneIndex given ZeroIndex"
-            (\_ ->
-                toOneIndex (MapExtent.ZeroIndex 0)
-                    |> Expect.equal (MapExtent.OneIndex 1)
-            )
-        , test "toOneIndex given ZeroIndex 99"
-            (\_ ->
-                toOneIndex (MapExtent.ZeroIndex 99)
-                    |> Expect.equal (MapExtent.OneIndex 100)
-            )
-        ]
 
 
 xyTests : Test

@@ -3,16 +3,6 @@ module MapExtent exposing (..)
 import Binary
 
 
-type MapExtent
-    = MapExtent Float Float Float Float
-    | NotReady
-
-
-init : MapExtent
-init =
-    NotReady
-
-
 
 -- SLIPPY MAP
 
@@ -168,23 +158,6 @@ toXY level point =
 bucketIndex : Float -> Float -> Float -> Int
 bucketIndex x0 dx x =
     floor ((x - x0) / dx)
-
-
-
--- ZOOM LEVEL
-
-
-type OneIndex
-    = OneIndex Int
-
-
-type ZeroIndex
-    = ZeroIndex Int
-
-
-toOneIndex : ZeroIndex -> OneIndex
-toOneIndex (ZeroIndex n) =
-    OneIndex (n + 1)
 
 
 
