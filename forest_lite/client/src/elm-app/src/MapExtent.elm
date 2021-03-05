@@ -44,6 +44,34 @@ zxy z x y =
     ZXY (ZoomLevel z) (XY x y)
 
 
+zxyToExtent : ZXY -> Viewport
+zxyToExtent (ZXY (ZoomLevel z) (XY i j)) =
+    Viewport
+        (vertexLocation z i j)
+        (vertexLocation z (i + 1) (j + 1))
+
+
+vertexLocation : Int -> Int -> Int -> WebMercator
+vertexLocation z i j =
+    let
+        x0 =
+            -pi * earthRadius
+
+        y0 =
+            pi * earthRadius
+
+        x =
+            toFloat i
+
+        y =
+            toFloat j
+
+        width =
+            (2 * pi * earthRadius) / (2 ^ toFloat z)
+    in
+    WebMercator (x0 + x * width) (y0 - y * width)
+
+
 xyRange : XY -> XY -> List XY
 xyRange (XY x_start y_start) (XY x_end y_end) =
     let

@@ -4,12 +4,14 @@ import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, intRange, list, string)
 import MapExtent
     exposing
-        ( earthRadius
+        ( WebMercator
+        , earthRadius
         , quadkey
         , toOneIndex
         , xy
         , xyRange
         , zxy
+        , zxyToExtent
         )
 import Test exposing (..)
 
@@ -44,12 +46,12 @@ zoomLevelTests =
         \_ ->
             let
                 start =
-                    MapExtent.WebMercator
+                    WebMercator
                         (-pi * earthRadius)
                         (-pi * earthRadius)
 
                 end =
-                    MapExtent.WebMercator
+                    WebMercator
                         (pi * earthRadius)
                         (pi * earthRadius)
 
@@ -87,3 +89,79 @@ xyTests =
                     , xy 1 0
                     , xy 1 1
                     ]
+
+
+zxyToExtentTests : Test
+zxyToExtentTests =
+    describe "calculate tile extents"
+        [ test "level 0 tile extent" <|
+            \_ ->
+                let
+                    start =
+                        WebMercator
+                            (-pi * earthRadius)
+                            (pi * earthRadius)
+
+                    end =
+                        WebMercator
+                            (pi * earthRadius)
+                            (-pi * earthRadius)
+
+                    expect =
+                        MapExtent.Viewport start end
+                in
+                zxyToExtent (zxy 0 0 0)
+                    |> Expect.equal expect
+        , test "level 1 tile extent" <|
+            \_ ->
+                let
+                    start =
+                        WebMercator
+                            (-pi * earthRadius)
+                            (pi * earthRadius)
+
+                    end =
+                        WebMercator 0 0
+
+                    expect =
+                        MapExtent.Viewport start end
+                in
+                zxyToExtent (zxy 1 0 0)
+                    |> Expect.equal expect
+        , test "level 2 tile extent" <|
+            \_ ->
+                let
+                    start =
+                        WebMercator
+                            (-pi * earthRadius)
+                            (pi * earthRadius)
+
+                    end =
+                        WebMercator
+                            (-pi * earthRadius / 2)
+                            (pi * earthRadius / 2)
+
+                    expect =
+                        MapExtent.Viewport start end
+                in
+                zxyToExtent (zxy 2 0 0)
+                    |> Expect.equal expect
+        , test "level 2 tile extent given xy 1 0" <|
+            \_ ->
+                let
+                    start =
+                        WebMercator
+                            (-pi * earthRadius / 2)
+                            (pi * earthRadius)
+
+                    end =
+                        WebMercator
+                            0
+                            (pi * earthRadius / 2)
+
+                    expect =
+                        MapExtent.Viewport start end
+                in
+                zxyToExtent (zxy 2 1 0)
+                    |> Expect.equal expect
+        ]
