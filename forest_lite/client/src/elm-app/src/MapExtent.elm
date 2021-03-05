@@ -26,13 +26,37 @@ zoomLevelToInt (ZoomLevel n) =
     n
 
 
-type XYZ
-    = XYZ Int Int ZoomLevel
+type ZXY
+    = ZXY ZoomLevel XY
 
 
-xyzFromInt : Int -> Int -> Int -> XYZ
-xyzFromInt x y z =
-    XYZ x y (ZoomLevel z)
+type XY
+    = XY Int Int
+
+
+xy : Int -> Int -> XY
+xy x y =
+    XY x y
+
+
+zxy : Int -> Int -> Int -> ZXY
+zxy z x y =
+    ZXY (ZoomLevel z) (XY x y)
+
+
+xyRange : XY -> XY -> List XY
+xyRange (XY x_start y_start) (XY x_end y_end) =
+    let
+        xs =
+            List.range x_start x_end
+
+        ys =
+            List.range y_start y_end
+    in
+    List.map
+        (\f -> List.map f ys)
+        (List.map xy xs)
+        |> List.concat
 
 
 type Viewport
@@ -51,13 +75,14 @@ viewportFromFloat x_start y_start x_end y_end =
     Viewport start end
 
 
-zoomLevel : Viewport -> Int
-zoomLevel viewport =
+zoomLevelFromViewport : Viewport -> ZoomLevel
+zoomLevelFromViewport viewport =
     let
         maximum_length =
             2 * pi * earthRadius
     in
     ceiling (logBase 2 (maximum_length / averageLength viewport))
+        |> ZoomLevel
 
 
 averageLength : Viewport -> Float
@@ -65,9 +90,16 @@ averageLength (Viewport start end) =
     sqrt ((start.x - end.x) * (start.y - end.y))
 
 
-toXYZ : ZoomLevel -> WebMercator -> XYZ
-toXYZ level point =
-    XYZ (tileIndex level point.x) (tileIndex level point.y) level
+toZXY : ZoomLevel -> WebMercator -> ZXY
+toZXY level point =
+    let
+        x =
+            tileIndex level point.x
+
+        y =
+            tileIndex level point.y
+    in
+    ZXY level (XY x y)
 
 
 tileIndex : ZoomLevel -> Float -> Int
@@ -80,11 +112,6 @@ tileIndex level x =
             (2 * pi * earthRadius) / toFloat (2 ^ n)
     in
     floor (x / dx)
-
-
-toTiles : ZoomLevel -> Viewport -> List XYZ
-toTiles level viewport =
-    []
 
 
 
@@ -117,11 +144,11 @@ quadkeyToString (Quadkey str) =
     str
 
 
-quadkey : XYZ -> Quadkey
-quadkey (XYZ x y z) =
+quadkey : ZXY -> Quadkey
+quadkey (ZXY (ZoomLevel z) (XY x y)) =
     let
         length =
-            zoomLevelToInt z
+            z
 
         x_ints =
             Binary.fromDecimal x
