@@ -1145,17 +1145,22 @@ updatePoint model selectPoint =
 
 getNaturalEarthFeature : String -> NaturalEarthFeature -> Maybe (Viewport WebMercator) -> Cmd Msg
 getNaturalEarthFeature baseURL feature map_extent =
-    let
-        endpoint =
-            NaturalEarthFeature.endpoint feature map_extent
+    case map_extent of
+        Just viewport ->
+            let
+                endpoint =
+                    NaturalEarthFeature.endpoint feature viewport
 
-        tagger =
-            GotNaturalEarthFeature feature
-    in
-    Http.get
-        { url = baseURL ++ endpoint
-        , expect = Http.expectJson tagger MultiLine.decoder
-        }
+                tagger =
+                    GotNaturalEarthFeature feature
+            in
+            Http.get
+                { url = baseURL ++ endpoint
+                , expect = Http.expectJson tagger MultiLine.decoder
+                }
+
+        Nothing ->
+            Cmd.none
 
 
 getDatasets : String -> Cmd Msg

@@ -34,7 +34,7 @@ toString feature =
             "lakes"
 
 
-endpoint : NaturalEarthFeature -> Maybe (Viewport WebMercator) -> String
+endpoint : NaturalEarthFeature -> Viewport WebMercator -> String
 endpoint feature map_extent =
     let
         path =
@@ -45,7 +45,7 @@ endpoint feature map_extent =
                 ]
     in
     case map_extent of
-        Just (MapExtent.Viewport start end) ->
+        MapExtent.Viewport start end ->
             let
                 scale =
                     Scale.fromExtent start.x end.x start.y end.y
@@ -59,9 +59,6 @@ endpoint feature map_extent =
                     , ( "maxlat", String.fromFloat end.y )
                     , ( "scale", Scale.toString scale )
                     ]
-
-        Nothing ->
-            path
 
 
 category : NaturalEarthFeature -> String
