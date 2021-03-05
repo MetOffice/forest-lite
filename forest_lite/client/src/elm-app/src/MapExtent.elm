@@ -17,8 +17,22 @@ init =
 -- SLIPPY MAP
 
 
+type ZoomLevel
+    = ZoomLevel Int
+
+
+zoomLevelToInt : ZoomLevel -> Int
+zoomLevelToInt (ZoomLevel n) =
+    n
+
+
 type XYZ
-    = XYZ Int Int Int
+    = XYZ Int Int ZoomLevel
+
+
+xyzFromInt : Int -> Int -> Int -> XYZ
+xyzFromInt x y z =
+    XYZ x y (ZoomLevel z)
 
 
 type Viewport
@@ -51,18 +65,43 @@ averageLength (Viewport start end) =
     sqrt ((start.x - end.x) * (start.y - end.y))
 
 
-toXYZ : Int -> WebMercator -> XYZ
+toXYZ : ZoomLevel -> WebMercator -> XYZ
 toXYZ level point =
     XYZ (tileIndex level point.x) (tileIndex level point.y) level
 
 
-tileIndex : Int -> Float -> Int
+tileIndex : ZoomLevel -> Float -> Int
 tileIndex level x =
     let
+        n =
+            zoomLevelToInt level
+
         dx =
-            (2 * pi * earthRadius) / toFloat (2 ^ level)
+            (2 * pi * earthRadius) / toFloat (2 ^ n)
     in
     floor (x / dx)
+
+
+toTiles : ZoomLevel -> Viewport -> List XYZ
+toTiles level viewport =
+    []
+
+
+
+-- ZOOM LEVEL
+
+
+type OneIndex
+    = OneIndex Int
+
+
+type ZeroIndex
+    = ZeroIndex Int
+
+
+toOneIndex : ZeroIndex -> OneIndex
+toOneIndex (ZeroIndex n) =
+    OneIndex (n + 1)
 
 
 
@@ -73,18 +112,26 @@ type Quadkey
     = Quadkey String
 
 
+quadkeyToString : Quadkey -> String
+quadkeyToString (Quadkey str) =
+    str
+
+
 quadkey : XYZ -> Quadkey
 quadkey (XYZ x y z) =
     let
+        length =
+            zoomLevelToInt z
+
         x_ints =
             Binary.fromDecimal x
                 |> Binary.toIntegers
-                |> zeroPad z
+                |> zeroPad length
 
         y_ints =
             Binary.fromDecimal y
                 |> Binary.toIntegers
-                |> zeroPad z
+                |> zeroPad length
 
         base4_ints =
             List.map2 (+) x_ints (List.map ((*) 2) y_ints)
