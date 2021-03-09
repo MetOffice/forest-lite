@@ -1,19 +1,11 @@
 module MapExtent exposing (..)
 
 import Binary
+import ZoomLevel exposing (ZoomLevel)
 
 
 
 -- SLIPPY MAP
-
-
-type ZoomLevel
-    = ZoomLevel Int
-
-
-zoomLevelToInt : ZoomLevel -> Int
-zoomLevelToInt (ZoomLevel n) =
-    n
 
 
 type ZXY
@@ -31,7 +23,7 @@ xy x y =
 
 zxy : Int -> Int -> Int -> ZXY
 zxy z x y =
-    ZXY (ZoomLevel z) (XY x y)
+    ZXY (ZoomLevel.ZoomLevel z) (XY x y)
 
 
 zxyToExtent : ZXY -> Viewport WebMercator
@@ -40,7 +32,7 @@ zxyToExtent (ZXY level point) =
 
 
 xyToExtent : ZoomLevel -> XY -> Viewport WebMercator
-xyToExtent (ZoomLevel z) (XY i j) =
+xyToExtent (ZoomLevel.ZoomLevel z) (XY i j) =
     Viewport
         (vertexLocation z i j)
         (vertexLocation z (i + 1) (j + 1))
@@ -108,14 +100,14 @@ viewportFromFloat x_start y_start x_end y_end =
     Viewport start end
 
 
-zoomLevelFromViewport : Viewport WebMercator -> ZoomLevel
-zoomLevelFromViewport viewport =
+viewportToZoomLevel : Viewport WebMercator -> ZoomLevel
+viewportToZoomLevel viewport =
     let
         maximum_length =
             2 * pi * earthRadius
     in
     ceiling (logBase 2 (maximum_length / averageLength viewport))
-        |> ZoomLevel
+        |> ZoomLevel.ZoomLevel
 
 
 averageLength : Viewport WebMercator -> Float
@@ -138,7 +130,7 @@ toXY level point =
             pi * earthRadius
 
         n =
-            zoomLevelToInt level
+            ZoomLevel.toInt level
 
         dx =
             (2 * pi * earthRadius) / toFloat (2 ^ n)
@@ -174,10 +166,10 @@ quadkeyToString (Quadkey str) =
 
 
 quadkey : ZXY -> Quadkey
-quadkey (ZXY (ZoomLevel z) (XY x y)) =
+quadkey (ZXY level (XY x y)) =
     let
         length =
-            z
+            ZoomLevel.toInt level
 
         x_ints =
             Binary.fromDecimal x

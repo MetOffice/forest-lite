@@ -5,7 +5,6 @@ import Fuzz exposing (Fuzzer, int, intRange, list, string)
 import MapExtent
     exposing
         ( WebMercator
-        , ZoomLevel
         , earthRadius
         , quadkey
         , startPoint
@@ -16,6 +15,7 @@ import MapExtent
         , zxyToExtent
         )
 import Test exposing (..)
+import ZoomLevel exposing (ZoomLevel)
 
 
 quadkeyTests : Test
@@ -60,8 +60,8 @@ zoomLevelTests =
                 viewport =
                     MapExtent.Viewport start end
             in
-            MapExtent.zoomLevelFromViewport viewport
-                |> Expect.equal (MapExtent.ZoomLevel 0)
+            MapExtent.viewportToZoomLevel viewport
+                |> Expect.equal (ZoomLevel.ZoomLevel 0)
 
 
 xyTests : Test
@@ -164,5 +164,5 @@ toZXYTests =
                 point =
                     zxyToExtent tile |> startPoint
             in
-            toZXY (MapExtent.ZoomLevel 2) point
+            toZXY (ZoomLevel.ZoomLevel 2) point
                 |> Expect.equal tile

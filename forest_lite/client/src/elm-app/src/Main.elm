@@ -71,6 +71,7 @@ import MapExtent
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Time
+import ZoomLevel exposing (ZoomLevel)
 
 
 type alias Settings =
@@ -195,6 +196,7 @@ type alias Model =
     , coastlines_color : String
     , limits : Limits
     , collapsed : Dict String Bool
+    , zoom_level : Maybe ZoomLevel
     }
 
 
@@ -384,6 +386,7 @@ init flags =
                 }
             , collapsed =
                 Dict.empty
+            , zoom_level = Nothing
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -1019,30 +1022,33 @@ updateAction model action =
                     , y = y_end
                     }
 
-                map_extent =
-                    Just (MapExtent.Viewport start end)
+                viewport =
+                    MapExtent.Viewport start end
+
+                zoom_level =
+                    MapExtent.viewportToZoomLevel viewport
 
                 cmd =
                     Cmd.batch
                         [ getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Coastline
-                            map_extent
+                            (Just viewport)
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Border
-                            map_extent
+                            (Just viewport)
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.DisputedBorder
-                            map_extent
+                            (Just viewport)
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Lake
-                            map_extent
+                            (Just viewport)
                         ]
             in
-            ( model, cmd )
+            ( { model | zoom_level = Just zoom_level }, cmd )
 
         SetLimits low high _ _ ->
             let
@@ -1377,6 +1383,7 @@ viewLayerMenu model =
                             [ viewHideShowIcon model.visible
                             , viewCoastlineCheckbox model.coastlines
                             , viewCoastlineColorPicker model.coastlines_color
+                            , viewZoomLevel model.zoom_level
                             ]
                     , onClick = ExpandCollapse DisplayMenu
                     }
@@ -1398,6 +1405,20 @@ viewLayerMenu model =
 
         NotStarted ->
             div [] [ text "..." ]
+
+
+viewZoomLevel : Maybe ZoomLevel -> Html Msg
+viewZoomLevel zoom_level =
+    case zoom_level of
+        Just level ->
+            div
+                [ style "margin-left" "0.5em"
+                , style "margin-top" "0.5em"
+                ]
+                [ text ("Zoom level: " ++ ZoomLevel.toString level) ]
+
+        Nothing ->
+            div [] [ text "Zoom level not set" ]
 
 
 getCollapsed : SubMenu -> Dict String Bool -> Bool
