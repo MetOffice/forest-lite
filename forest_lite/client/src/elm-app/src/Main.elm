@@ -1033,19 +1033,19 @@ updateAction model action =
                         [ getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Coastline
-                            (Just viewport)
+                            viewport
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Border
-                            (Just viewport)
+                            viewport
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.DisputedBorder
-                            (Just viewport)
+                            viewport
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Lake
-                            (Just viewport)
+                            viewport
                         ]
             in
             ( { model | zoom_level = Just zoom_level }, cmd )
@@ -1142,25 +1142,20 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> NaturalEarthFeature -> Maybe (Viewport WebMercator) -> Cmd Msg
-getNaturalEarthFeature baseURL feature map_extent =
-    case map_extent of
-        Just viewport ->
-            let
-                endpoint =
-                    NaturalEarthFeature.endpoint feature
-                        (mapViewport toWGS84 viewport)
+getNaturalEarthFeature : String -> NaturalEarthFeature -> Viewport WebMercator -> Cmd Msg
+getNaturalEarthFeature baseURL feature viewport =
+    let
+        endpoint =
+            NaturalEarthFeature.endpoint feature
+                (mapViewport toWGS84 viewport)
 
-                tagger =
-                    GotNaturalEarthFeature feature
-            in
-            Http.get
-                { url = baseURL ++ endpoint
-                , expect = Http.expectJson tagger MultiLine.decoder
-                }
-
-        Nothing ->
-            Cmd.none
+        tagger =
+            GotNaturalEarthFeature feature
+    in
+    Http.get
+        { url = baseURL ++ endpoint
+        , expect = Http.expectJson tagger MultiLine.decoder
+        }
 
 
 getDatasets : String -> Cmd Msg
