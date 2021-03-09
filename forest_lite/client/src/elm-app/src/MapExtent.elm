@@ -118,10 +118,18 @@ xyRange (XY x_start y_start) (XY x_end y_end) =
         ys =
             List.range y_start y_end
     in
-    List.map
-        (\f -> List.map f ys)
-        (List.map xy xs)
-        |> List.concat
+    nested xy xs ys
+
+
+{-| Application of operation on cartesian product of two lists
+
+A helper to make it easy to combine multiple combinations
+of lists into a single list using a binary operation
+
+-}
+nested : (a -> b -> c) -> List a -> List b -> List c
+nested op x y =
+    List.map (\f -> List.map f y) (List.map op x) |> List.concat
 
 
 viewportFromFloat : Float -> Float -> Float -> Float -> Viewport WebMercator
