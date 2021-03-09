@@ -194,7 +194,6 @@ type alias Model =
     , coastlines : Bool
     , coastlines_color : String
     , limits : Limits
-    , map_extent : Maybe (Viewport WebMercator)
     , collapsed : Dict String Bool
     }
 
@@ -383,7 +382,6 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
-            , map_extent = Nothing
             , collapsed =
                 Dict.empty
             }
@@ -397,18 +395,6 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
-                        , getNaturalEarthFeature baseURL
-                            NaturalEarthFeature.Coastline
-                            default.map_extent
-                        , getNaturalEarthFeature baseURL
-                            NaturalEarthFeature.Border
-                            default.map_extent
-                        , getNaturalEarthFeature baseURL
-                            NaturalEarthFeature.DisputedBorder
-                            default.map_extent
-                        , getNaturalEarthFeature baseURL
-                            NaturalEarthFeature.Lake
-                            default.map_extent
                         ]
             in
             case settings.claim of
@@ -1056,7 +1042,7 @@ updateAction model action =
                             map_extent
                         ]
             in
-            ( { model | map_extent = map_extent }, cmd )
+            ( model, cmd )
 
         SetLimits low high _ _ ->
             let
