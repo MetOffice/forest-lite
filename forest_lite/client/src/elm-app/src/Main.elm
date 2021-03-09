@@ -62,15 +62,14 @@ import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import MapExtent
     exposing
-        ( Viewport
-        , WGS84
+        ( WGS84
         , WebMercator
-        , mapViewport
         , toWGS84
         )
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Time
+import Viewport exposing (Viewport)
 import ZoomLevel exposing (ZoomLevel)
 
 
@@ -1027,7 +1026,7 @@ updateAction model action =
                     }
 
                 viewport =
-                    MapExtent.Viewport start end
+                    Viewport.Viewport start end
 
                 zoom_level =
                     MapExtent.viewportToZoomLevel viewport
@@ -1044,24 +1043,29 @@ updateAction model action =
                             tiles
                         )
 
+                bounding_box =
+                    viewport
+                        |> Viewport.map toWGS84
+                        |> MapExtent.viewportToBox
+
                 cmd =
                     Cmd.batch
                         [ getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Coastline
-                            viewport
+                            bounding_box
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Border
-                            viewport
+                            bounding_box
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.DisputedBorder
-                            viewport
+                            bounding_box
                         , getNaturalEarthFeature
                             model.baseURL
                             NaturalEarthFeature.Lake
-                            viewport
+                            bounding_box
                         ]
             in
             ( { model
@@ -1164,12 +1168,11 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> NaturalEarthFeature -> Viewport WebMercator -> Cmd Msg
-getNaturalEarthFeature baseURL feature viewport =
+getNaturalEarthFeature : String -> NaturalEarthFeature -> MapExtent.Box -> Cmd Msg
+getNaturalEarthFeature baseURL feature box =
     let
         endpoint =
-            NaturalEarthFeature.endpoint feature
-                (mapViewport toWGS84 viewport)
+            NaturalEarthFeature.endpoint feature box
 
         tagger =
             GotNaturalEarthFeature feature

@@ -1,6 +1,7 @@
 module MapExtent exposing (..)
 
 import Binary
+import Viewport exposing (Viewport)
 import ZoomLevel exposing (ZoomLevel)
 
 
@@ -53,7 +54,7 @@ xyToString (XY x y) =
 
 xyToExtent : ZoomLevel -> XY -> Viewport WebMercator
 xyToExtent (ZoomLevel.ZoomLevel z) (XY i j) =
-    Viewport
+    Viewport.Viewport
         (vertexLocation z i j)
         (vertexLocation z (i + 1) (j + 1))
 
@@ -82,12 +83,12 @@ vertexLocation z i j =
 toBox : ZoomLevel -> XY -> Box
 toBox level xy_index =
     xyToExtent level xy_index
-        |> mapViewport toWGS84
+        |> Viewport.map toWGS84
         |> viewportToBox
 
 
 viewportToBox : Viewport WGS84 -> Box
-viewportToBox (Viewport start end) =
+viewportToBox (Viewport.Viewport start end) =
     { minlon = min start.longitude end.longitude
     , maxlon = max start.longitude end.longitude
     , minlat = min start.latitude end.latitude
@@ -96,7 +97,7 @@ viewportToBox (Viewport start end) =
 
 
 tiles : ZoomLevel -> Viewport WebMercator -> List XY
-tiles level (Viewport start end) =
+tiles level (Viewport.Viewport start end) =
     let
         -- Flip diagonal direction to satisfy assumptions
         north_west =
@@ -123,20 +124,6 @@ xyRange (XY x_start y_start) (XY x_end y_end) =
         |> List.concat
 
 
-type Viewport a
-    = Viewport a a
-
-
-mapViewport : (a -> b) -> Viewport a -> Viewport b
-mapViewport f (Viewport start end) =
-    Viewport (f start) (f end)
-
-
-startPoint : Viewport a -> a
-startPoint (Viewport start _) =
-    start
-
-
 viewportFromFloat : Float -> Float -> Float -> Float -> Viewport WebMercator
 viewportFromFloat x_start y_start x_end y_end =
     let
@@ -146,7 +133,7 @@ viewportFromFloat x_start y_start x_end y_end =
         end =
             { x = x_end, y = y_end }
     in
-    Viewport start end
+    Viewport.Viewport start end
 
 
 viewportToZoomLevel : Viewport WebMercator -> ZoomLevel
@@ -160,7 +147,7 @@ viewportToZoomLevel viewport =
 
 
 averageLength : Viewport WebMercator -> Float
-averageLength (Viewport start end) =
+averageLength (Viewport.Viewport start end) =
     sqrt ((start.x - end.x) * (start.y - end.y))
 
 
