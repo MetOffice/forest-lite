@@ -197,6 +197,8 @@ type alias Model =
     , limits : Limits
     , collapsed : Dict String Bool
     , zoom_level : Maybe ZoomLevel
+    , tiles : List MapExtent.XY
+    , boxes : List MapExtent.Box
     }
 
 
@@ -387,6 +389,8 @@ init flags =
             , collapsed =
                 Dict.empty
             , zoom_level = Nothing
+            , tiles = []
+            , boxes = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -1028,6 +1032,18 @@ updateAction model action =
                 zoom_level =
                     MapExtent.viewportToZoomLevel viewport
 
+                tiles =
+                    MapExtent.tiles zoom_level viewport
+
+                boxes =
+                    Debug.log "boxes"
+                        (List.map
+                            (\t ->
+                                MapExtent.toBox zoom_level t
+                            )
+                            tiles
+                        )
+
                 cmd =
                     Cmd.batch
                         [ getNaturalEarthFeature
@@ -1048,7 +1064,13 @@ updateAction model action =
                             viewport
                         ]
             in
-            ( { model | zoom_level = Just zoom_level }, cmd )
+            ( { model
+                | zoom_level = Just zoom_level
+                , tiles = tiles
+                , boxes = boxes
+              }
+            , cmd
+            )
 
         SetLimits low high _ _ ->
             let
@@ -1379,6 +1401,7 @@ viewLayerMenu model =
                             , viewCoastlineCheckbox model.coastlines
                             , viewCoastlineColorPicker model.coastlines_color
                             , viewZoomLevel model.zoom_level
+                            , viewTiles model.tiles
                             ]
                     , onClick = ExpandCollapse DisplayMenu
                     }
@@ -1414,6 +1437,25 @@ viewZoomLevel zoom_level =
 
         Nothing ->
             div [] [ text "Zoom level not set" ]
+
+
+viewTiles : List MapExtent.XY -> Html Msg
+viewTiles tiles =
+    div
+        [ style "margin-left" "0.5em"
+        , style "margin-top" "0.5em"
+        ]
+        [ div [] [ text "Tiles:" ]
+        , ul []
+            (List.map
+                (\t ->
+                    li
+                        []
+                        [ text (MapExtent.xyToString t) ]
+                )
+                tiles
+            )
+        ]
 
 
 getCollapsed : SubMenu -> Dict String Bool -> Bool

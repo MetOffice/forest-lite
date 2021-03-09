@@ -8,6 +8,14 @@ import ZoomLevel exposing (ZoomLevel)
 -- SLIPPY MAP
 
 
+type alias Box =
+    { minlon : Float
+    , maxlon : Float
+    , minlat : Float
+    , maxlat : Float
+    }
+
+
 type ZXY
     = ZXY ZoomLevel XY
 
@@ -29,6 +37,18 @@ zxy z x y =
 zxyToExtent : ZXY -> Viewport WebMercator
 zxyToExtent (ZXY level point) =
     xyToExtent level point
+
+
+xyToString : XY -> String
+xyToString (XY x y) =
+    let
+        xs =
+            String.fromInt x
+
+        ys =
+            String.fromInt y
+    in
+    "(" ++ xs ++ ", " ++ ys ++ ")"
 
 
 xyToExtent : ZoomLevel -> XY -> Viewport WebMercator
@@ -57,6 +77,35 @@ vertexLocation z i j =
             (2 * pi * earthRadius) / (2 ^ toFloat z)
     in
     WebMercator (x0 + x * width) (y0 - y * width)
+
+
+toBox : ZoomLevel -> XY -> Box
+toBox level xy_index =
+    xyToExtent level xy_index
+        |> mapViewport toWGS84
+        |> viewportToBox
+
+
+viewportToBox : Viewport WGS84 -> Box
+viewportToBox (Viewport start end) =
+    { minlon = min start.longitude end.longitude
+    , maxlon = max start.longitude end.longitude
+    , minlat = min start.latitude end.latitude
+    , maxlat = max start.latitude end.latitude
+    }
+
+
+tiles : ZoomLevel -> Viewport WebMercator -> List XY
+tiles level (Viewport start end) =
+    let
+        -- Flip diagonal direction to satisfy assumptions
+        north_west =
+            WebMercator start.x end.y
+
+        south_east =
+            WebMercator end.x start.y
+    in
+    xyRange (toXY level north_west) (toXY level south_east)
 
 
 xyRange : XY -> XY -> List XY
