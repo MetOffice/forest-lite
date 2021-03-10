@@ -26,18 +26,6 @@ zxyToExtent (ZXY.ZXY level point) =
     xyToExtent level point
 
 
-xyToString : XY -> String
-xyToString (ZXY.XY x y) =
-    let
-        xs =
-            String.fromInt x
-
-        ys =
-            String.fromInt y
-    in
-    "(" ++ xs ++ ", " ++ ys ++ ")"
-
-
 xyToExtent : ZoomLevel -> XY -> Viewport WebMercator
 xyToExtent (ZoomLevel.ZoomLevel z) (ZXY.XY i j) =
     Viewport.Viewport

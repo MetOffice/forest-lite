@@ -199,7 +199,8 @@ type alias Model =
     , limits : Limits
     , collapsed : Dict String Bool
     , zoom_level : Maybe ZoomLevel
-    , tiles : List ZXY.XY
+    , xys : List XY
+    , quadkeys : List Quadkey
     }
 
 
@@ -390,7 +391,8 @@ init flags =
             , collapsed =
                 Dict.empty
             , zoom_level = Nothing
-            , tiles = []
+            , xys = []
+            , quadkeys = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -1035,6 +1037,9 @@ updateAction model action =
                 xys =
                     MapExtent.tiles zoom_level viewport
 
+                quadkeys =
+                    List.map (\xy -> Quadkey.fromXY zoom_level xy) xys
+
                 cmd =
                     Cmd.batch
                         (List.map
@@ -1074,7 +1079,8 @@ updateAction model action =
             in
             ( { model
                 | zoom_level = Just zoom_level
-                , tiles = xys
+                , xys = xys
+                , quadkeys = quadkeys
               }
             , cmd
             )
@@ -1408,7 +1414,8 @@ viewLayerMenu model =
                             , viewCoastlineCheckbox model.coastlines
                             , viewCoastlineColorPicker model.coastlines_color
                             , viewZoomLevel model.zoom_level
-                            , viewTiles model.tiles
+                            , viewXYs model.xys
+                            , viewQuadkeys model.quadkeys
                             ]
                     , onClick = ExpandCollapse DisplayMenu
                     }
@@ -1446,8 +1453,8 @@ viewZoomLevel zoom_level =
             div [] [ text "Zoom level not set" ]
 
 
-viewTiles : List ZXY.XY -> Html Msg
-viewTiles tiles =
+viewXYs : List XY -> Html Msg
+viewXYs xys =
     div
         [ style "margin-left" "0.5em"
         , style "margin-top" "0.5em"
@@ -1458,9 +1465,28 @@ viewTiles tiles =
                 (\t ->
                     li
                         []
-                        [ text (MapExtent.xyToString t) ]
+                        [ text (ZXY.xyToString t) ]
                 )
-                tiles
+                xys
+            )
+        ]
+
+
+viewQuadkeys : List Quadkey -> Html Msg
+viewQuadkeys quadkeys =
+    div
+        [ style "margin-left" "0.5em"
+        , style "margin-top" "0.5em"
+        ]
+        [ div [] [ text "Tiles:" ]
+        , ul []
+            (List.map
+                (\t ->
+                    li
+                        []
+                        [ text (Quadkey.toString t) ]
+                )
+                quadkeys
             )
         ]
 
