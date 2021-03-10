@@ -1,5 +1,6 @@
 port module Main exposing (..)
 
+import BoundingBox exposing (BoundingBox)
 import Browser
 import DataVarLabel exposing (DataVarLabel)
 import DatasetID exposing (DatasetID)
@@ -197,7 +198,7 @@ type alias Model =
     , collapsed : Dict String Bool
     , zoom_level : Maybe ZoomLevel
     , tiles : List MapExtent.XY
-    , boxes : List MapExtent.Box
+    , boxes : List BoundingBox
     }
 
 
@@ -319,7 +320,7 @@ type alias Collapsible =
 
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
-    | GotNaturalEarthFeature NaturalEarthFeature (Result Http.Error MultiLine)
+    | GotNaturalEarthFeature NaturalEarthFeature BoundingBox (Result Http.Error MultiLine)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -585,7 +586,7 @@ update msg model =
                     ( model, Cmd.none )
 
         -- NATURAL EARTH FEATURE
-        GotNaturalEarthFeature feature result ->
+        GotNaturalEarthFeature feature box result ->
             case result of
                 Ok data ->
                     let
@@ -1168,14 +1169,14 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> NaturalEarthFeature -> MapExtent.Box -> Cmd Msg
+getNaturalEarthFeature : String -> NaturalEarthFeature -> BoundingBox -> Cmd Msg
 getNaturalEarthFeature baseURL feature box =
     let
         endpoint =
             NaturalEarthFeature.endpoint feature box
 
         tagger =
-            GotNaturalEarthFeature feature
+            GotNaturalEarthFeature feature box
     in
     Http.get
         { url = baseURL ++ endpoint

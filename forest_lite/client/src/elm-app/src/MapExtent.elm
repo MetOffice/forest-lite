@@ -1,20 +1,13 @@
 module MapExtent exposing (..)
 
 import Binary
+import BoundingBox exposing (BoundingBox)
 import Viewport exposing (Viewport)
 import ZoomLevel exposing (ZoomLevel)
 
 
 
 -- SLIPPY MAP
-
-
-type alias Box =
-    { minlon : Float
-    , maxlon : Float
-    , minlat : Float
-    , maxlat : Float
-    }
 
 
 type ZXY
@@ -80,14 +73,14 @@ vertexLocation z i j =
     WebMercator (x0 + x * width) (y0 - y * width)
 
 
-toBox : ZoomLevel -> XY -> Box
+toBox : ZoomLevel -> XY -> BoundingBox
 toBox level xy_index =
     xyToExtent level xy_index
         |> Viewport.map toWGS84
         |> viewportToBox
 
 
-viewportToBox : Viewport WGS84 -> Box
+viewportToBox : Viewport WGS84 -> BoundingBox
 viewportToBox (Viewport.Viewport start end) =
     { minlon = min start.longitude end.longitude
     , maxlon = max start.longitude end.longitude

@@ -1,8 +1,8 @@
 module NaturalEarthFeature exposing (NaturalEarthFeature(..), encode, endpoint)
 
+import BoundingBox exposing (BoundingBox)
 import Endpoint
 import Json.Encode
-import MapExtent exposing (Box)
 import Scale
 
 
@@ -34,7 +34,7 @@ toString feature =
             "lakes"
 
 
-endpoint : NaturalEarthFeature -> Box -> String
+endpoint : NaturalEarthFeature -> BoundingBox -> String
 endpoint feature box =
     let
         path =
