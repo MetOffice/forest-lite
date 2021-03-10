@@ -591,7 +591,7 @@ update msg model =
                 Ok data ->
                     let
                         cmd =
-                            SetNaturalEarthFeature feature data
+                            SetNaturalEarthFeature feature box data
                                 |> encodeAction
                                 |> sendAction
                     in
@@ -1175,6 +1175,7 @@ getNaturalEarthFeature baseURL feature box =
         endpoint =
             NaturalEarthFeature.endpoint feature box
 
+        -- Tagger should take key, e.g. Quadkey
         tagger =
             GotNaturalEarthFeature feature box
     in
@@ -1737,7 +1738,7 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
-    | SetNaturalEarthFeature NaturalEarthFeature MultiLine
+    | SetNaturalEarthFeature NaturalEarthFeature BoundingBox MultiLine
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
 
@@ -1775,11 +1776,12 @@ encodeAction action =
                     ]
                 )
 
-        SetNaturalEarthFeature feature data ->
+        SetNaturalEarthFeature feature box data ->
             buildAction "SET_NATURAL_EARTH_FEATURE"
                 (Json.Encode.object
                     [ ( "feature", NaturalEarthFeature.encode feature )
                     , ( "data", MultiLine.encode data )
+                    , ( "bounding_box", BoundingBox.encode box )
                     ]
                 )
 
