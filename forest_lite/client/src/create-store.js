@@ -4,6 +4,7 @@ import { colorPaletteMiddleware } from "./colorpalette-middleware.js"
 import { timeMiddleware } from "./time-middleware.js"
 import { toolMiddleware } from "./middlewares.js"
 import { zoomMiddleware } from "./zoom-middleware.js"
+import { webWorkerMiddleware } from "./web-worker-middleware.js"
 import { navMiddleware } from "./nav-middleware.js"
 import {
     SET_DATASETS,
@@ -45,7 +46,8 @@ export const createStore = ({ log=false } = {}) => {
             timeMiddleware,
             datasetsMiddleware,
             zoomMiddleware,
-            navMiddleware
+            navMiddleware,
+            webWorkerMiddleware
     ])
     return Redux.createStore(rootReducer, Redux.applyMiddleware(...middlewares))
 }

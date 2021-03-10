@@ -44,7 +44,8 @@
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",
     "webpack-merge": "^5.2.0",
-    "whatwg-fetch": "^3.5.0"
+    "whatwg-fetch": "^3.5.0",
+    "worker-loader": "^3.0.8"
   },
   "dependencies": {
     "@turf/turf": "^5.1.6",
