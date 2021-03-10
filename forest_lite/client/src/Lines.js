@@ -73,18 +73,44 @@ const selectActive = state => {
     return active
 }
 
-
-const selectData = feature => state => {
-    const empty = {
+const empty = () => {
+    return {
         xs: [[]],
         ys: [[]]
     }
+}
+
+export const selectData = feature => state => {
     const { natural_earth_features = null } = state
     if (natural_earth_features == null) {
-        return empty
+        return empty()
     } else {
-        return natural_earth_features[feature] || empty
+        let quadkeys = Object.keys(natural_earth_features)
+        if (quadkeys.length === 0) {
+            return empty()
+        }
+        let dataList = quadkeys.map(quadkey => {
+            return natural_earth_features[quadkey]
+        })
+            .filter(features => features != null)
+            .map(features => {
+                return features[feature] || empty()
+            })
+        if (dataList.length === 0) {
+            return empty()
+        }
+        return dataList.reduce(multilineReducer, {})
     }
+}
+
+const multilineReducer = (acc, lines) => {
+    Object.keys(lines).map(key => {
+        if (!(key in acc)) {
+            acc[key] = []
+        }
+        acc[key] = acc[key].concat(lines[key])
+    })
+    return acc
 }
 
 const selectLineColor = feature => state => {

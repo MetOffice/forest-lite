@@ -33,7 +33,12 @@ import {
     UPDATE_NAVIGATE,
     ZOOM_IN,
     ZOOM_OUT,
-    SET_PORTS
+    SET_PORTS,
+    SET_QUADKEYS,
+    UPDATE_NATURAL_EARTH_FEATURE,
+    GET_HTTP_NATURAL_EARTH_FEATURE,
+    GET_INDEXEDDB_NATURAL_EARTH_FEATURE,
+    GOT_INDEXEDDB_NATURAL_EARTH_FEATURE
 } from "./action-types"
 
 // Action creators
@@ -110,3 +115,22 @@ export const zoomOut = () => ({ type: ZOOM_OUT })
 
 // Elm interop
 export const setPorts = ports => ({ type: SET_PORTS, payload: ports })
+
+// Elm messages
+export const getHttpNaturalEarthFeature = payload => {
+    return { type: GET_HTTP_NATURAL_EARTH_FEATURE, payload }
+}
+export const setQuadkeys = payload => {
+    return { type: SET_QUADKEYS, payload }
+}
+
+// WebWorker messages
+export const updateNaturalEarthFeature = payload => {
+    return { type: UPDATE_NATURAL_EARTH_FEATURE, payload }
+}
+export const getIndexedDBNaturalEarthFeature = payload => {
+    return { type: GET_INDEXEDDB_NATURAL_EARTH_FEATURE, payload }
+}
+export const gotIndexedDBNaturalEarthFeature = payload => {
+    return { type: GOT_INDEXEDDB_NATURAL_EARTH_FEATURE, payload }
+}

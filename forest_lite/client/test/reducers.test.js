@@ -12,7 +12,9 @@ const {
     nextItem,
     previousItem,
     setItems,
-    goToItem
+    goToItem,
+    setQuadkeys,
+    updateNaturalEarthFeature,
 } = require("../src/actions.js")
 const { reduce } = require("ramda")
 
@@ -426,4 +428,195 @@ test("previousItem", () => {
         }
     }
     expect(actual).toEqual(expected)
+})
+
+
+// Create, read, update and delete Natural Earth Features
+describe("NaturalEarthFeature CRUD operations", () => {
+    test("update an empty natural earth feature", () => {
+        const feature = "coastlines"
+        const quadkey = "0123"
+        const data = {
+            xs: [],
+            ys: []
+        }
+        const action = updateNaturalEarthFeature({ feature, quadkey, data })
+        const state = {
+            natural_earth_features: {
+                "0123": null
+            }
+        }
+        const actual = reduce(rootReducer, state, [ action ])
+        const expected = {
+            natural_earth_features: {
+                "0123": {
+                    coastlines: {
+                        xs: [],
+                        ys: []
+                    }
+                }
+            }
+        }
+        expect(actual).toEqual(expected)
+    })
+
+    test("update a realistic natural earth feature", () => {
+        const feature = "coastlines"
+        const quadkey = "0123"
+        const data = {
+            xs: [[1, 2], [3]],
+            ys: [[4, 5], [6]]
+        }
+        const action = updateNaturalEarthFeature({ feature, quadkey, data })
+        const state = {
+            natural_earth_features: {
+                "0123": null
+            }
+        }
+        const actual = reduce(rootReducer, state, [ action ])
+        const expected = {
+            natural_earth_features: {
+                "0123": {
+                    coastlines: {
+                        xs: [[1, 2], [3]],
+                        ys: [[4, 5], [6]],
+                    }
+                }
+            }
+        }
+        expect(actual).toEqual(expected)
+    })
+
+    test("update two natural earth features", () => {
+        const feature = "coastlines"
+        const data = {
+            xs: [[1]],
+            ys: [[2]]
+        }
+        const actions = [
+            setQuadkeys(["0", "42"]),
+            updateNaturalEarthFeature({ feature, quadkey: "0", data }),
+            updateNaturalEarthFeature({ feature, quadkey: "42", data })
+        ]
+        const state = {}
+        const actual = reduce(rootReducer, state, actions)
+        const expected = {
+            natural_earth_features: {
+                "0": {
+                    coastlines: {
+                        xs: [[1]],
+                        ys: [[2]],
+                    }
+                },
+                "42": {
+                    coastlines: {
+                        xs: [[1]],
+                        ys: [[2]],
+                    }
+                }
+            }
+        }
+        expect(actual).toEqual(expected)
+    })
+
+    test("set quadkeys", () => {
+        const feature = "coastlines"
+        const actions = [
+            setQuadkeys(["00", "01", "10", "11"])
+        ]
+        const state = {}
+        const actual = reduce(rootReducer, state, actions)
+        const expected = {
+            natural_earth_features: {
+                "00": null,
+                "01": null,
+                "10": null,
+                "11": null
+            }
+        }
+        expect(actual).toEqual(expected)
+    })
+
+    test("set quadkeys preserves previous tiles", () => {
+        const feature = "coastlines"
+        const actions = [
+            setQuadkeys(["00", "01"])
+        ]
+        const state = {
+            natural_earth_features: {
+                "00": { foo: "bar" }
+            }
+        }
+        const actual = reduce(rootReducer, state, actions)
+        const expected = {
+            natural_earth_features: {
+                "00": { foo: "bar" },
+                "01": null,
+            }
+        }
+        expect(actual).toEqual(expected)
+    })
+
+    test("set quadkeys removes previous tiles", () => {
+        const feature = "coastlines"
+        const actions = [
+            setQuadkeys(["123"])
+        ]
+        const state = {
+            natural_earth_features: {
+                "00": { foo: "bar" }
+            }
+        }
+        const actual = reduce(rootReducer, state, actions)
+        const expected = {
+            natural_earth_features: {
+                "123": null,
+            }
+        }
+        expect(actual).toEqual(expected)
+    })
+    test("update natural earth feature given existing key", () => {
+        const feature = "coastlines"
+        const quadkey = "0123"
+        const data = {
+            xs: [[1, 2], [3]],
+            ys: [[4, 5], [6]]
+        }
+        const action = updateNaturalEarthFeature({ feature, quadkey, data })
+        const state = {
+            natural_earth_features: {
+                "0123": null
+            }
+        }
+        const actual = reduce(rootReducer, state, [ action ])
+        const expected = {
+            natural_earth_features: {
+                "0123": {
+                    coastlines: {
+                        xs: [[1, 2], [3]],
+                        ys: [[4, 5], [6]],
+                    }
+                }
+            }
+        }
+        expect(actual).toEqual(expected)
+    })
+    test("update natural earth feature if no key present", () => {
+        const feature = "coastlines"
+        const quadkey = "0123"
+        const data = {
+            xs: [[1, 2], [3]],
+            ys: [[4, 5], [6]]
+        }
+        const action = updateNaturalEarthFeature({ feature, quadkey, data })
+        const state = {
+            natural_earth_features: {}
+        }
+        const actual = reduce(rootReducer, state, [ action ])
+        const expected = {
+            natural_earth_features: {}
+        }
+        expect(actual).toEqual(expected)
+    })
+
 })
