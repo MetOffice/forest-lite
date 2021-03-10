@@ -1,6 +1,8 @@
 /**
  * Wiring between React-Redux app and dedicated web worker
  */
+import React, { useEffect } from "react"
+import { useDispatch } from "react-redux"
 import { SET_NATURAL_EARTH_FEATURE } from "./action-types.js"
 import Worker from "./web-worker.js"
 
@@ -8,9 +10,16 @@ import Worker from "./web-worker.js"
 const worker = new Worker()
 
 
-// Receive messages from worker
-worker.onmessage = ({ data }) => {
-    console.log("message from worker", data)
+// React component to connect web-worker to React store
+export const WebWorker = () => {
+    const dispatch = useDispatch()
+    useEffect(() => {
+        // Receive messages from worker
+        worker.onmessage = ({ data }) => {
+            dispatch(data)
+        }
+    }, [])
+    return null
 }
 
 

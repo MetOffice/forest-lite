@@ -3,15 +3,21 @@
  */
 
 
+// Wrap postMessage with a log message
+const log = msg => {
+    postMessage({ type: "LOG", payload: msg })
+}
+
+
 // IndexedDB set up
 const version = 1
 const dbName = "forest-lite"
 const request = indexedDB.open(dbName, version)
 request.onerror = ev => {
-    postMessage("error")
+    log("error")
 }
 request.onsuccess = ev => {
-    postMessage("success")
+    log("success")
 }
 request.onupgradeneeded = ev => {
     const db = ev.target.result
@@ -41,10 +47,10 @@ onmessage = ({ data }) => {
         const objectStore = transaction.objectStore("natural_earth_feature")
         const request = objectStore.add(payload)
         request.onerror = ev => {
-            postMessage("failed to add record")
+            log("failed to add record")
         }
         request.onsuccess = ev => {
-            postMessage("successfully added record")
+            log("successfully added record")
         }
     }
 }
