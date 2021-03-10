@@ -8,6 +8,13 @@ import Worker from "./web-worker.js"
 const worker = new Worker()
 
 
+// Receive messages from worker
+worker.onmessage = ({ data }) => {
+    console.log("message from worker", data)
+}
+
+
+// Send messages to worker
 export const webWorkerMiddleware = store => next => action => {
     const { type } = action
     if (type === SET_NATURAL_EARTH_FEATURE) {

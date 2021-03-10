@@ -8,10 +8,10 @@ const version = 1
 const dbName = "forest-lite"
 const request = indexedDB.open(dbName, version)
 request.onerror = ev => {
-    console.log("error")
+    postMessage("error")
 }
 request.onsuccess = ev => {
-    console.log("success")
+    postMessage("success")
 }
 request.onupgradeneeded = ev => {
     const db = ev.target.result
@@ -23,7 +23,7 @@ request.onupgradeneeded = ev => {
     objectStore.createIndex("quadkey", "quadkey", { unique: false })
 
     objectStore.transaction.oncomplete = ev => {
-        console.log("upgrade complete")
+        postMessage("upgrade complete")
     }
 }
 
@@ -41,10 +41,10 @@ onmessage = ({ data }) => {
         const objectStore = transaction.objectStore("natural_earth_feature")
         const request = objectStore.add(payload)
         request.onerror = ev => {
-            console.log("failed to add record")
+            postMessage("failed to add record")
         }
         request.onsuccess = ev => {
-            console.log("successfully added record")
+            postMessage("successfully added record")
         }
     }
 }
