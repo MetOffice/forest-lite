@@ -69,6 +69,7 @@ import MapExtent
         )
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
+import Quadkey exposing (Quadkey)
 import Time
 import Viewport exposing (Viewport)
 import ZXY exposing (XY)
@@ -199,7 +200,6 @@ type alias Model =
     , collapsed : Dict String Bool
     , zoom_level : Maybe ZoomLevel
     , tiles : List ZXY.XY
-    , boxes : List BoundingBox
     }
 
 
@@ -321,7 +321,7 @@ type alias Collapsible =
 
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
-    | GotNaturalEarthFeature NaturalEarthFeature BoundingBox (Result Http.Error MultiLine)
+    | GotNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey (Result Http.Error MultiLine)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -391,7 +391,6 @@ init flags =
                 Dict.empty
             , zoom_level = Nothing
             , tiles = []
-            , boxes = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -587,12 +586,12 @@ update msg model =
                     ( model, Cmd.none )
 
         -- NATURAL EARTH FEATURE
-        GotNaturalEarthFeature feature box result ->
+        GotNaturalEarthFeature feature box quadkey result ->
             case result of
                 Ok data ->
                     let
                         cmd =
-                            SetNaturalEarthFeature feature box data
+                            SetNaturalEarthFeature feature box quadkey data
                                 |> encodeAction
                                 |> sendAction
                     in
@@ -1036,43 +1035,46 @@ updateAction model action =
                 xys =
                     MapExtent.tiles zoom_level viewport
 
-                boxes =
-                    List.map
-                        (\t ->
-                            MapExtent.toBox zoom_level t
-                        )
-                        xys
-
                 cmd =
                     Cmd.batch
                         (List.map
-                            (\bounding_box ->
+                            (\xy ->
+                                let
+                                    quadkey =
+                                        Quadkey.fromXY zoom_level xy
+
+                                    bounding_box =
+                                        MapExtent.toBox zoom_level xy
+                                in
                                 [ getNaturalEarthFeature
                                     model.baseURL
                                     NaturalEarthFeature.Coastline
                                     bounding_box
+                                    quadkey
                                 , getNaturalEarthFeature
                                     model.baseURL
                                     NaturalEarthFeature.Border
                                     bounding_box
+                                    quadkey
                                 , getNaturalEarthFeature
                                     model.baseURL
                                     NaturalEarthFeature.DisputedBorder
                                     bounding_box
+                                    quadkey
                                 , getNaturalEarthFeature
                                     model.baseURL
                                     NaturalEarthFeature.Lake
                                     bounding_box
+                                    quadkey
                                 ]
                                     |> Cmd.batch
                             )
-                            boxes
+                            xys
                         )
             in
             ( { model
                 | zoom_level = Just zoom_level
                 , tiles = xys
-                , boxes = boxes
               }
             , cmd
             )
@@ -1169,15 +1171,15 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> NaturalEarthFeature -> BoundingBox -> Cmd Msg
-getNaturalEarthFeature baseURL feature box =
+getNaturalEarthFeature : String -> NaturalEarthFeature -> BoundingBox -> Quadkey -> Cmd Msg
+getNaturalEarthFeature baseURL feature box quadkey =
     let
         endpoint =
             NaturalEarthFeature.endpoint feature box
 
         -- Tagger should take key, e.g. Quadkey
         tagger =
-            GotNaturalEarthFeature feature box
+            GotNaturalEarthFeature feature box quadkey
     in
     Http.get
         { url = baseURL ++ endpoint
@@ -1738,7 +1740,7 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
-    | SetNaturalEarthFeature NaturalEarthFeature BoundingBox MultiLine
+    | SetNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey MultiLine
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
 
@@ -1776,12 +1778,13 @@ encodeAction action =
                     ]
                 )
 
-        SetNaturalEarthFeature feature box data ->
+        SetNaturalEarthFeature feature box quadkey data ->
             buildAction "SET_NATURAL_EARTH_FEATURE"
                 (Json.Encode.object
                     [ ( "feature", NaturalEarthFeature.encode feature )
                     , ( "data", MultiLine.encode data )
                     , ( "bounding_box", BoundingBox.encode box )
+                    , ( "quadkey", Quadkey.encode quadkey )
                     ]
                 )
 

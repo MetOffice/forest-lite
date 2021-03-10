@@ -1,12 +1,18 @@
-module Quadkey exposing (Quadkey, toString)
+module Quadkey exposing (Quadkey, encode, fromXY, fromZXY, toString)
 
 import Binary
+import Json.Encode
 import ZXY exposing (XY, ZXY)
-import ZoomLevel
+import ZoomLevel exposing (ZoomLevel)
 
 
 type Quadkey
     = Quadkey String
+
+
+encode : Quadkey -> Json.Encode.Value
+encode (Quadkey str) =
+    Json.Encode.string str
 
 
 toString : Quadkey -> String
@@ -14,8 +20,13 @@ toString (Quadkey str) =
     str
 
 
-quadkey : ZXY -> Quadkey
-quadkey (ZXY.ZXY level (ZXY.XY x y)) =
+fromZXY : ZXY -> Quadkey
+fromZXY (ZXY.ZXY level xy) =
+    fromXY level xy
+
+
+fromXY : ZoomLevel -> XY -> Quadkey
+fromXY level (ZXY.XY x y) =
     let
         length =
             ZoomLevel.toInt level
