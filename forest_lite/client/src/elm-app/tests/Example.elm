@@ -5,10 +5,8 @@ import Fuzz exposing (Fuzzer, int, intRange, list, string)
 import MapExtent
     exposing
         ( WebMercator
-        , ZoomLevel
         , earthRadius
         , quadkey
-        , startPoint
         , toZXY
         , xy
         , xyRange
@@ -16,6 +14,8 @@ import MapExtent
         , zxyToExtent
         )
 import Test exposing (..)
+import Viewport
+import ZoomLevel exposing (ZoomLevel)
 
 
 quadkeyTests : Test
@@ -58,10 +58,10 @@ zoomLevelTests =
                         (pi * earthRadius)
 
                 viewport =
-                    MapExtent.Viewport start end
+                    Viewport.Viewport start end
             in
-            MapExtent.zoomLevelFromViewport viewport
-                |> Expect.equal (MapExtent.ZoomLevel 0)
+            MapExtent.viewportToZoomLevel viewport
+                |> Expect.equal (ZoomLevel.ZoomLevel 0)
 
 
 xyTests : Test
@@ -94,7 +94,7 @@ zxyToExtentTests =
                             (-pi * earthRadius)
 
                     expect =
-                        MapExtent.Viewport start end
+                        Viewport.Viewport start end
                 in
                 zxyToExtent (zxy 0 0 0)
                     |> Expect.equal expect
@@ -110,7 +110,7 @@ zxyToExtentTests =
                         WebMercator 0 0
 
                     expect =
-                        MapExtent.Viewport start end
+                        Viewport.Viewport start end
                 in
                 zxyToExtent (zxy 1 0 0)
                     |> Expect.equal expect
@@ -128,7 +128,7 @@ zxyToExtentTests =
                             (pi * earthRadius / 2)
 
                     expect =
-                        MapExtent.Viewport start end
+                        Viewport.Viewport start end
                 in
                 zxyToExtent (zxy 2 0 0)
                     |> Expect.equal expect
@@ -146,7 +146,7 @@ zxyToExtentTests =
                             (pi * earthRadius / 2)
 
                     expect =
-                        MapExtent.Viewport start end
+                        Viewport.Viewport start end
                 in
                 zxyToExtent (zxy 2 1 0)
                     |> Expect.equal expect
@@ -162,7 +162,7 @@ toZXYTests =
                     zxy 2 1 2
 
                 point =
-                    zxyToExtent tile |> startPoint
+                    zxyToExtent tile |> Viewport.getStart
             in
-            toZXY (MapExtent.ZoomLevel 2) point
+            toZXY (ZoomLevel.ZoomLevel 2) point
                 |> Expect.equal tile

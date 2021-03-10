@@ -1,47 +1,34 @@
 module MapExtent exposing (..)
 
-import Binary
+import BoundingBox exposing (BoundingBox)
+import Quadkey exposing (Quadkey)
+import Viewport exposing (Viewport)
+import ZXY exposing (XY, ZXY)
+import ZoomLevel exposing (ZoomLevel)
 
 
 
 -- SLIPPY MAP
 
 
-type ZoomLevel
-    = ZoomLevel Int
-
-
-zoomLevelToInt : ZoomLevel -> Int
-zoomLevelToInt (ZoomLevel n) =
-    n
-
-
-type ZXY
-    = ZXY ZoomLevel XY
-
-
-type XY
-    = XY Int Int
-
-
 xy : Int -> Int -> XY
 xy x y =
-    XY x y
+    ZXY.XY x y
 
 
 zxy : Int -> Int -> Int -> ZXY
 zxy z x y =
-    ZXY (ZoomLevel z) (XY x y)
+    ZXY.ZXY (ZoomLevel.ZoomLevel z) (ZXY.XY x y)
 
 
 zxyToExtent : ZXY -> Viewport WebMercator
-zxyToExtent (ZXY level point) =
+zxyToExtent (ZXY.ZXY level point) =
     xyToExtent level point
 
 
 xyToExtent : ZoomLevel -> XY -> Viewport WebMercator
-xyToExtent (ZoomLevel z) (XY i j) =
-    Viewport
+xyToExtent (ZoomLevel.ZoomLevel z) (ZXY.XY i j) =
+    Viewport.Viewport
         (vertexLocation z i j)
         (vertexLocation z (i + 1) (j + 1))
 
@@ -67,8 +54,37 @@ vertexLocation z i j =
     WebMercator (x0 + x * width) (y0 - y * width)
 
 
+toBox : ZoomLevel -> XY -> BoundingBox
+toBox level xy_index =
+    xyToExtent level xy_index
+        |> Viewport.map toWGS84
+        |> viewportToBox
+
+
+viewportToBox : Viewport WGS84 -> BoundingBox
+viewportToBox (Viewport.Viewport start end) =
+    { minlon = min start.longitude end.longitude
+    , maxlon = max start.longitude end.longitude
+    , minlat = min start.latitude end.latitude
+    , maxlat = max start.latitude end.latitude
+    }
+
+
+tiles : ZoomLevel -> Viewport WebMercator -> List XY
+tiles level (Viewport.Viewport start end) =
+    let
+        -- Flip diagonal direction to satisfy assumptions
+        north_west =
+            WebMercator start.x end.y
+
+        south_east =
+            WebMercator end.x start.y
+    in
+    xyRange (toXY level north_west) (toXY level south_east)
+
+
 xyRange : XY -> XY -> List XY
-xyRange (XY x_start y_start) (XY x_end y_end) =
+xyRange (ZXY.XY x_start y_start) (ZXY.XY x_end y_end) =
     let
         xs =
             List.range x_start x_end
@@ -76,24 +92,18 @@ xyRange (XY x_start y_start) (XY x_end y_end) =
         ys =
             List.range y_start y_end
     in
-    List.map
-        (\f -> List.map f ys)
-        (List.map xy xs)
-        |> List.concat
+    nested xy xs ys
 
 
-type Viewport a
-    = Viewport a a
+{-| Application of operation on cartesian product of two lists
 
+A helper to make it easy to combine multiple combinations
+of lists into a single list using a binary operation
 
-mapViewport : (a -> b) -> Viewport a -> Viewport b
-mapViewport f (Viewport start end) =
-    Viewport (f start) (f end)
-
-
-startPoint : Viewport a -> a
-startPoint (Viewport start _) =
-    start
+-}
+nested : (a -> b -> c) -> List a -> List b -> List c
+nested op x y =
+    List.map (\f -> List.map f y) (List.map op x) |> List.concat
 
 
 viewportFromFloat : Float -> Float -> Float -> Float -> Viewport WebMercator
@@ -105,27 +115,27 @@ viewportFromFloat x_start y_start x_end y_end =
         end =
             { x = x_end, y = y_end }
     in
-    Viewport start end
+    Viewport.Viewport start end
 
 
-zoomLevelFromViewport : Viewport WebMercator -> ZoomLevel
-zoomLevelFromViewport viewport =
+viewportToZoomLevel : Viewport WebMercator -> ZoomLevel
+viewportToZoomLevel viewport =
     let
         maximum_length =
             2 * pi * earthRadius
     in
     ceiling (logBase 2 (maximum_length / averageLength viewport))
-        |> ZoomLevel
+        |> ZoomLevel.ZoomLevel
 
 
 averageLength : Viewport WebMercator -> Float
-averageLength (Viewport start end) =
+averageLength (Viewport.Viewport start end) =
     sqrt ((start.x - end.x) * (start.y - end.y))
 
 
 toZXY : ZoomLevel -> WebMercator -> ZXY
 toZXY level point =
-    ZXY level (toXY level point)
+    ZXY.ZXY level (toXY level point)
 
 
 toXY : ZoomLevel -> WebMercator -> XY
@@ -138,7 +148,7 @@ toXY level point =
             pi * earthRadius
 
         n =
-            zoomLevelToInt level
+            ZoomLevel.toInt level
 
         dx =
             (2 * pi * earthRadius) / toFloat (2 ^ n)
@@ -152,63 +162,12 @@ toXY level point =
         y =
             bucketIndex y0 dy point.y
     in
-    XY x y
+    ZXY.XY x y
 
 
 bucketIndex : Float -> Float -> Float -> Int
 bucketIndex x0 dx x =
     floor ((x - x0) / dx)
-
-
-
--- QUADKEY
-
-
-type Quadkey
-    = Quadkey String
-
-
-quadkeyToString : Quadkey -> String
-quadkeyToString (Quadkey str) =
-    str
-
-
-quadkey : ZXY -> Quadkey
-quadkey (ZXY (ZoomLevel z) (XY x y)) =
-    let
-        length =
-            z
-
-        x_ints =
-            Binary.fromDecimal x
-                |> Binary.toIntegers
-                |> zeroPad length
-
-        y_ints =
-            Binary.fromDecimal y
-                |> Binary.toIntegers
-                |> zeroPad length
-
-        base4_ints =
-            List.map2 (+) x_ints (List.map ((*) 2) y_ints)
-
-        base4_strs =
-            List.map String.fromInt base4_ints
-    in
-    Quadkey (String.join "" base4_strs)
-
-
-zeroPad : Int -> List Int -> List Int
-zeroPad length array =
-    let
-        extra =
-            length - List.length array
-    in
-    if extra > 0 then
-        List.repeat extra 0 ++ array
-
-    else
-        array
 
 
 

@@ -1,5 +1,6 @@
 port module Main exposing (..)
 
+import BoundingBox exposing (BoundingBox)
 import Browser
 import DataVarLabel exposing (DataVarLabel)
 import DatasetID exposing (DatasetID)
@@ -62,15 +63,17 @@ import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import MapExtent
     exposing
-        ( Viewport
-        , WGS84
+        ( WGS84
         , WebMercator
-        , mapViewport
         , toWGS84
         )
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
+import Quadkey exposing (Quadkey)
 import Time
+import Viewport exposing (Viewport)
+import ZXY exposing (XY)
+import ZoomLevel exposing (ZoomLevel)
 
 
 type alias Settings =
@@ -194,8 +197,10 @@ type alias Model =
     , coastlines : Bool
     , coastlines_color : String
     , limits : Limits
-    , map_extent : Maybe (Viewport WebMercator)
     , collapsed : Dict String Bool
+    , zoom_level : Maybe ZoomLevel
+    , xys : List XY
+    , quadkeys : List Quadkey
     }
 
 
@@ -317,7 +322,7 @@ type alias Collapsible =
 
 type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
-    | GotNaturalEarthFeature NaturalEarthFeature (Result Http.Error MultiLine)
+    | GotNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey (Result Http.Error MultiLine)
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
     | GotAxis DatasetID (Result Http.Error Axis)
@@ -383,9 +388,11 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
-            , map_extent = Nothing
             , collapsed =
                 Dict.empty
+            , zoom_level = Nothing
+            , xys = []
+            , quadkeys = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -397,18 +404,6 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
-                        , getNaturalEarthFeature baseURL
-                            NaturalEarthFeature.Coastline
-                            default.map_extent
-                        , getNaturalEarthFeature baseURL
-                            NaturalEarthFeature.Border
-                            default.map_extent
-                        , getNaturalEarthFeature baseURL
-                            NaturalEarthFeature.DisputedBorder
-                            default.map_extent
-                        , getNaturalEarthFeature baseURL
-                            NaturalEarthFeature.Lake
-                            default.map_extent
                         ]
             in
             case settings.claim of
@@ -593,12 +588,12 @@ update msg model =
                     ( model, Cmd.none )
 
         -- NATURAL EARTH FEATURE
-        GotNaturalEarthFeature feature result ->
+        GotNaturalEarthFeature feature box quadkey result ->
             case result of
                 Ok data ->
                     let
                         cmd =
-                            SetNaturalEarthFeature feature data
+                            SetNaturalEarthFeature feature box quadkey data
                                 |> encodeAction
                                 |> sendAction
                     in
@@ -1033,30 +1028,62 @@ updateAction model action =
                     , y = y_end
                     }
 
-                map_extent =
-                    Just (MapExtent.Viewport start end)
+                viewport =
+                    Viewport.Viewport start end
+
+                zoom_level =
+                    MapExtent.viewportToZoomLevel viewport
+
+                xys =
+                    MapExtent.tiles zoom_level viewport
+
+                quadkeys =
+                    List.map (\xy -> Quadkey.fromXY zoom_level xy) xys
 
                 cmd =
                     Cmd.batch
-                        [ getNaturalEarthFeature
-                            model.baseURL
-                            NaturalEarthFeature.Coastline
-                            map_extent
-                        , getNaturalEarthFeature
-                            model.baseURL
-                            NaturalEarthFeature.Border
-                            map_extent
-                        , getNaturalEarthFeature
-                            model.baseURL
-                            NaturalEarthFeature.DisputedBorder
-                            map_extent
-                        , getNaturalEarthFeature
-                            model.baseURL
-                            NaturalEarthFeature.Lake
-                            map_extent
-                        ]
+                        (List.map
+                            (\xy ->
+                                let
+                                    quadkey =
+                                        Quadkey.fromXY zoom_level xy
+
+                                    bounding_box =
+                                        MapExtent.toBox zoom_level xy
+                                in
+                                [ getNaturalEarthFeature
+                                    model.baseURL
+                                    NaturalEarthFeature.Coastline
+                                    bounding_box
+                                    quadkey
+                                , getNaturalEarthFeature
+                                    model.baseURL
+                                    NaturalEarthFeature.Border
+                                    bounding_box
+                                    quadkey
+                                , getNaturalEarthFeature
+                                    model.baseURL
+                                    NaturalEarthFeature.DisputedBorder
+                                    bounding_box
+                                    quadkey
+                                , getNaturalEarthFeature
+                                    model.baseURL
+                                    NaturalEarthFeature.Lake
+                                    bounding_box
+                                    quadkey
+                                ]
+                                    |> Cmd.batch
+                            )
+                            xys
+                        )
             in
-            ( { model | map_extent = map_extent }, cmd )
+            ( { model
+                | zoom_level = Just zoom_level
+                , xys = xys
+                , quadkeys = quadkeys
+              }
+            , cmd
+            )
 
         SetLimits low high _ _ ->
             let
@@ -1150,25 +1177,20 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> NaturalEarthFeature -> Maybe (Viewport WebMercator) -> Cmd Msg
-getNaturalEarthFeature baseURL feature map_extent =
-    case map_extent of
-        Just viewport ->
-            let
-                endpoint =
-                    NaturalEarthFeature.endpoint feature
-                        (mapViewport toWGS84 viewport)
+getNaturalEarthFeature : String -> NaturalEarthFeature -> BoundingBox -> Quadkey -> Cmd Msg
+getNaturalEarthFeature baseURL feature box quadkey =
+    let
+        endpoint =
+            NaturalEarthFeature.endpoint feature box
 
-                tagger =
-                    GotNaturalEarthFeature feature
-            in
-            Http.get
-                { url = baseURL ++ endpoint
-                , expect = Http.expectJson tagger MultiLine.decoder
-                }
-
-        Nothing ->
-            Cmd.none
+        -- Tagger should take key, e.g. Quadkey
+        tagger =
+            GotNaturalEarthFeature feature box quadkey
+    in
+    Http.get
+        { url = baseURL ++ endpoint
+        , expect = Http.expectJson tagger MultiLine.decoder
+        }
 
 
 getDatasets : String -> Cmd Msg
@@ -1391,6 +1413,9 @@ viewLayerMenu model =
                             [ viewHideShowIcon model.visible
                             , viewCoastlineCheckbox model.coastlines
                             , viewCoastlineColorPicker model.coastlines_color
+                            , viewZoomLevel model.zoom_level
+                            , viewXYs model.xys
+                            , viewQuadkeys model.quadkeys
                             ]
                     , onClick = ExpandCollapse DisplayMenu
                     }
@@ -1412,6 +1437,58 @@ viewLayerMenu model =
 
         NotStarted ->
             div [] [ text "..." ]
+
+
+viewZoomLevel : Maybe ZoomLevel -> Html Msg
+viewZoomLevel zoom_level =
+    case zoom_level of
+        Just level ->
+            div
+                [ style "margin-left" "0.5em"
+                , style "margin-top" "0.5em"
+                ]
+                [ text ("Zoom level: " ++ ZoomLevel.toString level) ]
+
+        Nothing ->
+            div [] [ text "Zoom level not set" ]
+
+
+viewXYs : List XY -> Html Msg
+viewXYs xys =
+    div
+        [ style "margin-left" "0.5em"
+        , style "margin-top" "0.5em"
+        ]
+        [ div [] [ text "Tiles:" ]
+        , ul []
+            (List.map
+                (\t ->
+                    li
+                        []
+                        [ text (ZXY.xyToString t) ]
+                )
+                xys
+            )
+        ]
+
+
+viewQuadkeys : List Quadkey -> Html Msg
+viewQuadkeys quadkeys =
+    div
+        [ style "margin-left" "0.5em"
+        , style "margin-top" "0.5em"
+        ]
+        [ div [] [ text "Tiles:" ]
+        , ul []
+            (List.map
+                (\t ->
+                    li
+                        []
+                        [ text (Quadkey.toString t) ]
+                )
+                quadkeys
+            )
+        ]
 
 
 getCollapsed : SubMenu -> Dict String Bool -> Bool
@@ -1689,7 +1766,7 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
-    | SetNaturalEarthFeature NaturalEarthFeature MultiLine
+    | SetNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey MultiLine
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
 
@@ -1727,11 +1804,13 @@ encodeAction action =
                     ]
                 )
 
-        SetNaturalEarthFeature feature data ->
+        SetNaturalEarthFeature feature box quadkey data ->
             buildAction "SET_NATURAL_EARTH_FEATURE"
                 (Json.Encode.object
                     [ ( "feature", NaturalEarthFeature.encode feature )
                     , ( "data", MultiLine.encode data )
+                    , ( "bounding_box", BoundingBox.encode box )
+                    , ( "quadkey", Quadkey.encode quadkey )
                     ]
                 )
 
