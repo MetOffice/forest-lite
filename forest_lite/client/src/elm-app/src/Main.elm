@@ -1032,46 +1032,45 @@ updateAction model action =
                 zoom_level =
                     MapExtent.viewportToZoomLevel viewport
 
-                tiles =
+                xys =
                     MapExtent.tiles zoom_level viewport
 
                 boxes =
-                    Debug.log "boxes"
-                        (List.map
-                            (\t ->
-                                MapExtent.toBox zoom_level t
-                            )
-                            tiles
+                    List.map
+                        (\t ->
+                            MapExtent.toBox zoom_level t
                         )
-
-                bounding_box =
-                    viewport
-                        |> Viewport.map toWGS84
-                        |> MapExtent.viewportToBox
+                        xys
 
                 cmd =
                     Cmd.batch
-                        [ getNaturalEarthFeature
-                            model.baseURL
-                            NaturalEarthFeature.Coastline
-                            bounding_box
-                        , getNaturalEarthFeature
-                            model.baseURL
-                            NaturalEarthFeature.Border
-                            bounding_box
-                        , getNaturalEarthFeature
-                            model.baseURL
-                            NaturalEarthFeature.DisputedBorder
-                            bounding_box
-                        , getNaturalEarthFeature
-                            model.baseURL
-                            NaturalEarthFeature.Lake
-                            bounding_box
-                        ]
+                        (List.map
+                            (\bounding_box ->
+                                [ getNaturalEarthFeature
+                                    model.baseURL
+                                    NaturalEarthFeature.Coastline
+                                    bounding_box
+                                , getNaturalEarthFeature
+                                    model.baseURL
+                                    NaturalEarthFeature.Border
+                                    bounding_box
+                                , getNaturalEarthFeature
+                                    model.baseURL
+                                    NaturalEarthFeature.DisputedBorder
+                                    bounding_box
+                                , getNaturalEarthFeature
+                                    model.baseURL
+                                    NaturalEarthFeature.Lake
+                                    bounding_box
+                                ]
+                                    |> Cmd.batch
+                            )
+                            boxes
+                        )
             in
             ( { model
                 | zoom_level = Just zoom_level
-                , tiles = tiles
+                , tiles = xys
                 , boxes = boxes
               }
             , cmd
