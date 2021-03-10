@@ -1,8 +1,9 @@
 module MapExtent exposing (..)
 
-import Binary
 import BoundingBox exposing (BoundingBox)
+import Quadkey exposing (Quadkey)
 import Viewport exposing (Viewport)
+import ZXY exposing (XY, ZXY)
 import ZoomLevel exposing (ZoomLevel)
 
 
@@ -10,31 +11,23 @@ import ZoomLevel exposing (ZoomLevel)
 -- SLIPPY MAP
 
 
-type ZXY
-    = ZXY ZoomLevel XY
-
-
-type XY
-    = XY Int Int
-
-
 xy : Int -> Int -> XY
 xy x y =
-    XY x y
+    ZXY.XY x y
 
 
 zxy : Int -> Int -> Int -> ZXY
 zxy z x y =
-    ZXY (ZoomLevel.ZoomLevel z) (XY x y)
+    ZXY.ZXY (ZoomLevel.ZoomLevel z) (ZXY.XY x y)
 
 
 zxyToExtent : ZXY -> Viewport WebMercator
-zxyToExtent (ZXY level point) =
+zxyToExtent (ZXY.ZXY level point) =
     xyToExtent level point
 
 
 xyToString : XY -> String
-xyToString (XY x y) =
+xyToString (ZXY.XY x y) =
     let
         xs =
             String.fromInt x
@@ -46,7 +39,7 @@ xyToString (XY x y) =
 
 
 xyToExtent : ZoomLevel -> XY -> Viewport WebMercator
-xyToExtent (ZoomLevel.ZoomLevel z) (XY i j) =
+xyToExtent (ZoomLevel.ZoomLevel z) (ZXY.XY i j) =
     Viewport.Viewport
         (vertexLocation z i j)
         (vertexLocation z (i + 1) (j + 1))
@@ -103,7 +96,7 @@ tiles level (Viewport.Viewport start end) =
 
 
 xyRange : XY -> XY -> List XY
-xyRange (XY x_start y_start) (XY x_end y_end) =
+xyRange (ZXY.XY x_start y_start) (ZXY.XY x_end y_end) =
     let
         xs =
             List.range x_start x_end
@@ -154,7 +147,7 @@ averageLength (Viewport.Viewport start end) =
 
 toZXY : ZoomLevel -> WebMercator -> ZXY
 toZXY level point =
-    ZXY level (toXY level point)
+    ZXY.ZXY level (toXY level point)
 
 
 toXY : ZoomLevel -> WebMercator -> XY
@@ -181,63 +174,12 @@ toXY level point =
         y =
             bucketIndex y0 dy point.y
     in
-    XY x y
+    ZXY.XY x y
 
 
 bucketIndex : Float -> Float -> Float -> Int
 bucketIndex x0 dx x =
     floor ((x - x0) / dx)
-
-
-
--- QUADKEY
-
-
-type Quadkey
-    = Quadkey String
-
-
-quadkeyToString : Quadkey -> String
-quadkeyToString (Quadkey str) =
-    str
-
-
-quadkey : ZXY -> Quadkey
-quadkey (ZXY level (XY x y)) =
-    let
-        length =
-            ZoomLevel.toInt level
-
-        x_ints =
-            Binary.fromDecimal x
-                |> Binary.toIntegers
-                |> zeroPad length
-
-        y_ints =
-            Binary.fromDecimal y
-                |> Binary.toIntegers
-                |> zeroPad length
-
-        base4_ints =
-            List.map2 (+) x_ints (List.map ((*) 2) y_ints)
-
-        base4_strs =
-            List.map String.fromInt base4_ints
-    in
-    Quadkey (String.join "" base4_strs)
-
-
-zeroPad : Int -> List Int -> List Int
-zeroPad length array =
-    let
-        extra =
-            length - List.length array
-    in
-    if extra > 0 then
-        List.repeat extra 0 ++ array
-
-    else
-        array
 
 
 

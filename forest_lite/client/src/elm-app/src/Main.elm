@@ -71,6 +71,7 @@ import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Time
 import Viewport exposing (Viewport)
+import ZXY exposing (XY)
 import ZoomLevel exposing (ZoomLevel)
 
 
@@ -197,7 +198,7 @@ type alias Model =
     , limits : Limits
     , collapsed : Dict String Bool
     , zoom_level : Maybe ZoomLevel
-    , tiles : List MapExtent.XY
+    , tiles : List ZXY.XY
     , boxes : List BoundingBox
     }
 
@@ -1443,7 +1444,7 @@ viewZoomLevel zoom_level =
             div [] [ text "Zoom level not set" ]
 
 
-viewTiles : List MapExtent.XY -> Html Msg
+viewTiles : List ZXY.XY -> Html Msg
 viewTiles tiles =
     div
         [ style "margin-left" "0.5em"
