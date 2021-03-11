@@ -1,12 +1,16 @@
 /**
  * Web worker to perform off-main thread tasks
  */
+import {
+    SET_NATURAL_EARTH_FEATURE,
+    GET_NATURAL_EARTH_FEATURE,
+    GOT_NATURAL_EARTH_FEATURE
+} from "./action-types.js"
 
 
-// Wrap postMessage with a log message
-const log = msg => {
-    postMessage({ type: "LOG", payload: msg })
-}
+// Message creators
+const log = msg => ({ type: "LOG", payload: msg })
+const gotFeature = payload => ({ type: GOT_NATURAL_EARTH_FEATURE, payload })
 
 
 // IndexedDB set up
@@ -14,10 +18,10 @@ const version = 1
 const dbName = "forest-lite"
 const request = indexedDB.open(dbName, version)
 request.onerror = ev => {
-    log("error")
+    postMessage(log("error"))
 }
 request.onsuccess = ev => {
-    log("success")
+    postMessage(log("success"))
 }
 request.onupgradeneeded = ev => {
     const db = ev.target.result
@@ -29,7 +33,7 @@ request.onupgradeneeded = ev => {
     objectStore.createIndex("quadkey", "quadkey", { unique: false })
 
     objectStore.transaction.oncomplete = ev => {
-        postMessage("upgrade complete")
+        postMessage(log("upgrade complete"))
     }
 }
 
@@ -40,17 +44,33 @@ onmessage = ({ data }) => {
     const { type, payload } = data
 
     // Add an entry to IndexedDB
+    if (type === SET_NATURAL_EARTH_FEATURE) {
+        setNaturalEarthFeature(payload)
+    } else if (type === GET_NATURAL_EARTH_FEATURE) {
+        getNaturalEarthFeature(payload)
+    }
+
+}
+
+
+const getNaturalEarthFeature = payload => {
+    postMessage(gotNaturalEarthFeature({ status: "FAIL" }))
+}
+
+
+const setNaturalEarthFeature = payload => {
     const request = indexedDB.open(dbName, version)
     request.onsuccess = ev => {
         const db = ev.target.result
-        const transaction = db.transaction([ "natural_earth_feature" ], "readwrite")
-        const objectStore = transaction.objectStore("natural_earth_feature")
+        const storeName = "natural_earth_feature"
+        const transaction = db.transaction([ storeName ], "readwrite")
+        const objectStore = transaction.objectStore(storeName)
         const request = objectStore.add(payload)
         request.onerror = ev => {
-            log("failed to add record")
+            postMessage(log("failed to add record"))
         }
         request.onsuccess = ev => {
-            log("successfully added record")
+            postMessage(log("successfully added record"))
         }
     }
 }

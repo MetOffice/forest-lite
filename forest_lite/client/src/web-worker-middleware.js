@@ -3,7 +3,10 @@
  */
 import React, { useEffect } from "react"
 import { useDispatch } from "react-redux"
-import { SET_NATURAL_EARTH_FEATURE } from "./action-types.js"
+import {
+    SET_NATURAL_EARTH_FEATURE,
+    SET_QUADKEYS
+} from "./action-types.js"
 import Worker from "./web-worker.js"
 
 
@@ -29,6 +32,9 @@ export const webWorkerMiddleware = store => next => action => {
     if (type === SET_NATURAL_EARTH_FEATURE) {
         // Send action to web worker
         worker.postMessage(action)
+    }
+    if (type === SET_QUADKEYS) {
+        console.log("web-worker-middleware", action)
     }
     return next(action)
 }
