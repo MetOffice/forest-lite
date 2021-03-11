@@ -34,6 +34,7 @@ import {
     ZOOM_IN,
     ZOOM_OUT,
     SET_PORTS,
+    SET_NATURAL_EARTH_FEATURE,
     GET_HTTP_NATURAL_EARTH_FEATURE
 } from "./action-types"
 
@@ -115,4 +116,9 @@ export const setPorts = ports => ({ type: SET_PORTS, payload: ports })
 // Elm messages
 export const getHttpNaturalEarthFeature = payload => {
     return { type: GET_HTTP_NATURAL_EARTH_FEATURE, payload }
+}
+
+// WebWorker messages
+export const setNaturalEarthFeature = payload => {
+    return { type: SET_NATURAL_EARTH_FEATURE, payload }
 }

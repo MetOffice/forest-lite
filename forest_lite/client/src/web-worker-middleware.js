@@ -8,7 +8,8 @@ import {
     SET_QUADKEYS
 } from "./action-types.js"
 import {
-    getHttpNaturalEarthFeature
+    getHttpNaturalEarthFeature,
+    setNaturalEarthFeature
 } from "./actions.js"
 import { selectPorts } from "./ports-selector.js"
 import Worker from "./web-worker.js"
@@ -36,6 +37,9 @@ export const webWorkerMiddleware = store => next => action => {
     if (type === SET_HTTP_NATURAL_EARTH_FEATURE) {
         // Send action to web worker
         worker.postMessage(action)
+
+        // Send action to Redux app
+        return next(setNaturalEarthFeature(payload))
     }
     if (type === SET_QUADKEYS) {
 
