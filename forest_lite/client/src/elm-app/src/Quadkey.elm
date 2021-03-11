@@ -70,7 +70,6 @@ toZoomLevel (Quadkey str) =
 
 toXY : Quadkey -> XY
 toXY (Quadkey str) =
-    -- TODO replace with implementation
     let
         length =
             String.length str
@@ -81,6 +80,7 @@ toXY (Quadkey str) =
                 |> Base4.toDecimal
                 |> Binary.fromDecimal
                 |> Binary.toIntegers
+                |> zeroPad (2 * length)
 
         x =
             everyOther ints 1

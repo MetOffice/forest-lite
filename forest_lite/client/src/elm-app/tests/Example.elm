@@ -67,6 +67,23 @@ quadkeyToXYTests =
                 in
                 Quadkey.toXY key
                     |> Expect.equal (MapExtent.xy 3 5)
+        , test "round trip preserves x y" <|
+            \_ ->
+                let
+                    z =
+                        5
+
+                    x =
+                        5
+
+                    y =
+                        3
+
+                    key =
+                        Quadkey.fromXY (ZoomLevel.ZoomLevel z) (MapExtent.xy x y)
+                in
+                Quadkey.toXY key
+                    |> Expect.equal (MapExtent.xy x y)
         ]
 
 
