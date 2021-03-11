@@ -42,6 +42,34 @@ quadkeyTests =
         ]
 
 
+quadkeyToZoomLevelTests : Test
+quadkeyToZoomLevelTests =
+    describe "Quadkey toZoomLevel"
+        [ test "given 212 returns 3" <|
+            \_ ->
+                let
+                    key =
+                        Quadkey.fromString "212"
+                in
+                Quadkey.toZoomLevel key
+                    |> Expect.equal (ZoomLevel.ZoomLevel 3)
+        ]
+
+
+quadkeyToXYTests : Test
+quadkeyToXYTests =
+    describe "Quadkey toXY"
+        [ test "given 213 returns 3 5" <|
+            \_ ->
+                let
+                    key =
+                        Quadkey.fromString "213"
+                in
+                Quadkey.toXY key
+                    |> Expect.equal (MapExtent.xy 3 5)
+        ]
+
+
 zoomLevelTests : Test
 zoomLevelTests =
     test "zoomLevel" <|

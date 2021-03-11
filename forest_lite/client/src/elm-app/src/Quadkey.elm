@@ -10,6 +10,7 @@ module Quadkey exposing
     , toZoomLevel
     )
 
+import Base4
 import Binary
 import Json.Decode exposing (Decoder)
 import Json.Encode
@@ -68,9 +69,44 @@ toZoomLevel (Quadkey str) =
 
 
 toXY : Quadkey -> XY
-toXY _ =
+toXY (Quadkey str) =
     -- TODO replace with implementation
-    ZXY.XY 0 0
+    let
+        length =
+            String.length str
+
+        ints =
+            str
+                |> Base4.fromString
+                |> Base4.toDecimal
+                |> Binary.fromDecimal
+                |> Binary.toIntegers
+
+        x =
+            everyOther ints 1
+                |> Binary.fromIntegers
+                |> Binary.toDecimal
+
+        y =
+            everyOther ints 0
+                |> Binary.fromIntegers
+                |> Binary.toDecimal
+    in
+    ZXY.XY x y
+
+
+everyOther : List a -> Int -> List a
+everyOther items i =
+    case items of
+        [] ->
+            []
+
+        head :: tail ->
+            if modBy 2 i == 0 then
+                head :: everyOther tail (i + 1)
+
+            else
+                everyOther tail (i + 1)
 
 
 fromZXY : ZXY -> Quadkey
