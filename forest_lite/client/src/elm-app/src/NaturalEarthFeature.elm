@@ -1,7 +1,8 @@
-module NaturalEarthFeature exposing (NaturalEarthFeature(..), encode, endpoint)
+module NaturalEarthFeature exposing (NaturalEarthFeature(..), decoder, encode, endpoint)
 
 import BoundingBox exposing (BoundingBox)
 import Endpoint
+import Json.Decode exposing (Decoder)
 import Json.Encode
 import Scale
 
@@ -16,6 +17,29 @@ type NaturalEarthFeature
 encode : NaturalEarthFeature -> Json.Encode.Value
 encode feature =
     Json.Encode.string (toString feature)
+
+
+decoder : Decoder NaturalEarthFeature
+decoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\str ->
+                case str of
+                    "coastlines" ->
+                        Json.Decode.succeed Coastline
+
+                    "borders" ->
+                        Json.Decode.succeed Border
+
+                    "disputed" ->
+                        Json.Decode.succeed DisputedBorder
+
+                    "lakes" ->
+                        Json.Decode.succeed Lake
+
+                    _ ->
+                        Json.Decode.fail "unrecognised feature"
+            )
 
 
 toString : NaturalEarthFeature -> String

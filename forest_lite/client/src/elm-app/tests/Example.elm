@@ -6,13 +6,13 @@ import MapExtent
     exposing
         ( WebMercator
         , earthRadius
-        , quadkey
         , toZXY
         , xy
         , xyRange
         , zxy
         , zxyToExtent
         )
+import Quadkey exposing (Quadkey)
 import Test exposing (..)
 import Viewport
 import ZoomLevel exposing (ZoomLevel)
@@ -23,20 +23,20 @@ quadkeyTests =
     describe "Quadkey"
         [ test "given 000" <|
             \_ ->
-                quadkey (zxy 0 0 0)
-                    |> Expect.equal (MapExtent.Quadkey "0")
+                Quadkey.fromZXY (zxy 0 0 0)
+                    |> Expect.equal (Quadkey.fromString "0")
         , test "given 011" <|
             \_ ->
-                quadkey (zxy 1 0 1)
-                    |> Expect.equal (MapExtent.Quadkey "2")
+                Quadkey.fromZXY (zxy 1 0 1)
+                    |> Expect.equal (Quadkey.fromString "2")
         , test "given 355" <|
             \_ ->
-                quadkey (zxy 5 3 5)
-                    |> Expect.equal (MapExtent.Quadkey "00213")
+                Quadkey.fromZXY (zxy 5 3 5)
+                    |> Expect.equal (Quadkey.fromString "00213")
         , fuzz (intRange 1 24) "length of quadkey equals level" <|
             \n ->
-                quadkey (zxy n 0 0)
-                    |> MapExtent.quadkeyToString
+                Quadkey.fromZXY (zxy n 0 0)
+                    |> Quadkey.toString
                     |> String.length
                     |> Expect.equal n
         ]

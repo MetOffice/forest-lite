@@ -170,6 +170,13 @@ actionPayloadDecoder label =
                     )
                 )
 
+        "GET_HTTP_NATURAL_EARTH_FEATURE" ->
+            Json.Decode.field "payload"
+                (Json.Decode.map2 GetHttpNaturalEarthFeature
+                    (Json.Decode.field "feature" NaturalEarthFeature.decoder)
+                    (Json.Decode.field "quadkey" Quadkey.decoder)
+                )
+
         _ ->
             Json.Decode.field "payload"
                 (Json.Decode.map4 SetLimits
@@ -593,7 +600,7 @@ update msg model =
                 Ok data ->
                     let
                         cmd =
-                            SetNaturalEarthFeature feature box quadkey data
+                            SetHttpNaturalEarthFeature feature box quadkey data
                                 |> encodeAction
                                 |> sendAction
                     in
@@ -1040,48 +1047,10 @@ updateAction model action =
                 quadkeys =
                     List.map (\xy -> Quadkey.fromXY zoom_level xy) xys
 
-                cmdSetQuadkeys =
+                cmd =
                     SetQuadkeys quadkeys
                         |> encodeAction
                         |> sendAction
-
-                cmdGets =
-                    List.map
-                        (\xy ->
-                            let
-                                quadkey =
-                                    Quadkey.fromXY zoom_level xy
-
-                                bounding_box =
-                                    MapExtent.toBox zoom_level xy
-                            in
-                            [ getNaturalEarthFeature
-                                model.baseURL
-                                NaturalEarthFeature.Coastline
-                                bounding_box
-                                quadkey
-                            , getNaturalEarthFeature
-                                model.baseURL
-                                NaturalEarthFeature.Border
-                                bounding_box
-                                quadkey
-                            , getNaturalEarthFeature
-                                model.baseURL
-                                NaturalEarthFeature.DisputedBorder
-                                bounding_box
-                                quadkey
-                            , getNaturalEarthFeature
-                                model.baseURL
-                                NaturalEarthFeature.Lake
-                                bounding_box
-                                quadkey
-                            ]
-                                |> Cmd.batch
-                        )
-                        xys
-
-                cmd =
-                    Cmd.batch (cmdSetQuadkeys :: cmdGets)
             in
             ( { model
                 | zoom_level = Just zoom_level
@@ -1090,6 +1059,22 @@ updateAction model action =
               }
             , cmd
             )
+
+        GetHttpNaturalEarthFeature feature quadkey ->
+            let
+                z =
+                    Quadkey.toZoomLevel quadkey
+
+                xy =
+                    Quadkey.toXY quadkey
+
+                bounding_box =
+                    MapExtent.toBox z xy
+
+                cmd =
+                    getNaturalEarthFeature model.baseURL feature bounding_box quadkey
+            in
+            ( model, cmd )
 
         SetLimits low high _ _ ->
             let
@@ -1772,10 +1757,11 @@ type Action
     | SetVisible Bool
     | SetFlag Bool
     | SetLimits Float Float DatasetID DataVarLabel
-    | SetNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey MultiLine
     | SetQuadkeys (List Quadkey)
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
+    | GetHttpNaturalEarthFeature NaturalEarthFeature Quadkey
+    | SetHttpNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey MultiLine
 
 
 type alias OnlyActive =
@@ -1811,12 +1797,20 @@ encodeAction action =
                     ]
                 )
 
-        SetNaturalEarthFeature feature box quadkey data ->
-            buildAction "SET_NATURAL_EARTH_FEATURE"
+        SetHttpNaturalEarthFeature feature box quadkey data ->
+            buildAction "SET_HTTP_NATURAL_EARTH_FEATURE"
                 (Json.Encode.object
                     [ ( "feature", NaturalEarthFeature.encode feature )
                     , ( "data", MultiLine.encode data )
                     , ( "bounding_box", BoundingBox.encode box )
+                    , ( "quadkey", Quadkey.encode quadkey )
+                    ]
+                )
+
+        GetHttpNaturalEarthFeature feature quadkey ->
+            buildAction "GET_HTTP_NATURAL_EARTH_FEATURE"
+                (Json.Encode.object
+                    [ ( "feature", NaturalEarthFeature.encode feature )
                     , ( "quadkey", Quadkey.encode quadkey )
                     ]
                 )

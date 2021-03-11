@@ -1,7 +1,19 @@
-module Quadkey exposing (Quadkey, encode, fromXY, fromZXY, toString)
+module Quadkey exposing
+    ( Quadkey
+    , decoder
+    , encode
+    , fromString
+    , fromXY
+    , fromZXY
+    , toString
+    , toXY
+    , toZoomLevel
+    )
 
 import Binary
+import Json.Decode exposing (Decoder)
 import Json.Encode
+import Regex
 import ZXY exposing (XY, ZXY)
 import ZoomLevel exposing (ZoomLevel)
 
@@ -10,14 +22,55 @@ type Quadkey
     = Quadkey String
 
 
+fromString : String -> Quadkey
+fromString str =
+    -- TODO add validation here
+    Quadkey str
+
+
 encode : Quadkey -> Json.Encode.Value
 encode (Quadkey str) =
     Json.Encode.string str
 
 
+decoder : Decoder Quadkey
+decoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\str ->
+                let
+                    pattern =
+                        "^[0123]+$"
+
+                    regex =
+                        Maybe.withDefault Regex.never (Regex.fromString pattern)
+
+                    contains =
+                        Regex.contains regex str
+                in
+                case contains of
+                    True ->
+                        Json.Decode.succeed (Quadkey str)
+
+                    False ->
+                        Json.Decode.fail "invalid quadkey"
+            )
+
+
 toString : Quadkey -> String
 toString (Quadkey str) =
     str
+
+
+toZoomLevel : Quadkey -> ZoomLevel
+toZoomLevel (Quadkey str) =
+    ZoomLevel.ZoomLevel (String.length str)
+
+
+toXY : Quadkey -> XY
+toXY _ =
+    -- TODO replace with implementation
+    ZXY.XY 0 0
 
 
 fromZXY : ZXY -> Quadkey
