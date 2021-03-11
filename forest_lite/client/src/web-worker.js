@@ -3,14 +3,15 @@
  */
 import {
     SET_HTTP_NATURAL_EARTH_FEATURE,
-    GET_INDEXEDDB_NATURAL_EARTH_FEATURE,
-    GOT_NATURAL_EARTH_FEATURE
+    GET_INDEXEDDB_NATURAL_EARTH_FEATURE
 } from "./action-types.js"
+import {
+    gotIndexedDBNaturalEarthFeature
+} from "./actions.js"
 
 
 // Message creators
 const log = msg => ({ type: "LOG", payload: msg })
-const gotFeature = payload => ({ type: GOT_NATURAL_EARTH_FEATURE, payload })
 
 
 // IndexedDB set up
@@ -54,7 +55,9 @@ onmessage = ({ data }) => {
 
 
 const getNaturalEarthFeature = payload => {
-    postMessage(gotNaturalEarthFeature({ status: "FAIL" }))
+    const { feature, quadkey } = payload
+    // TODO: Query IndexedDB for feature/quadkey record
+    postMessage(gotIndexedDBNaturalEarthFeature({ status: "FAIL", feature, quadkey }))
 }
 
 

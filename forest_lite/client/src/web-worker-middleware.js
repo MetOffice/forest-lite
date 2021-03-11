@@ -4,10 +4,12 @@
 import React, { useEffect } from "react"
 import { useDispatch } from "react-redux"
 import {
+    GOT_INDEXEDDB_NATURAL_EARTH_FEATURE,
     SET_HTTP_NATURAL_EARTH_FEATURE,
     SET_QUADKEYS
 } from "./action-types.js"
 import {
+    getIndexedDBNaturalEarthFeature,
     getHttpNaturalEarthFeature,
     setNaturalEarthFeature
 } from "./actions.js"
@@ -42,18 +44,26 @@ export const webWorkerMiddleware = store => next => action => {
         return next(setNaturalEarthFeature(payload))
     }
     if (type === SET_QUADKEYS) {
-
-        // Query Indexed DB or message Elm to send HTTP requests
-
-        const ports = selectPorts(store.getState())
+        // Query Indexed DB
         payload.map(quadkey => {
             const feature = "coastlines"
-            const action = getHttpNaturalEarthFeature({ quadkey, feature })
+            const action = getIndexedDBNaturalEarthFeature({ quadkey, feature })
+            worker.postMessage(action)
+        })
+    }
+    if (type === GOT_INDEXEDDB_NATURAL_EARTH_FEATURE) {
+        const { status, quadkey, feature } = payload
+        if (status === "FAIL") {
+            const ports = selectPorts(store.getState())
             if (ports !== null) {
                 // Send action to Elm
+                const action = getHttpNaturalEarthFeature({ quadkey, feature })
                 ports.receiveData.send({ label: "action", payload: action })
             }
-        })
+        } else if (status === "SUCCEED") {
+            // Send action to Redux app
+            return next(setNaturalEarthFeature(payload))
+        }
     }
     return next(action)
 }

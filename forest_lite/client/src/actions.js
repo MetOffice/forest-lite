@@ -35,7 +35,9 @@ import {
     ZOOM_OUT,
     SET_PORTS,
     SET_NATURAL_EARTH_FEATURE,
-    GET_HTTP_NATURAL_EARTH_FEATURE
+    GET_HTTP_NATURAL_EARTH_FEATURE,
+    GET_INDEXEDDB_NATURAL_EARTH_FEATURE,
+    GOT_INDEXEDDB_NATURAL_EARTH_FEATURE
 } from "./action-types"
 
 // Action creators
@@ -121,4 +123,10 @@ export const getHttpNaturalEarthFeature = payload => {
 // WebWorker messages
 export const setNaturalEarthFeature = payload => {
     return { type: SET_NATURAL_EARTH_FEATURE, payload }
+}
+export const getIndexedDBNaturalEarthFeature = payload => {
+    return { type: GET_INDEXEDDB_NATURAL_EARTH_FEATURE, payload }
+}
+export const gotIndexedDBNaturalEarthFeature = payload => {
+    return { type: GOT_INDEXEDDB_NATURAL_EARTH_FEATURE, payload }
 }
