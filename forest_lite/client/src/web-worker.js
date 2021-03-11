@@ -2,8 +2,8 @@
  * Web worker to perform off-main thread tasks
  */
 import {
-    SET_NATURAL_EARTH_FEATURE,
-    GET_NATURAL_EARTH_FEATURE,
+    SET_HTTP_NATURAL_EARTH_FEATURE,
+    GET_INDEXEDDB_NATURAL_EARTH_FEATURE,
     GOT_NATURAL_EARTH_FEATURE
 } from "./action-types.js"
 
@@ -44,9 +44,9 @@ onmessage = ({ data }) => {
     const { type, payload } = data
 
     // Add an entry to IndexedDB
-    if (type === SET_NATURAL_EARTH_FEATURE) {
+    if (type === SET_HTTP_NATURAL_EARTH_FEATURE) {
         setNaturalEarthFeature(payload)
-    } else if (type === GET_NATURAL_EARTH_FEATURE) {
+    } else if (type === GET_INDEXEDDB_NATURAL_EARTH_FEATURE) {
         getNaturalEarthFeature(payload)
     }
 

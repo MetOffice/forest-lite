@@ -33,7 +33,8 @@ import {
     UPDATE_NAVIGATE,
     ZOOM_IN,
     ZOOM_OUT,
-    SET_PORTS
+    SET_PORTS,
+    GET_HTTP_NATURAL_EARTH_FEATURE
 } from "./action-types"
 
 // Action creators
@@ -110,3 +111,8 @@ export const zoomOut = () => ({ type: ZOOM_OUT })
 
 // Elm interop
 export const setPorts = ports => ({ type: SET_PORTS, payload: ports })
+
+// Elm messages
+export const getHttpNaturalEarthFeature = payload => {
+    return { type: GET_HTTP_NATURAL_EARTH_FEATURE, payload }
+}

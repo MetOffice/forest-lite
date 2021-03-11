@@ -4,9 +4,13 @@
 import React, { useEffect } from "react"
 import { useDispatch } from "react-redux"
 import {
-    SET_NATURAL_EARTH_FEATURE,
+    SET_HTTP_NATURAL_EARTH_FEATURE,
     SET_QUADKEYS
 } from "./action-types.js"
+import {
+    getHttpNaturalEarthFeature
+} from "./actions.js"
+import { selectPorts } from "./ports-selector.js"
 import Worker from "./web-worker.js"
 
 
@@ -28,13 +32,24 @@ export const WebWorker = () => {
 
 // Send messages to worker
 export const webWorkerMiddleware = store => next => action => {
-    const { type } = action
-    if (type === SET_NATURAL_EARTH_FEATURE) {
+    const { type, payload } = action
+    if (type === SET_HTTP_NATURAL_EARTH_FEATURE) {
         // Send action to web worker
         worker.postMessage(action)
     }
     if (type === SET_QUADKEYS) {
-        console.log("web-worker-middleware", action)
+
+        // Query Indexed DB or message Elm to send HTTP requests
+
+        const ports = selectPorts(store.getState())
+        payload.map(quadkey => {
+            const feature = "coastlines"
+            const action = getHttpNaturalEarthFeature({ quadkey, feature })
+            if (ports !== null) {
+                // Send action to Elm
+                ports.receiveData.send({ label: "action", payload: action })
+            }
+        })
     }
     return next(action)
 }
