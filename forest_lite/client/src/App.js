@@ -35,6 +35,9 @@ import {
     Link
 } from "react-router-dom"
 
+// Web worker
+import { WebWorker } from "./web-worker-middleware.js"
+
 
 // Elm ports
 const setupPorts = dispatch => ports => {
@@ -73,6 +76,7 @@ const App = ({ baseURL }) => {
     const dispatch = useDispatch()
     return (
         <Router>
+            <WebWorker />
             <div className="App-window">
                 <div className="App-navbar">
                     <ul>

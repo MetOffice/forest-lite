@@ -6,13 +6,13 @@ import MapExtent
     exposing
         ( WebMercator
         , earthRadius
-        , quadkey
         , toZXY
         , xy
         , xyRange
         , zxy
         , zxyToExtent
         )
+import Quadkey exposing (Quadkey)
 import Test exposing (..)
 import Viewport
 import ZoomLevel exposing (ZoomLevel)
@@ -23,22 +23,67 @@ quadkeyTests =
     describe "Quadkey"
         [ test "given 000" <|
             \_ ->
-                quadkey (zxy 0 0 0)
-                    |> Expect.equal (MapExtent.Quadkey "0")
+                Quadkey.fromZXY (zxy 0 0 0)
+                    |> Expect.equal (Quadkey.fromString "0")
         , test "given 011" <|
             \_ ->
-                quadkey (zxy 1 0 1)
-                    |> Expect.equal (MapExtent.Quadkey "2")
+                Quadkey.fromZXY (zxy 1 0 1)
+                    |> Expect.equal (Quadkey.fromString "2")
         , test "given 355" <|
             \_ ->
-                quadkey (zxy 5 3 5)
-                    |> Expect.equal (MapExtent.Quadkey "00213")
+                Quadkey.fromZXY (zxy 5 3 5)
+                    |> Expect.equal (Quadkey.fromString "00213")
         , fuzz (intRange 1 24) "length of quadkey equals level" <|
             \n ->
-                quadkey (zxy n 0 0)
-                    |> MapExtent.quadkeyToString
+                Quadkey.fromZXY (zxy n 0 0)
+                    |> Quadkey.toString
                     |> String.length
                     |> Expect.equal n
+        ]
+
+
+quadkeyToZoomLevelTests : Test
+quadkeyToZoomLevelTests =
+    describe "Quadkey toZoomLevel"
+        [ test "given 212 returns 3" <|
+            \_ ->
+                let
+                    key =
+                        Quadkey.fromString "212"
+                in
+                Quadkey.toZoomLevel key
+                    |> Expect.equal (ZoomLevel.ZoomLevel 3)
+        ]
+
+
+quadkeyToXYTests : Test
+quadkeyToXYTests =
+    describe "Quadkey toXY"
+        [ test "given 213 returns 3 5" <|
+            \_ ->
+                let
+                    key =
+                        Quadkey.fromString "213"
+                in
+                Quadkey.toXY key
+                    |> Expect.equal (MapExtent.xy 3 5)
+        , test "round trip preserves x y" <|
+            \_ ->
+                let
+                    z =
+                        5
+
+                    x =
+                        5
+
+                    y =
+                        3
+
+                    key =
+                        Quadkey.fromXY (ZoomLevel.ZoomLevel z) (MapExtent.xy x y)
+                in
+                Quadkey.toXY key
+                    |> Expect.equal (MapExtent.xy x y)
         ]
 
 

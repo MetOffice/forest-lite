@@ -1,4 +1,6 @@
-module Scale exposing (fromExtent, toString)
+module Scale exposing (fromExtent, fromZoomLevel, toString)
+
+import ZoomLevel exposing (ZoomLevel)
 
 
 type Scale
@@ -13,6 +15,22 @@ fromExtent x_start x_end y_start y_end =
         Small
 
     else if abs (x_end - x_start) < 90 then
+        Medium
+
+    else
+        Large
+
+
+fromZoomLevel : ZoomLevel -> Scale
+fromZoomLevel level =
+    let
+        n =
+            ZoomLevel.toInt level
+    in
+    if n > 4 then
+        Small
+
+    else if n > 2 then
         Medium
 
     else

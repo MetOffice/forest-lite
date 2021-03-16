@@ -8,7 +8,7 @@ import {
     SET_ONLY_ACTIVE,
     SET_FLAG,
     SET_FIGURE,
-    SET_NATURAL_EARTH_FEATURE,
+    UPDATE_NATURAL_EARTH_FEATURE,
     SET_COASTLINES_COLOR,
     SET_DATASET,
     SET_DATASETS,
@@ -33,7 +33,8 @@ import {
     SET_ITEMS,
     FETCH_IMAGE,
     FETCH_IMAGE_SUCCESS,
-    SET_PORTS
+    SET_PORTS,
+    SET_QUADKEYS
 } from "./action-types.js"
 import * as R from "ramda"
 import {
@@ -181,7 +182,9 @@ export const rootReducer = (state = "", action) => {
             return navigateReducer(state, action)
         case SET_PORTS:
             return portsReducer(state, action)
-        case SET_NATURAL_EARTH_FEATURE:
+        case SET_QUADKEYS:
+            return quadkeysReducer(state, action)
+        case UPDATE_NATURAL_EARTH_FEATURE:
         case SET_COASTLINES_COLOR:
             return coastlinesReducer(state, action)
         default:
@@ -204,6 +207,24 @@ const portsReducer = (state, action) => {
     }
 }
 
+/**
+ * Quadkeys reducer
+ *
+ * Assign quadkeys array to state to simplify tiling
+ */
+const quadkeysReducer = (state, action) => {
+    const { type, payload } = action
+    let features = state.natural_earth_features || {}
+    if (type === SET_QUADKEYS) {
+        let data = payload.reduce((obj, key) => {
+            obj[key] = features[key] || null
+            return obj
+        }, {})
+        return Object.assign({}, state, { natural_earth_features: data })
+    } else {
+        return state
+    }
+}
 
 
 /**
@@ -211,11 +232,24 @@ const portsReducer = (state, action) => {
  */
 const coastlinesReducer = (state, action) => {
     const { type, payload } = action
-    if (type === SET_NATURAL_EARTH_FEATURE) {
-        const { feature, data } = payload
-        const update = state.natural_earth_features || {}
-        update[feature] = data
-        return Object.assign({}, state, { natural_earth_features: update })
+    if (type === UPDATE_NATURAL_EARTH_FEATURE) {
+        const { feature, quadkey, data } = payload
+
+        let natural_earth_features = Object.assign({},
+            state.natural_earth_features || {})
+
+        if (!(quadkey in natural_earth_features)) {
+            // NOTE: only modify data if quadkey has been set, e.g.
+            //       use data structure to eliminate impossible states
+            return state
+        }
+        if (natural_earth_features[quadkey] == null) {
+            natural_earth_features[quadkey] = {}
+        }
+        natural_earth_features[quadkey][feature] = data
+
+        return Object.assign({}, state, { natural_earth_features })
+
     } else if (type === SET_COASTLINES_COLOR) {
         return Object.assign({}, state, { coastlines_color: payload })
     } else {
