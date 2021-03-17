@@ -3,6 +3,7 @@ module MapExtent exposing (..)
 import BoundingBox exposing (BoundingBox)
 import Quadkey exposing (Quadkey)
 import Viewport exposing (Viewport)
+import WebMercator exposing (WebMercator)
 import ZXY exposing (XY, ZXY)
 import ZoomLevel exposing (ZoomLevel)
 
@@ -177,12 +178,6 @@ bucketIndex x0 dx x =
 type alias WGS84 =
     { longitude : Float
     , latitude : Float
-    }
-
-
-type alias WebMercator =
-    { x : Float
-    , y : Float
     }
 
 

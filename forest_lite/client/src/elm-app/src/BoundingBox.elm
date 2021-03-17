@@ -3,6 +3,8 @@ module BoundingBox exposing (BoundingBox, encode)
 import Json.Encode
 
 
+{-| Bounding box in longitude/latitude coordinates
+-}
 type alias BoundingBox =
     { minlon : Float
     , maxlon : Float

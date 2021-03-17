@@ -13,3 +13,8 @@ map f (Viewport start end) =
 getStart : Viewport a -> a
 getStart (Viewport start _) =
     start
+
+
+getEnd : Viewport a -> a
+getEnd (Viewport _ end) =
+    end
