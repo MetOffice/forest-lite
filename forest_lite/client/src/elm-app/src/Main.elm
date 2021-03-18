@@ -66,6 +66,7 @@ import MapExtent
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Quadkey exposing (Quadkey)
+import Scale exposing (Scale)
 import Time
 import Viewport exposing (Viewport)
 import WebMercator
@@ -1052,6 +1053,7 @@ updateAction model action =
 
                 zoom_level =
                     MapExtent.viewportToZoomLevel viewport
+                        |> Scale.truncateZoomLevel
 
                 xys =
                     MapExtent.tiles zoom_level viewport
@@ -1083,8 +1085,11 @@ updateAction model action =
                 bounding_box =
                     MapExtent.toBox z xy
 
+                scale =
+                    Scale.fromZoomLevel z
+
                 cmd =
-                    getNaturalEarthFeature model.baseURL feature bounding_box z quadkey
+                    getNaturalEarthFeature model.baseURL feature bounding_box scale quadkey
             in
             ( model, cmd )
 
@@ -1180,11 +1185,11 @@ updatePoint model selectPoint =
             { model | point = Just point }
 
 
-getNaturalEarthFeature : String -> NaturalEarthFeature -> BoundingBox -> ZoomLevel -> Quadkey -> Cmd Msg
-getNaturalEarthFeature baseURL feature box z quadkey =
+getNaturalEarthFeature : String -> NaturalEarthFeature -> BoundingBox -> Scale -> Quadkey -> Cmd Msg
+getNaturalEarthFeature baseURL feature box scale quadkey =
     let
         endpoint =
-            NaturalEarthFeature.endpoint feature box z
+            NaturalEarthFeature.endpoint feature box scale
 
         -- Tagger should take key, e.g. Quadkey
         tagger =
