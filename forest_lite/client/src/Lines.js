@@ -31,6 +31,7 @@ export const NaturalEarthFeature = ({ figure, feature }) => {
     const [ renderer, setRenderer ] = useState(null)
 
     const active = useSelector(selectActive)
+    const quadkeys = useSelector(selectQuadkeys)
     const data = useSelector(selectData(feature))
     const line_color = useSelector(selectLineColor(feature))
 
@@ -55,13 +56,17 @@ export const NaturalEarthFeature = ({ figure, feature }) => {
 
     }, [])
 
+    // Only render coastlines if quadkeys or data length changes
+    useEffect(() => {
+        if (source != null) {
+            source.data = data
+        }
+    }, [ JSON.stringify(quadkeys), dataLength(data) ])
+
     // Render application state
     if (renderer != null) {
         renderer.visible = active
         renderer.glyph.line_color = line_color
-    }
-    if (source != null) {
-        source.data = data
     }
 
     return null
@@ -77,6 +82,27 @@ const empty = () => {
     return {
         xs: [[]],
         ys: [[]]
+    }
+}
+
+// Multiline ColumnDataSource length (crude implementation)
+const dataLength = data => {
+    if (data == null) {
+        return 0
+    } else if (data.xs == null) {
+        return 0
+    } else {
+        return data.xs.length
+    }
+}
+
+// Select NaturalEarthFeature quadkeys
+export const selectQuadkeys = state => {
+    const { natural_earth_features = null } = state
+    if (natural_earth_features == null) {
+        return []
+    } else {
+        return Object.keys(natural_earth_features)
     }
 }
 
