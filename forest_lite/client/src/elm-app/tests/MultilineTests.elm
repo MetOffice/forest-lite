@@ -212,11 +212,9 @@ conversionTests =
                     |> Expect.equal
                         { xs =
                             [ [ 2, 3 ]
-                            , []
                             ]
                         , ys =
                             [ [ 2, 3 ]
-                            , []
                             ]
                         }
         ]
