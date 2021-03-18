@@ -1,11 +1,15 @@
-module NaturalEarthFeature exposing (NaturalEarthFeature(..), decoder, encode, endpoint)
+module NaturalEarthFeature exposing
+    ( NaturalEarthFeature(..)
+    , decoder
+    , encode
+    , endpoint
+    )
 
 import BoundingBox exposing (BoundingBox)
 import Endpoint
 import Json.Decode exposing (Decoder)
 import Json.Encode
-import Scale
-import ZoomLevel exposing (ZoomLevel)
+import Scale exposing (Scale)
 
 
 type NaturalEarthFeature
@@ -59,8 +63,8 @@ toString feature =
             "lakes"
 
 
-endpoint : NaturalEarthFeature -> BoundingBox -> ZoomLevel -> String
-endpoint feature box zoom_level =
+endpoint : NaturalEarthFeature -> BoundingBox -> Scale -> String
+endpoint feature box scale =
     let
         path =
             Endpoint.format
@@ -68,10 +72,6 @@ endpoint feature box zoom_level =
                 , category feature
                 , name feature
                 ]
-
-        scale =
-            Scale.fromZoomLevel
-                zoom_level
     in
     path
         ++ "?"

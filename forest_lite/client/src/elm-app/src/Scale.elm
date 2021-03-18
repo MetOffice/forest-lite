@@ -1,4 +1,11 @@
-module Scale exposing (fromExtent, fromZoomLevel, toString)
+module Scale exposing
+    ( Scale
+    , fromExtent
+    , fromZoomLevel
+    , toString
+    , toZoomLevel
+    , truncateZoomLevel
+    )
 
 import ZoomLevel exposing (ZoomLevel)
 
@@ -21,6 +28,15 @@ fromExtent x_start x_end y_start y_end =
         Large
 
 
+{-| Truncate ZoomLevel to minimum level that satisfies scale
+-}
+truncateZoomLevel : ZoomLevel -> ZoomLevel
+truncateZoomLevel level =
+    level
+        |> fromZoomLevel
+        |> toZoomLevel
+
+
 fromZoomLevel : ZoomLevel -> Scale
 fromZoomLevel level =
     let
@@ -35,6 +51,21 @@ fromZoomLevel level =
 
     else
         Large
+
+
+{-| Minimum ZoomLevel that satisfies length scale
+-}
+toZoomLevel : Scale -> ZoomLevel
+toZoomLevel scale =
+    case scale of
+        Small ->
+            ZoomLevel.ZoomLevel 5
+
+        Medium ->
+            ZoomLevel.ZoomLevel 3
+
+        Large ->
+            ZoomLevel.ZoomLevel 1
 
 
 toString : Scale -> String
