@@ -4,8 +4,7 @@ import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, intRange, list, string)
 import MapExtent
     exposing
-        ( WebMercator
-        , earthRadius
+        ( earthRadius
         , toZXY
         , xy
         , xyRange
@@ -15,6 +14,7 @@ import MapExtent
 import Quadkey exposing (Quadkey)
 import Test exposing (..)
 import Viewport
+import WebMercator exposing (WebMercator)
 import ZoomLevel exposing (ZoomLevel)
 
 

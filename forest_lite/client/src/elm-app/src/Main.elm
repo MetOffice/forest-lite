@@ -7,6 +7,7 @@ import DatasetID exposing (DatasetID)
 import Datum exposing (Datum)
 import Dict exposing (Dict)
 import Endpoint
+import Geometry
 import Html
     exposing
         ( Attribute
@@ -62,16 +63,12 @@ import Json.Decode
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import MapExtent
-    exposing
-        ( WGS84
-        , WebMercator
-        , toWGS84
-        )
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Quadkey exposing (Quadkey)
 import Time
 import Viewport exposing (Viewport)
+import WebMercator
 import ZXY exposing (XY)
 import ZoomLevel exposing (ZoomLevel)
 
@@ -597,8 +594,23 @@ update msg model =
         -- NATURAL EARTH FEATURE
         GotNaturalEarthFeature feature box quadkey result ->
             case result of
-                Ok data ->
+                Ok multi_line ->
                     let
+                        z =
+                            Quadkey.toZoomLevel quadkey
+
+                        xy =
+                            Quadkey.toXY quadkey
+
+                        viewport =
+                            MapExtent.xyToExtent z xy
+
+                        bounding_box =
+                            WebMercator.toBoundingBox2d viewport
+
+                        data =
+                            Geometry.clip bounding_box multi_line
+
                         cmd =
                             SetHttpNaturalEarthFeature feature box quadkey data
                                 |> encodeAction
