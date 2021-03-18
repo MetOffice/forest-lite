@@ -203,9 +203,6 @@ type alias Model =
     , coastlines_color : String
     , limits : Limits
     , collapsed : Dict String Bool
-    , zoom_level : Maybe ZoomLevel
-    , xys : List XY
-    , quadkeys : List Quadkey
     }
 
 
@@ -395,9 +392,6 @@ init flags =
                 }
             , collapsed =
                 Dict.empty
-            , zoom_level = Nothing
-            , xys = []
-            , quadkeys = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -1066,13 +1060,7 @@ updateAction model action =
                         |> encodeAction
                         |> sendAction
             in
-            ( { model
-                | zoom_level = Just zoom_level
-                , xys = xys
-                , quadkeys = quadkeys
-              }
-            , cmd
-            )
+            ( model, cmd )
 
         GetHttpNaturalEarthFeature feature quadkey ->
             let
@@ -1421,9 +1409,6 @@ viewLayerMenu model =
                             [ viewHideShowIcon model.visible
                             , viewCoastlineCheckbox model.coastlines
                             , viewCoastlineColorPicker model.coastlines_color
-                            , viewZoomLevel model.zoom_level
-                            , viewXYs model.xys
-                            , viewQuadkeys model.quadkeys
                             ]
                     , onClick = ExpandCollapse DisplayMenu
                     }
@@ -1445,58 +1430,6 @@ viewLayerMenu model =
 
         NotStarted ->
             div [] [ text "..." ]
-
-
-viewZoomLevel : Maybe ZoomLevel -> Html Msg
-viewZoomLevel zoom_level =
-    case zoom_level of
-        Just level ->
-            div
-                [ style "margin-left" "0.5em"
-                , style "margin-top" "0.5em"
-                ]
-                [ text ("Zoom level: " ++ ZoomLevel.toString level) ]
-
-        Nothing ->
-            div [] [ text "Zoom level not set" ]
-
-
-viewXYs : List XY -> Html Msg
-viewXYs xys =
-    div
-        [ style "margin-left" "0.5em"
-        , style "margin-top" "0.5em"
-        ]
-        [ div [] [ text "Tiles:" ]
-        , ul []
-            (List.map
-                (\t ->
-                    li
-                        []
-                        [ text (ZXY.xyToString t) ]
-                )
-                xys
-            )
-        ]
-
-
-viewQuadkeys : List Quadkey -> Html Msg
-viewQuadkeys quadkeys =
-    div
-        [ style "margin-left" "0.5em"
-        , style "margin-top" "0.5em"
-        ]
-        [ div [] [ text "Tiles:" ]
-        , ul []
-            (List.map
-                (\t ->
-                    li
-                        []
-                        [ text (Quadkey.toString t) ]
-                )
-                quadkeys
-            )
-        ]
 
 
 getCollapsed : SubMenu -> Dict String Bool -> Bool
