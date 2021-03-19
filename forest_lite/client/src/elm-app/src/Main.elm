@@ -3,8 +3,8 @@ port module Main exposing (..)
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
+import DataVar.Label exposing (Label)
 import DataVar.Select exposing (Select)
-import DataVarLabel exposing (DataVarLabel)
 import Dataset exposing (Dataset)
 import Dataset.Description exposing (Description)
 import Dataset.ID exposing (ID)
@@ -185,7 +185,7 @@ actionPayloadDecoder label =
                     (Json.Decode.field "low" Json.Decode.float)
                     (Json.Decode.field "high" Json.Decode.float)
                     (Json.Decode.field "path" (Json.Decode.index 0 Dataset.ID.decoder))
-                    (Json.Decode.field "path" (Json.Decode.index 1 DataVarLabel.decoder))
+                    (Json.Decode.field "path" (Json.Decode.index 1 DataVar.Label.decoder))
                 )
 
 
@@ -641,7 +641,7 @@ update msg model =
                             selected.dataset_id
 
                         data_var =
-                            DataVarLabel.toString selected.data_var
+                            DataVar.Label.toString selected.data_var
 
                         maybeDatasetLabel =
                             selectDatasetLabelById model dataset_id
@@ -670,7 +670,7 @@ update msg model =
                                             getAxis
                                                 model.baseURL
                                                 dataset_id
-                                                (DataVarLabel.DataVarLabel data_var)
+                                                (DataVar.Label.Label data_var)
                                                 dim
                                                 Nothing
                                         )
@@ -700,7 +700,7 @@ update msg model =
                                 path =
                                     [ "navigate"
                                     , Dataset.Label.toString dataset_label
-                                    , DataVarLabel.toString data_var
+                                    , DataVar.Label.toString data_var
                                     , selectPoint.dim_name
                                     ]
 
@@ -1128,11 +1128,11 @@ getDatasetDescription baseURL id =
         }
 
 
-getAxis : String -> Dataset.ID.ID -> DataVarLabel -> String -> Maybe Datum -> Cmd Msg
+getAxis : String -> Dataset.ID.ID -> DataVar.Label.Label -> String -> Maybe Datum -> Cmd Msg
 getAxis baseURL dataset_id data_var_label dim maybeStartTime =
     let
         data_var =
-            DataVarLabel.toString data_var_label
+            DataVar.Label.toString data_var_label
 
         endpoint =
             Endpoint.Axis dataset_id data_var dim maybeStartTime
@@ -1573,7 +1573,7 @@ type Action
     | GoToItem Item
     | SetVisible Bool
     | SetFlag Bool
-    | SetLimits Float Float Dataset.ID.ID DataVarLabel
+    | SetLimits Float Float Dataset.ID.ID DataVar.Label.Label
     | SetQuadkeys (List Quadkey)
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
@@ -1691,11 +1691,11 @@ buildAction key payload =
         )
 
 
-encodeLimitPath : Dataset.ID.ID -> DataVarLabel -> Json.Encode.Value
+encodeLimitPath : Dataset.ID.ID -> DataVar.Label.Label -> Json.Encode.Value
 encodeLimitPath dataset_id data_var =
     Json.Encode.list identity
         [ Dataset.ID.encode dataset_id
-        , DataVarLabel.encode data_var
+        , DataVar.Label.encode data_var
         ]
 
 
@@ -1764,7 +1764,7 @@ viewSelected model =
                         Success desc ->
                             let
                                 key =
-                                    DataVarLabel.toString payload.data_var
+                                    DataVar.Label.toString payload.data_var
 
                                 maybeVar =
                                     Dict.get key desc.data_vars
@@ -1840,7 +1840,7 @@ asDatasetLabel maybeDataset =
             Nothing
 
 
-selectDataVarLabel : Model -> Maybe DataVarLabel
+selectDataVarLabel : Model -> Maybe DataVar.Label.Label
 selectDataVarLabel model =
     case model.selected of
         Just selected ->

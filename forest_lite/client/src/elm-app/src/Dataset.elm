@@ -1,7 +1,7 @@
 module Dataset exposing (Dataset, decoder, view)
 
+import DataVar.Label exposing (Label)
 import DataVar.Select exposing (Select)
-import DataVarLabel exposing (DataVarLabel)
 import Dataset.Description exposing (Description)
 import Dataset.ID exposing (ID)
 import Dataset.Label exposing (Label)
@@ -57,7 +57,7 @@ view datasetDescriptions dataset =
                                 option
                                     [ attribute "value"
                                         (DataVar.Select.toString
-                                            { data_var = DataVarLabel.DataVarLabel v
+                                            { data_var = DataVar.Label.Label v
                                             , dataset_id = dataset.id
                                             }
                                         )
