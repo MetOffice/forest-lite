@@ -438,15 +438,6 @@ datasetDecoder =
         (field "view" string)
 
 
-datasetDescriptionDecoder : Decoder Dataset.Description.Description
-datasetDescriptionDecoder =
-    Json.Decode.map3
-        Dataset.Description.Description
-        (field "attrs" Attrs.decoder)
-        (field "data_vars" (dict DataVar.decoder))
-        (field "dataset_id" Dataset.ID.decoder)
-
-
 selectDataVarDecoder : Decoder SelectDataVar
 selectDataVarDecoder =
     Json.Decode.map2
@@ -1171,7 +1162,7 @@ getDatasetDescription baseURL id =
     in
     Http.get
         { url = baseURL ++ Endpoint.toString endpoint
-        , expect = Http.expectJson (GotDatasetDescription id) datasetDescriptionDecoder
+        , expect = Http.expectJson (GotDatasetDescription id) Dataset.Description.decoder
         }
 
 

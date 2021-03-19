@@ -1,9 +1,10 @@
-module Dataset.Description exposing (Description, encode)
+module Dataset.Description exposing (Description, decoder, encode)
 
 import Attrs
 import DataVar exposing (DataVar)
 import Dataset.ID exposing (ID)
 import Dict exposing (Dict)
+import Json.Decode exposing (Decoder, dict, field)
 import Json.Encode
 
 
@@ -29,3 +30,12 @@ encodeData desc =
         , ( "dataset_id", Dataset.ID.encode desc.dataset_id )
         , ( "data_vars", Json.Encode.dict identity DataVar.encode desc.data_vars )
         ]
+
+
+decoder : Decoder Description
+decoder =
+    Json.Decode.map3
+        Description
+        (field "attrs" Attrs.decoder)
+        (field "data_vars" (dict DataVar.decoder))
+        (field "dataset_id" Dataset.ID.decoder)
