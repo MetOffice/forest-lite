@@ -2,7 +2,9 @@ port module Main exposing (..)
 
 import BoundingBox exposing (BoundingBox)
 import Browser
+import DataVar exposing (DataVar)
 import DataVarLabel exposing (DataVarLabel)
+import Dataset.Description exposing (Description)
 import Dataset.ID exposing (ID)
 import Dataset.Label exposing (Label)
 import Datum exposing (Datum)
@@ -195,7 +197,7 @@ type alias Model =
     , route : Maybe Route
     , selected : Maybe SelectDataVar
     , datasets : Request (List Dataset)
-    , datasetDescriptions : Dict Int (Request DatasetDescription)
+    , datasetDescriptions : Dict Int (Request Dataset.Description.Description)
     , dimensions : Dict String Dimension
     , point : Maybe Point
     , baseURL : String
@@ -233,19 +235,6 @@ type alias Dataset =
     , id : Dataset.ID.ID
     , driver : String
     , view : String
-    }
-
-
-type alias DatasetDescription =
-    { attrs : Dict String String
-    , data_vars : Dict String DataVar
-    , dataset_id : Dataset.ID.ID
-    }
-
-
-type alias DataVar =
-    { dims : List String
-    , attrs : Dict String String
     }
 
 
@@ -318,7 +307,7 @@ type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
     | GotNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey (Result Http.Error MultiLine)
     | GotDatasets (Result Http.Error (List Dataset))
-    | GotDatasetDescription Dataset.ID.ID (Result Http.Error DatasetDescription)
+    | GotDatasetDescription Dataset.ID.ID (Result Http.Error Dataset.Description.Description)
     | GotAxis Dataset.ID.ID (Result Http.Error Axis)
     | DataVarSelected String
     | PointSelected String
@@ -448,10 +437,10 @@ datasetDecoder =
         (field "view" string)
 
 
-datasetDescriptionDecoder : Decoder DatasetDescription
+datasetDescriptionDecoder : Decoder Dataset.Description.Description
 datasetDescriptionDecoder =
     Json.Decode.map3
-        DatasetDescription
+        Dataset.Description.Description
         (field "attrs" attrsDecoder)
         (field "data_vars" (dict dataVarDecoder))
         (field "dataset_id" Dataset.ID.decoder)
@@ -1685,7 +1674,7 @@ viewCoastlineColorPicker str =
 
 type Action
     = SetDatasets (List Dataset)
-    | SetDatasetDescription DatasetDescription
+    | SetDatasetDescription Dataset.Description.Description
     | SetOnlyActive OnlyActive
     | SetItems Items
     | GoToItem Item
@@ -1827,7 +1816,7 @@ encodeDataset dataset =
         ]
 
 
-encodeDatasetDescription : DatasetDescription -> Json.Encode.Value
+encodeDatasetDescription : Dataset.Description.Description -> Json.Encode.Value
 encodeDatasetDescription description =
     Json.Encode.object
         [ ( "datasetId", Dataset.ID.encode description.dataset_id )
@@ -1835,7 +1824,7 @@ encodeDatasetDescription description =
         ]
 
 
-encodeData : DatasetDescription -> Json.Encode.Value
+encodeData : Dataset.Description.Description -> Json.Encode.Value
 encodeData desc =
     Json.Encode.object
         [ ( "attrs", encodeAttrs desc.attrs )
