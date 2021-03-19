@@ -3,6 +3,7 @@ port module Main exposing (..)
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
+import DataVar.Select exposing (Select)
 import DataVarLabel exposing (DataVarLabel)
 import Dataset exposing (Dataset)
 import Dataset.Description exposing (Description)
@@ -26,7 +27,6 @@ import Html
         , input
         , label
         , li
-        , optgroup
         , option
         , select
         , span
@@ -69,6 +69,7 @@ import MapExtent
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Quadkey exposing (Quadkey)
+import Request exposing (Request(..))
 import Scale exposing (Scale)
 import Time
 import Viewport exposing (Viewport)
@@ -195,7 +196,7 @@ actionPayloadDecoder label =
 type alias Model =
     { user : Maybe User
     , route : Maybe Route
-    , selected : Maybe SelectDataVar
+    , selected : Maybe DataVar.Select.Select
     , datasets : Request (List Dataset)
     , datasetDescriptions : Dict Int (Request Dataset.Description.Description)
     , dimensions : Dict String Dimension
@@ -255,12 +256,6 @@ type DimensionKind
     | Horizontal
 
 
-type alias SelectDataVar =
-    { dataset_id : Dataset.ID.ID
-    , data_var : DataVarLabel
-    }
-
-
 type alias SelectPoint =
     { dim_name : String
     , point : Datum
@@ -269,13 +264,6 @@ type alias SelectPoint =
 
 type alias Point =
     Dict String Datum
-
-
-type Request a
-    = NotStarted
-    | Failure
-    | Loading
-    | Success a
 
 
 type Route
@@ -418,14 +406,6 @@ axisDecoder =
 datasetsDecoder : Decoder (List Dataset)
 datasetsDecoder =
     field "datasets" (list Dataset.decoder)
-
-
-selectDataVarDecoder : Decoder SelectDataVar
-selectDataVarDecoder =
-    Json.Decode.map2
-        SelectDataVar
-        (field "dataset_id" Dataset.ID.decoder)
-        (field "data_var" DataVarLabel.decoder)
 
 
 selectPointDecoder : Decoder SelectPoint
@@ -654,7 +634,7 @@ update msg model =
                     ( model, Cmd.none )
 
         DataVarSelected payload ->
-            case Json.Decode.decodeString selectDataVarDecoder payload of
+            case Json.Decode.decodeString DataVar.Select.decoder payload of
                 Ok selected ->
                     let
                         dataset_id =
@@ -875,7 +855,7 @@ setBound bound data_limits (TextLimits user_low user_high) =
                     TextLimits data_low user_high
 
 
-setLimitOriginCmd : LimitOrigin -> Limits -> Maybe SelectDataVar -> Cmd Msg
+setLimitOriginCmd : LimitOrigin -> Limits -> Maybe DataVar.Select.Select -> Cmd Msg
 setLimitOriginCmd origin limits maybe_select_data_var =
     case origin of
         DataSource ->
@@ -909,7 +889,7 @@ setLimitOriginCmd origin limits maybe_select_data_var =
                                 |> sendAction
 
 
-limitsCmd : LimitOrigin -> TextLimits -> Maybe SelectDataVar -> Cmd Msg
+limitsCmd : LimitOrigin -> TextLimits -> Maybe DataVar.Select.Select -> Cmd Msg
 limitsCmd origin text_limits maybe_select_data_var =
     case origin of
         DataSource ->
@@ -1472,7 +1452,7 @@ viewDatasets datasets model =
                 [ onSelect DataVarSelected
                 , class "select__select"
                 ]
-                (List.map (viewDataset model) datasets)
+                (List.map (Dataset.view model.datasetDescriptions) datasets)
             ]
         ]
 
@@ -1487,54 +1467,6 @@ viewDatasetLabel model =
 
         Nothing ->
             label [ class "select__label" ] [ text "Dataset:" ]
-
-
-viewDataset : Model -> Dataset -> Html Msg
-viewDataset model dataset =
-    let
-        dataset_label =
-            Dataset.Label.toString dataset.label
-
-        maybeDescription =
-            Dict.get (Dataset.ID.toInt dataset.id) model.datasetDescriptions
-    in
-    case maybeDescription of
-        Just description ->
-            case description of
-                Success desc ->
-                    optgroup [ attribute "label" dataset_label ]
-                        (List.map
-                            (\v ->
-                                option
-                                    [ attribute "value"
-                                        (dataVarToString
-                                            { data_var = DataVarLabel.DataVarLabel v
-                                            , dataset_id = dataset.id
-                                            }
-                                        )
-                                    ]
-                                    [ text v ]
-                            )
-                            (Dict.keys desc.data_vars)
-                        )
-
-                Failure ->
-                    optgroup [ attribute "label" dataset_label ]
-                        [ option [] [ text "Failed to load variables" ]
-                        ]
-
-                Loading ->
-                    optgroup [ attribute "label" dataset_label ]
-                        [ option [] [ text "..." ]
-                        ]
-
-                NotStarted ->
-                    optgroup [ attribute "label" dataset_label ]
-                        [ option [] [ text "..." ]
-                        ]
-
-        Nothing ->
-            optgroup [ attribute "label" dataset_label ] []
 
 
 viewHideShowIcon : Bool -> Html Msg
@@ -1803,16 +1735,6 @@ encodeItem item =
 
 
 -- JSON ENCODERS
-
-
-dataVarToString : SelectDataVar -> String
-dataVarToString props =
-    Json.Encode.encode 0
-        (Json.Encode.object
-            [ ( "dataset_id", Dataset.ID.encode props.dataset_id )
-            , ( "data_var", DataVarLabel.encode props.data_var )
-            ]
-        )
 
 
 pointToString : SelectPoint -> String
