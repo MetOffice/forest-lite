@@ -53,13 +53,12 @@ import Html.Events
         , targetValue
         )
 import Http
-import JWT exposing (Claim)
+import JWT
 import Json.Decode
     exposing
         ( Decoder
         , field
         , float
-        , int
         , list
         , maybe
         , string
