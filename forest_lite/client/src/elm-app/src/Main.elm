@@ -3,8 +3,8 @@ port module Main exposing (..)
 import BoundingBox exposing (BoundingBox)
 import Browser
 import DataVarLabel exposing (DataVarLabel)
+import Dataset.ID exposing (ID)
 import Dataset.Label exposing (Label)
-import DatasetID exposing (DatasetID)
 import Datum exposing (Datum)
 import Dict exposing (Dict)
 import Endpoint
@@ -181,7 +181,7 @@ actionPayloadDecoder label =
                 (Json.Decode.map4 SetLimits
                     (Json.Decode.field "low" Json.Decode.float)
                     (Json.Decode.field "high" Json.Decode.float)
-                    (Json.Decode.field "path" (Json.Decode.index 0 DatasetID.decoder))
+                    (Json.Decode.field "path" (Json.Decode.index 0 Dataset.ID.decoder))
                     (Json.Decode.field "path" (Json.Decode.index 1 DataVarLabel.decoder))
                 )
 
@@ -230,7 +230,7 @@ type DataLimits
 
 type alias Dataset =
     { label : Dataset.Label.Label
-    , id : DatasetID
+    , id : Dataset.ID.ID
     , driver : String
     , view : String
     }
@@ -239,7 +239,7 @@ type alias Dataset =
 type alias DatasetDescription =
     { attrs : Dict String String
     , data_vars : Dict String DataVar
-    , dataset_id : DatasetID
+    , dataset_id : Dataset.ID.ID
     }
 
 
@@ -275,7 +275,7 @@ type DimensionKind
 
 
 type alias SelectDataVar =
-    { dataset_id : DatasetID
+    { dataset_id : Dataset.ID.ID
     , data_var : DataVarLabel
     }
 
@@ -318,8 +318,8 @@ type Msg
     = PortReceived (Result Json.Decode.Error PortMessage)
     | GotNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey (Result Http.Error MultiLine)
     | GotDatasets (Result Http.Error (List Dataset))
-    | GotDatasetDescription DatasetID (Result Http.Error DatasetDescription)
-    | GotAxis DatasetID (Result Http.Error Axis)
+    | GotDatasetDescription Dataset.ID.ID (Result Http.Error DatasetDescription)
+    | GotAxis Dataset.ID.ID (Result Http.Error Axis)
     | DataVarSelected String
     | PointSelected String
     | HideShowLayer Bool
@@ -443,7 +443,7 @@ datasetDecoder : Decoder Dataset
 datasetDecoder =
     Json.Decode.map4 Dataset
         (field "label" Dataset.Label.decoder)
-        (field "id" DatasetID.decoder)
+        (field "id" Dataset.ID.decoder)
         (field "driver" string)
         (field "view" string)
 
@@ -454,7 +454,7 @@ datasetDescriptionDecoder =
         DatasetDescription
         (field "attrs" attrsDecoder)
         (field "data_vars" (dict dataVarDecoder))
-        (field "dataset_id" DatasetID.decoder)
+        (field "dataset_id" Dataset.ID.decoder)
 
 
 dataVarDecoder : Decoder DataVar
@@ -469,7 +469,7 @@ selectDataVarDecoder : Decoder SelectDataVar
 selectDataVarDecoder =
     Json.Decode.map2
         SelectDataVar
-        (field "dataset_id" DatasetID.decoder)
+        (field "dataset_id" Dataset.ID.decoder)
         (field "data_var" DataVarLabel.decoder)
 
 
@@ -689,7 +689,7 @@ update msg model =
                 Ok desc ->
                     let
                         key =
-                            DatasetID.toInt dataset_id
+                            Dataset.ID.toInt dataset_id
 
                         datasetDescriptions =
                             Dict.insert key (Success desc) model.datasetDescriptions
@@ -1186,7 +1186,7 @@ getDatasets baseURL =
         }
 
 
-getDatasetDescription : String -> DatasetID -> Cmd Msg
+getDatasetDescription : String -> Dataset.ID.ID -> Cmd Msg
 getDatasetDescription baseURL id =
     let
         endpoint =
@@ -1198,7 +1198,7 @@ getDatasetDescription baseURL id =
         }
 
 
-getAxis : String -> DatasetID -> DataVarLabel -> String -> Maybe Datum -> Cmd Msg
+getAxis : String -> Dataset.ID.ID -> DataVarLabel -> String -> Maybe Datum -> Cmd Msg
 getAxis baseURL dataset_id data_var_label dim maybeStartTime =
     let
         data_var =
@@ -1546,7 +1546,7 @@ viewDataset model dataset =
             Dataset.Label.toString dataset.label
 
         maybeDescription =
-            Dict.get (DatasetID.toInt dataset.id) model.datasetDescriptions
+            Dict.get (Dataset.ID.toInt dataset.id) model.datasetDescriptions
     in
     case maybeDescription of
         Just description ->
@@ -1691,7 +1691,7 @@ type Action
     | GoToItem Item
     | SetVisible Bool
     | SetFlag Bool
-    | SetLimits Float Float DatasetID DataVarLabel
+    | SetLimits Float Float Dataset.ID.ID DataVarLabel
     | SetQuadkeys (List Quadkey)
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
@@ -1809,10 +1809,10 @@ buildAction key payload =
         )
 
 
-encodeLimitPath : DatasetID -> DataVarLabel -> Json.Encode.Value
+encodeLimitPath : Dataset.ID.ID -> DataVarLabel -> Json.Encode.Value
 encodeLimitPath dataset_id data_var =
     Json.Encode.list identity
-        [ DatasetID.encode dataset_id
+        [ Dataset.ID.encode dataset_id
         , DataVarLabel.encode data_var
         ]
 
@@ -1820,7 +1820,7 @@ encodeLimitPath dataset_id data_var =
 encodeDataset : Dataset -> Json.Encode.Value
 encodeDataset dataset =
     Json.Encode.object
-        [ ( "id", DatasetID.encode dataset.id )
+        [ ( "id", Dataset.ID.encode dataset.id )
         , ( "driver", Json.Encode.string dataset.driver )
         , ( "label", Dataset.Label.encode dataset.label )
         , ( "view", Json.Encode.string dataset.view )
@@ -1830,7 +1830,7 @@ encodeDataset dataset =
 encodeDatasetDescription : DatasetDescription -> Json.Encode.Value
 encodeDatasetDescription description =
     Json.Encode.object
-        [ ( "datasetId", DatasetID.encode description.dataset_id )
+        [ ( "datasetId", Dataset.ID.encode description.dataset_id )
         , ( "data", encodeData description )
         ]
 
@@ -1839,7 +1839,7 @@ encodeData : DatasetDescription -> Json.Encode.Value
 encodeData desc =
     Json.Encode.object
         [ ( "attrs", encodeAttrs desc.attrs )
-        , ( "dataset_id", DatasetID.encode desc.dataset_id )
+        , ( "dataset_id", Dataset.ID.encode desc.dataset_id )
         , ( "data_vars", Json.Encode.dict identity encodeDataVar desc.data_vars )
         ]
 
@@ -1889,7 +1889,7 @@ dataVarToString : SelectDataVar -> String
 dataVarToString props =
     Json.Encode.encode 0
         (Json.Encode.object
-            [ ( "dataset_id", DatasetID.encode props.dataset_id )
+            [ ( "dataset_id", Dataset.ID.encode props.dataset_id )
             , ( "data_var", DataVarLabel.encode props.data_var )
             ]
         )
@@ -1911,7 +1911,7 @@ viewSelected model =
         Just payload ->
             let
                 dataset_id =
-                    DatasetID.toInt payload.dataset_id
+                    Dataset.ID.toInt payload.dataset_id
 
                 maybeDesc =
                     Dict.get dataset_id model.datasetDescriptions
@@ -1950,7 +1950,7 @@ viewSelected model =
             text "Nothing selected"
 
 
-selectDatasetId : Model -> Maybe DatasetID
+selectDatasetId : Model -> Maybe Dataset.ID.ID
 selectDatasetId model =
     case model.selected of
         Just selected ->
@@ -1970,7 +1970,7 @@ selectDatasetLabel model =
             Nothing
 
 
-selectDatasetLabelById : Model -> DatasetID -> Maybe Dataset.Label.Label
+selectDatasetLabelById : Model -> Dataset.ID.ID -> Maybe Dataset.Label.Label
 selectDatasetLabelById model dataset_id =
     case model.datasets of
         Success datasets ->
@@ -1983,7 +1983,7 @@ selectDatasetLabelById model dataset_id =
             Nothing
 
 
-matchId : DatasetID -> Dataset -> Bool
+matchId : Dataset.ID.ID -> Dataset -> Bool
 matchId dataset_id dataset =
     dataset.id == dataset_id
 
@@ -2022,11 +2022,11 @@ selectDimension model dim_name =
             { label = dim_name, points = [], kind = Numeric }
 
 
-selectedDims : Model -> DatasetID -> String -> Maybe (List String)
+selectedDims : Model -> Dataset.ID.ID -> String -> Maybe (List String)
 selectedDims model dataset_id data_var =
     let
         key =
-            DatasetID.toInt dataset_id
+            Dataset.ID.toInt dataset_id
 
         maybeDesc =
             Dict.get key model.datasetDescriptions

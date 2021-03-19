@@ -1,6 +1,6 @@
 module Endpoint exposing (..)
 
-import DatasetID exposing (DatasetID)
+import Dataset.ID exposing (ID)
 import Datum exposing (Datum)
 import Json.Encode
 
@@ -11,8 +11,8 @@ type alias Query =
 
 type Endpoint
     = Datasets
-    | DatasetDescription DatasetID
-    | Axis DatasetID String String (Maybe Datum)
+    | DatasetDescription Dataset.ID.ID
+    | Axis Dataset.ID.ID String String (Maybe Datum)
 
 
 toString : Endpoint -> String
@@ -22,14 +22,14 @@ toString endpoint =
             format [ "datasets" ]
 
         DatasetDescription id ->
-            format [ "datasets", DatasetID.toString id ]
+            format [ "datasets", Dataset.ID.toString id ]
 
         Axis dataset_id data_var dim maybeStartTime ->
             let
                 path =
                     format
                         [ "datasets"
-                        , DatasetID.toString dataset_id
+                        , Dataset.ID.toString dataset_id
                         , data_var
                         , "axis"
                         , dim
