@@ -232,11 +232,6 @@ type DataLimits
 -- TODO extract this data structure into a module
 
 
-labelToString : Dataset.Label.Label -> String
-labelToString (Dataset.Label.Label str) =
-    str
-
-
 type alias Dataset =
     { label : Dataset.Label.Label
     , id : DatasetID
@@ -451,7 +446,7 @@ datasetsDecoder =
 datasetDecoder : Decoder Dataset
 datasetDecoder =
     Json.Decode.map4 Dataset
-        (field "label" datasetLabelDecoder)
+        (field "label" Dataset.Label.decoder)
         (field "id" DatasetID.decoder)
         (field "driver" string)
         (field "view" string)
@@ -485,13 +480,6 @@ selectDataVarDecoder =
 attrsDecoder : Decoder (Dict String String)
 attrsDecoder =
     dict (Json.Decode.oneOf [ string, Json.Decode.succeed "" ])
-
-
-datasetLabelDecoder : Decoder Dataset.Label.Label
-datasetLabelDecoder =
-    Json.Decode.map
-        Dataset.Label.Label
-        string
 
 
 selectPointDecoder : Decoder SelectPoint
@@ -654,7 +642,7 @@ update msg model =
                                         [ SetItems
                                             { path =
                                                 [ "navigate"
-                                                , labelToString dataset_label
+                                                , Dataset.Label.toString dataset_label
                                                 , axis.data_var
                                                 , axis.dim_name
                                                 ]
@@ -785,7 +773,7 @@ update msg model =
                             let
                                 path =
                                     [ "navigate"
-                                    , labelToString dataset_label
+                                    , Dataset.Label.toString dataset_label
                                     , DataVarLabel.toString data_var
                                     , selectPoint.dim_name
                                     ]
@@ -1548,7 +1536,7 @@ viewDatasetLabel model =
     case selectDatasetLabel model of
         Just dataset_label ->
             label [ class "select__label" ]
-                [ text ("Dataset: " ++ labelToString dataset_label)
+                [ text ("Dataset: " ++ Dataset.Label.toString dataset_label)
                 ]
 
         Nothing ->
@@ -1559,7 +1547,7 @@ viewDataset : Model -> Dataset -> Html Msg
 viewDataset model dataset =
     let
         dataset_label =
-            labelToString dataset.label
+            Dataset.Label.toString dataset.label
 
         maybeDescription =
             Dict.get (DatasetID.toInt dataset.id) model.datasetDescriptions
@@ -1838,7 +1826,7 @@ encodeDataset dataset =
     Json.Encode.object
         [ ( "id", DatasetID.encode dataset.id )
         , ( "driver", Json.Encode.string dataset.driver )
-        , ( "label", Json.Encode.string (labelToString dataset.label) )
+        , ( "label", Json.Encode.string (Dataset.Label.toString dataset.label) )
         , ( "view", Json.Encode.string dataset.view )
         ]
 
@@ -1876,7 +1864,7 @@ encodeAttrs attrs =
 encodeOnlyActive : OnlyActive -> Json.Encode.Value
 encodeOnlyActive only_active =
     Json.Encode.object
-        [ ( "dataset", Json.Encode.string (labelToString only_active.dataset) )
+        [ ( "dataset", Json.Encode.string (Dataset.Label.toString only_active.dataset) )
         , ( "data_var", Json.Encode.string only_active.data_var )
         ]
 
