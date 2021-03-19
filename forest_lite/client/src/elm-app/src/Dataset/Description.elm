@@ -1,8 +1,10 @@
-module Dataset.Description exposing (Description)
+module Dataset.Description exposing (Description, encode)
 
+import Attrs
 import DataVar exposing (DataVar)
 import Dataset.ID exposing (ID)
 import Dict exposing (Dict)
+import Json.Encode
 
 
 type alias Description =
@@ -10,3 +12,20 @@ type alias Description =
     , data_vars : Dict String DataVar
     , dataset_id : Dataset.ID.ID
     }
+
+
+encode : Description -> Json.Encode.Value
+encode description =
+    Json.Encode.object
+        [ ( "datasetId", Dataset.ID.encode description.dataset_id )
+        , ( "data", encodeData description )
+        ]
+
+
+encodeData : Description -> Json.Encode.Value
+encodeData desc =
+    Json.Encode.object
+        [ ( "attrs", Attrs.encode desc.attrs )
+        , ( "dataset_id", Dataset.ID.encode desc.dataset_id )
+        , ( "data_vars", Json.Encode.dict identity DataVar.encode desc.data_vars )
+        ]

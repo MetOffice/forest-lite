@@ -1,5 +1,6 @@
 port module Main exposing (..)
 
+import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
 import DataVar exposing (DataVar)
@@ -417,7 +418,7 @@ init flags =
 axisDecoder : Decoder Axis
 axisDecoder =
     Json.Decode.map4 Axis
-        (field "attrs" attrsDecoder)
+        (field "attrs" Attrs.decoder)
         (field "data" (list Datum.decoder))
         (field "data_var" string)
         (field "dim_name" string)
@@ -441,17 +442,9 @@ datasetDescriptionDecoder : Decoder Dataset.Description.Description
 datasetDescriptionDecoder =
     Json.Decode.map3
         Dataset.Description.Description
-        (field "attrs" attrsDecoder)
-        (field "data_vars" (dict dataVarDecoder))
+        (field "attrs" Attrs.decoder)
+        (field "data_vars" (dict DataVar.decoder))
         (field "dataset_id" Dataset.ID.decoder)
-
-
-dataVarDecoder : Decoder DataVar
-dataVarDecoder =
-    Json.Decode.map2
-        DataVar
-        (field "dims" (list string))
-        (field "attrs" attrsDecoder)
 
 
 selectDataVarDecoder : Decoder SelectDataVar
@@ -460,11 +453,6 @@ selectDataVarDecoder =
         SelectDataVar
         (field "dataset_id" Dataset.ID.decoder)
         (field "data_var" DataVarLabel.decoder)
-
-
-attrsDecoder : Decoder (Dict String String)
-attrsDecoder =
-    dict (Json.Decode.oneOf [ string, Json.Decode.succeed "" ])
 
 
 selectPointDecoder : Decoder SelectPoint
@@ -1753,7 +1741,7 @@ encodeAction action =
 
         SetDatasetDescription payload ->
             buildAction "SET_DATASET_DESCRIPTION"
-                (encodeDatasetDescription payload)
+                (Dataset.Description.encode payload)
 
         SetOnlyActive active ->
             buildAction "SET_ONLY_ACTIVE"
@@ -1814,36 +1802,6 @@ encodeDataset dataset =
         , ( "label", Dataset.Label.encode dataset.label )
         , ( "view", Json.Encode.string dataset.view )
         ]
-
-
-encodeDatasetDescription : Dataset.Description.Description -> Json.Encode.Value
-encodeDatasetDescription description =
-    Json.Encode.object
-        [ ( "datasetId", Dataset.ID.encode description.dataset_id )
-        , ( "data", encodeData description )
-        ]
-
-
-encodeData : Dataset.Description.Description -> Json.Encode.Value
-encodeData desc =
-    Json.Encode.object
-        [ ( "attrs", encodeAttrs desc.attrs )
-        , ( "dataset_id", Dataset.ID.encode desc.dataset_id )
-        , ( "data_vars", Json.Encode.dict identity encodeDataVar desc.data_vars )
-        ]
-
-
-encodeDataVar : DataVar -> Json.Encode.Value
-encodeDataVar data_var =
-    Json.Encode.object
-        [ ( "attrs", encodeAttrs data_var.attrs )
-        , ( "dims", Json.Encode.list Json.Encode.string data_var.dims )
-        ]
-
-
-encodeAttrs : Dict String String -> Json.Encode.Value
-encodeAttrs attrs =
-    Json.Encode.dict identity Json.Encode.string attrs
 
 
 encodeOnlyActive : OnlyActive -> Json.Encode.Value
