@@ -3,7 +3,6 @@ port module Main exposing (..)
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
-import DataVar exposing (DataVar)
 import DataVarLabel exposing (DataVarLabel)
 import Dataset.Description exposing (Description)
 import Dataset.ID exposing (ID)
@@ -56,7 +55,6 @@ import Http
 import Json.Decode
     exposing
         ( Decoder
-        , dict
         , field
         , float
         , int
