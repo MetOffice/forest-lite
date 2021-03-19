@@ -228,10 +228,6 @@ type DataLimits
     | Undefined
 
 
-
--- TODO extract this data structure into a module
-
-
 type alias Dataset =
     { label : Dataset.Label.Label
     , id : DatasetID
