@@ -3,6 +3,7 @@ port module Main exposing (..)
 import BoundingBox exposing (BoundingBox)
 import Browser
 import DataVarLabel exposing (DataVarLabel)
+import Dataset.Label exposing (Label)
 import DatasetID exposing (DatasetID)
 import Datum exposing (Datum)
 import Dict exposing (Dict)
@@ -231,17 +232,13 @@ type DataLimits
 -- TODO extract this data structure into a module
 
 
-type DatasetLabel
-    = DatasetLabel String
-
-
-labelToString : DatasetLabel -> String
-labelToString (DatasetLabel str) =
+labelToString : Dataset.Label.Label -> String
+labelToString (Dataset.Label.Label str) =
     str
 
 
 type alias Dataset =
-    { label : DatasetLabel
+    { label : Dataset.Label.Label
     , id : DatasetID
     , driver : String
     , view : String
@@ -490,10 +487,10 @@ attrsDecoder =
     dict (Json.Decode.oneOf [ string, Json.Decode.succeed "" ])
 
 
-datasetLabelDecoder : Decoder DatasetLabel
+datasetLabelDecoder : Decoder Dataset.Label.Label
 datasetLabelDecoder =
     Json.Decode.map
-        DatasetLabel
+        Dataset.Label.Label
         string
 
 
@@ -1719,7 +1716,7 @@ type Action
 
 
 type alias OnlyActive =
-    { dataset : DatasetLabel, data_var : String }
+    { dataset : Dataset.Label.Label, data_var : String }
 
 
 type alias Items =
@@ -1979,7 +1976,7 @@ selectDatasetId model =
             Nothing
 
 
-selectDatasetLabel : Model -> Maybe DatasetLabel
+selectDatasetLabel : Model -> Maybe Dataset.Label.Label
 selectDatasetLabel model =
     case selectDatasetId model of
         Just dataset_id ->
@@ -1989,7 +1986,7 @@ selectDatasetLabel model =
             Nothing
 
 
-selectDatasetLabelById : Model -> DatasetID -> Maybe DatasetLabel
+selectDatasetLabelById : Model -> DatasetID -> Maybe Dataset.Label.Label
 selectDatasetLabelById model dataset_id =
     case model.datasets of
         Success datasets ->
@@ -2007,7 +2004,7 @@ matchId dataset_id dataset =
     dataset.id == dataset_id
 
 
-asDatasetLabel : Maybe Dataset -> Maybe DatasetLabel
+asDatasetLabel : Maybe Dataset -> Maybe Dataset.Label.Label
 asDatasetLabel maybeDataset =
     case maybeDataset of
         Just dataset ->
