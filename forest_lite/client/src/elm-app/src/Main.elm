@@ -53,17 +53,16 @@ import Html.Events
         , targetValue
         )
 import Http
+import JWT
 import Json.Decode
     exposing
         ( Decoder
         , field
         , float
-        , int
         , list
         , maybe
         , string
         )
-import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import MapExtent
 import MultiLine exposing (MultiLine)
@@ -79,7 +78,7 @@ import ZoomLevel exposing (ZoomLevel)
 
 
 type alias Settings =
-    { claim : Maybe JWTClaim
+    { claim : Maybe JWT.Claim
     , baseURL : String
     }
 
@@ -87,33 +86,8 @@ type alias Settings =
 flagsDecoder : Decoder Settings
 flagsDecoder =
     Json.Decode.map2 Settings
-        (maybe (field "claim" jwtDecoder))
+        (maybe (field "claim" JWT.decoder))
         (field "baseURL" string)
-
-
-jwtDecoder : Decoder JWTClaim
-jwtDecoder =
-    Json.Decode.succeed JWTClaim
-        |> required "auth_time" int
-        |> optional "email" string "Not provided"
-        |> required "name" string
-        |> required "given_name" string
-        |> required "family_name" string
-        |> required "groups" (list string)
-        |> required "iat" int
-        |> required "exp" int
-
-
-type alias JWTClaim =
-    { auth_time : Int
-    , email : String
-    , name : String
-    , given_name : String
-    , family_name : String
-    , groups : List String
-    , iat : Int
-    , exp : Int
-    }
 
 
 type alias User =
