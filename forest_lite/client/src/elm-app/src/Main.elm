@@ -3,6 +3,7 @@ port module Main exposing (..)
 import BoundingBox exposing (BoundingBox)
 import Browser
 import DataVarLabel exposing (DataVarLabel)
+import Dataset.Label exposing (Label)
 import DatasetID exposing (DatasetID)
 import Datum exposing (Datum)
 import Dict exposing (Dict)
@@ -227,17 +228,8 @@ type DataLimits
     | Undefined
 
 
-type DatasetLabel
-    = DatasetLabel String
-
-
-labelToString : DatasetLabel -> String
-labelToString (DatasetLabel str) =
-    str
-
-
 type alias Dataset =
-    { label : DatasetLabel
+    { label : Dataset.Label.Label
     , id : DatasetID
     , driver : String
     , view : String
@@ -450,7 +442,7 @@ datasetsDecoder =
 datasetDecoder : Decoder Dataset
 datasetDecoder =
     Json.Decode.map4 Dataset
-        (field "label" datasetLabelDecoder)
+        (field "label" Dataset.Label.decoder)
         (field "id" DatasetID.decoder)
         (field "driver" string)
         (field "view" string)
@@ -484,13 +476,6 @@ selectDataVarDecoder =
 attrsDecoder : Decoder (Dict String String)
 attrsDecoder =
     dict (Json.Decode.oneOf [ string, Json.Decode.succeed "" ])
-
-
-datasetLabelDecoder : Decoder DatasetLabel
-datasetLabelDecoder =
-    Json.Decode.map
-        DatasetLabel
-        string
 
 
 selectPointDecoder : Decoder SelectPoint
@@ -653,7 +638,7 @@ update msg model =
                                         [ SetItems
                                             { path =
                                                 [ "navigate"
-                                                , labelToString dataset_label
+                                                , Dataset.Label.toString dataset_label
                                                 , axis.data_var
                                                 , axis.dim_name
                                                 ]
@@ -784,7 +769,7 @@ update msg model =
                             let
                                 path =
                                     [ "navigate"
-                                    , labelToString dataset_label
+                                    , Dataset.Label.toString dataset_label
                                     , DataVarLabel.toString data_var
                                     , selectPoint.dim_name
                                     ]
@@ -1547,7 +1532,7 @@ viewDatasetLabel model =
     case selectDatasetLabel model of
         Just dataset_label ->
             label [ class "select__label" ]
-                [ text ("Dataset: " ++ labelToString dataset_label)
+                [ text ("Dataset: " ++ Dataset.Label.toString dataset_label)
                 ]
 
         Nothing ->
@@ -1558,7 +1543,7 @@ viewDataset : Model -> Dataset -> Html Msg
 viewDataset model dataset =
     let
         dataset_label =
-            labelToString dataset.label
+            Dataset.Label.toString dataset.label
 
         maybeDescription =
             Dict.get (DatasetID.toInt dataset.id) model.datasetDescriptions
@@ -1715,7 +1700,7 @@ type Action
 
 
 type alias OnlyActive =
-    { dataset : DatasetLabel, data_var : String }
+    { dataset : Dataset.Label.Label, data_var : String }
 
 
 type alias Items =
@@ -1837,7 +1822,7 @@ encodeDataset dataset =
     Json.Encode.object
         [ ( "id", DatasetID.encode dataset.id )
         , ( "driver", Json.Encode.string dataset.driver )
-        , ( "label", Json.Encode.string (labelToString dataset.label) )
+        , ( "label", Dataset.Label.encode dataset.label )
         , ( "view", Json.Encode.string dataset.view )
         ]
 
@@ -1875,7 +1860,7 @@ encodeAttrs attrs =
 encodeOnlyActive : OnlyActive -> Json.Encode.Value
 encodeOnlyActive only_active =
     Json.Encode.object
-        [ ( "dataset", Json.Encode.string (labelToString only_active.dataset) )
+        [ ( "dataset", Dataset.Label.encode only_active.dataset )
         , ( "data_var", Json.Encode.string only_active.data_var )
         ]
 
@@ -1975,7 +1960,7 @@ selectDatasetId model =
             Nothing
 
 
-selectDatasetLabel : Model -> Maybe DatasetLabel
+selectDatasetLabel : Model -> Maybe Dataset.Label.Label
 selectDatasetLabel model =
     case selectDatasetId model of
         Just dataset_id ->
@@ -1985,7 +1970,7 @@ selectDatasetLabel model =
             Nothing
 
 
-selectDatasetLabelById : Model -> DatasetID -> Maybe DatasetLabel
+selectDatasetLabelById : Model -> DatasetID -> Maybe Dataset.Label.Label
 selectDatasetLabelById model dataset_id =
     case model.datasets of
         Success datasets ->
@@ -2003,7 +1988,7 @@ matchId dataset_id dataset =
     dataset.id == dataset_id
 
 
-asDatasetLabel : Maybe Dataset -> Maybe DatasetLabel
+asDatasetLabel : Maybe Dataset -> Maybe Dataset.Label.Label
 asDatasetLabel maybeDataset =
     case maybeDataset of
         Just dataset ->
