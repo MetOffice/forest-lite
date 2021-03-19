@@ -1826,7 +1826,7 @@ encodeDataset dataset =
     Json.Encode.object
         [ ( "id", DatasetID.encode dataset.id )
         , ( "driver", Json.Encode.string dataset.driver )
-        , ( "label", Json.Encode.string (Dataset.Label.toString dataset.label) )
+        , ( "label", Dataset.Label.encode dataset.label )
         , ( "view", Json.Encode.string dataset.view )
         ]
 
@@ -1864,7 +1864,7 @@ encodeAttrs attrs =
 encodeOnlyActive : OnlyActive -> Json.Encode.Value
 encodeOnlyActive only_active =
     Json.Encode.object
-        [ ( "dataset", Json.Encode.string (Dataset.Label.toString only_active.dataset) )
+        [ ( "dataset", Dataset.Label.encode only_active.dataset )
         , ( "data_var", Json.Encode.string only_active.data_var )
         ]
 
