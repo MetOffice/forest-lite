@@ -3,7 +3,9 @@ port module Main exposing (..)
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
-import DataVarLabel exposing (DataVarLabel)
+import DataVar.Label exposing (Label)
+import DataVar.Select exposing (Select)
+import Dataset exposing (Dataset)
 import Dataset.Description exposing (Description)
 import Dataset.ID exposing (ID)
 import Dataset.Label exposing (Label)
@@ -25,7 +27,6 @@ import Html
         , input
         , label
         , li
-        , optgroup
         , option
         , select
         , span
@@ -68,6 +69,7 @@ import MapExtent
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import Quadkey exposing (Quadkey)
+import Request exposing (Request(..))
 import Scale exposing (Scale)
 import Time
 import Viewport exposing (Viewport)
@@ -183,7 +185,7 @@ actionPayloadDecoder label =
                     (Json.Decode.field "low" Json.Decode.float)
                     (Json.Decode.field "high" Json.Decode.float)
                     (Json.Decode.field "path" (Json.Decode.index 0 Dataset.ID.decoder))
-                    (Json.Decode.field "path" (Json.Decode.index 1 DataVarLabel.decoder))
+                    (Json.Decode.field "path" (Json.Decode.index 1 DataVar.Label.decoder))
                 )
 
 
@@ -194,7 +196,7 @@ actionPayloadDecoder label =
 type alias Model =
     { user : Maybe User
     , route : Maybe Route
-    , selected : Maybe SelectDataVar
+    , selected : Maybe DataVar.Select.Select
     , datasets : Request (List Dataset)
     , datasetDescriptions : Dict Int (Request Dataset.Description.Description)
     , dimensions : Dict String Dimension
@@ -229,14 +231,6 @@ type DataLimits
     | Undefined
 
 
-type alias Dataset =
-    { label : Dataset.Label.Label
-    , id : Dataset.ID.ID
-    , driver : String
-    , view : String
-    }
-
-
 type alias Axis =
     { attrs : Dict String String
     , data : List Datum
@@ -262,12 +256,6 @@ type DimensionKind
     | Horizontal
 
 
-type alias SelectDataVar =
-    { dataset_id : Dataset.ID.ID
-    , data_var : DataVarLabel
-    }
-
-
 type alias SelectPoint =
     { dim_name : String
     , point : Datum
@@ -276,13 +264,6 @@ type alias SelectPoint =
 
 type alias Point =
     Dict String Datum
-
-
-type Request a
-    = NotStarted
-    | Failure
-    | Loading
-    | Success a
 
 
 type Route
@@ -424,24 +405,7 @@ axisDecoder =
 
 datasetsDecoder : Decoder (List Dataset)
 datasetsDecoder =
-    field "datasets" (list datasetDecoder)
-
-
-datasetDecoder : Decoder Dataset
-datasetDecoder =
-    Json.Decode.map4 Dataset
-        (field "label" Dataset.Label.decoder)
-        (field "id" Dataset.ID.decoder)
-        (field "driver" string)
-        (field "view" string)
-
-
-selectDataVarDecoder : Decoder SelectDataVar
-selectDataVarDecoder =
-    Json.Decode.map2
-        SelectDataVar
-        (field "dataset_id" Dataset.ID.decoder)
-        (field "data_var" DataVarLabel.decoder)
+    field "datasets" (list Dataset.decoder)
 
 
 selectPointDecoder : Decoder SelectPoint
@@ -670,14 +634,14 @@ update msg model =
                     ( model, Cmd.none )
 
         DataVarSelected payload ->
-            case Json.Decode.decodeString selectDataVarDecoder payload of
+            case Json.Decode.decodeString DataVar.Select.decoder payload of
                 Ok selected ->
                     let
                         dataset_id =
                             selected.dataset_id
 
                         data_var =
-                            DataVarLabel.toString selected.data_var
+                            DataVar.Label.toString selected.data_var
 
                         maybeDatasetLabel =
                             selectDatasetLabelById model dataset_id
@@ -706,7 +670,7 @@ update msg model =
                                             getAxis
                                                 model.baseURL
                                                 dataset_id
-                                                (DataVarLabel.DataVarLabel data_var)
+                                                (DataVar.Label.Label data_var)
                                                 dim
                                                 Nothing
                                         )
@@ -736,7 +700,7 @@ update msg model =
                                 path =
                                     [ "navigate"
                                     , Dataset.Label.toString dataset_label
-                                    , DataVarLabel.toString data_var
+                                    , DataVar.Label.toString data_var
                                     , selectPoint.dim_name
                                     ]
 
@@ -891,7 +855,7 @@ setBound bound data_limits (TextLimits user_low user_high) =
                     TextLimits data_low user_high
 
 
-setLimitOriginCmd : LimitOrigin -> Limits -> Maybe SelectDataVar -> Cmd Msg
+setLimitOriginCmd : LimitOrigin -> Limits -> Maybe DataVar.Select.Select -> Cmd Msg
 setLimitOriginCmd origin limits maybe_select_data_var =
     case origin of
         DataSource ->
@@ -925,7 +889,7 @@ setLimitOriginCmd origin limits maybe_select_data_var =
                                 |> sendAction
 
 
-limitsCmd : LimitOrigin -> TextLimits -> Maybe SelectDataVar -> Cmd Msg
+limitsCmd : LimitOrigin -> TextLimits -> Maybe DataVar.Select.Select -> Cmd Msg
 limitsCmd origin text_limits maybe_select_data_var =
     case origin of
         DataSource ->
@@ -1164,11 +1128,11 @@ getDatasetDescription baseURL id =
         }
 
 
-getAxis : String -> Dataset.ID.ID -> DataVarLabel -> String -> Maybe Datum -> Cmd Msg
+getAxis : String -> Dataset.ID.ID -> DataVar.Label.Label -> String -> Maybe Datum -> Cmd Msg
 getAxis baseURL dataset_id data_var_label dim maybeStartTime =
     let
         data_var =
-            DataVarLabel.toString data_var_label
+            DataVar.Label.toString data_var_label
 
         endpoint =
             Endpoint.Axis dataset_id data_var dim maybeStartTime
@@ -1488,7 +1452,7 @@ viewDatasets datasets model =
                 [ onSelect DataVarSelected
                 , class "select__select"
                 ]
-                (List.map (viewDataset model) datasets)
+                (List.map (Dataset.view model.datasetDescriptions) datasets)
             ]
         ]
 
@@ -1503,54 +1467,6 @@ viewDatasetLabel model =
 
         Nothing ->
             label [ class "select__label" ] [ text "Dataset:" ]
-
-
-viewDataset : Model -> Dataset -> Html Msg
-viewDataset model dataset =
-    let
-        dataset_label =
-            Dataset.Label.toString dataset.label
-
-        maybeDescription =
-            Dict.get (Dataset.ID.toInt dataset.id) model.datasetDescriptions
-    in
-    case maybeDescription of
-        Just description ->
-            case description of
-                Success desc ->
-                    optgroup [ attribute "label" dataset_label ]
-                        (List.map
-                            (\v ->
-                                option
-                                    [ attribute "value"
-                                        (dataVarToString
-                                            { data_var = DataVarLabel.DataVarLabel v
-                                            , dataset_id = dataset.id
-                                            }
-                                        )
-                                    ]
-                                    [ text v ]
-                            )
-                            (Dict.keys desc.data_vars)
-                        )
-
-                Failure ->
-                    optgroup [ attribute "label" dataset_label ]
-                        [ option [] [ text "Failed to load variables" ]
-                        ]
-
-                Loading ->
-                    optgroup [ attribute "label" dataset_label ]
-                        [ option [] [ text "..." ]
-                        ]
-
-                NotStarted ->
-                    optgroup [ attribute "label" dataset_label ]
-                        [ option [] [ text "..." ]
-                        ]
-
-        Nothing ->
-            optgroup [ attribute "label" dataset_label ] []
 
 
 viewHideShowIcon : Bool -> Html Msg
@@ -1657,7 +1573,7 @@ type Action
     | GoToItem Item
     | SetVisible Bool
     | SetFlag Bool
-    | SetLimits Float Float Dataset.ID.ID DataVarLabel
+    | SetLimits Float Float Dataset.ID.ID DataVar.Label.Label
     | SetQuadkeys (List Quadkey)
     | SetCoastlineColor String
     | SetFigure Float Float Float Float
@@ -1775,11 +1691,11 @@ buildAction key payload =
         )
 
 
-encodeLimitPath : Dataset.ID.ID -> DataVarLabel -> Json.Encode.Value
+encodeLimitPath : Dataset.ID.ID -> DataVar.Label.Label -> Json.Encode.Value
 encodeLimitPath dataset_id data_var =
     Json.Encode.list identity
         [ Dataset.ID.encode dataset_id
-        , DataVarLabel.encode data_var
+        , DataVar.Label.encode data_var
         ]
 
 
@@ -1821,16 +1737,6 @@ encodeItem item =
 -- JSON ENCODERS
 
 
-dataVarToString : SelectDataVar -> String
-dataVarToString props =
-    Json.Encode.encode 0
-        (Json.Encode.object
-            [ ( "dataset_id", Dataset.ID.encode props.dataset_id )
-            , ( "data_var", DataVarLabel.encode props.data_var )
-            ]
-        )
-
-
 pointToString : SelectPoint -> String
 pointToString props =
     Json.Encode.encode 0
@@ -1858,7 +1764,7 @@ viewSelected model =
                         Success desc ->
                             let
                                 key =
-                                    DataVarLabel.toString payload.data_var
+                                    DataVar.Label.toString payload.data_var
 
                                 maybeVar =
                                     Dict.get key desc.data_vars
@@ -1934,7 +1840,7 @@ asDatasetLabel maybeDataset =
             Nothing
 
 
-selectDataVarLabel : Model -> Maybe DataVarLabel
+selectDataVarLabel : Model -> Maybe DataVar.Label.Label
 selectDataVarLabel model =
     case model.selected of
         Just selected ->
