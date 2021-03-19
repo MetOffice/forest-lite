@@ -4,6 +4,7 @@ import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
 import DataVarLabel exposing (DataVarLabel)
+import Dataset exposing (Dataset)
 import Dataset.Description exposing (Description)
 import Dataset.ID exposing (ID)
 import Dataset.Label exposing (Label)
@@ -229,14 +230,6 @@ type DataLimits
     | Undefined
 
 
-type alias Dataset =
-    { label : Dataset.Label.Label
-    , id : Dataset.ID.ID
-    , driver : String
-    , view : String
-    }
-
-
 type alias Axis =
     { attrs : Dict String String
     , data : List Datum
@@ -424,16 +417,7 @@ axisDecoder =
 
 datasetsDecoder : Decoder (List Dataset)
 datasetsDecoder =
-    field "datasets" (list datasetDecoder)
-
-
-datasetDecoder : Decoder Dataset
-datasetDecoder =
-    Json.Decode.map4 Dataset
-        (field "label" Dataset.Label.decoder)
-        (field "id" Dataset.ID.decoder)
-        (field "driver" string)
-        (field "view" string)
+    field "datasets" (list Dataset.decoder)
 
 
 selectDataVarDecoder : Decoder SelectDataVar
