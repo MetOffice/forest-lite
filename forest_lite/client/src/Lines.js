@@ -34,6 +34,7 @@ export const NaturalEarthFeature = ({ figure, feature }) => {
     const quadkeys = useSelector(selectQuadkeys)
     const data = useSelector(selectData(feature))
     const line_color = useSelector(selectLineColor(feature))
+    const line_width = useSelector(selectLineWidth(feature))
 
     useEffect(() => {
         const source = new ColumnDataSource({
@@ -46,6 +47,7 @@ export const NaturalEarthFeature = ({ figure, feature }) => {
             xs: { field: "xs" },
             ys: { field: "ys" },
             line_color: line_color,
+            line_width: line_width,
             source: source,
         })
         renderer.level = "overlay" // NOTE: only prop assignment works
@@ -67,6 +69,7 @@ export const NaturalEarthFeature = ({ figure, feature }) => {
     if (renderer != null) {
         renderer.visible = active
         renderer.glyph.line_color = line_color
+        renderer.glyph.line_width = line_width
     }
 
     return null
@@ -148,4 +151,9 @@ const selectLineColor = feature => state => {
     }
     const { coastlines_color = "black" } = state
     return coastlines_color
+}
+
+const selectLineWidth = feature => state => {
+    const { coastlines_width = 1 } = state
+    return coastlines_width
 }

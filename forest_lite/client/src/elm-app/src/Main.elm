@@ -1305,8 +1305,17 @@ viewLayerMenu model =
                             [ viewHideShowIcon model.visible
                             , viewCoastlineCheckbox model.coastlines
                             , viewColorPicker
-                                (NaturalEarthFeature << NaturalEarthFeature.SelectColor)
+                                (NaturalEarthFeature
+                                    << NaturalEarthFeature.SelectColor
+                                )
                                 model.coastlines_color
+                            , viewInputNumber
+                                (NaturalEarthFeature
+                                    << NaturalEarthFeature.SelectWidth
+                                    << Maybe.withDefault 1
+                                    << String.toInt
+                                )
+                                model.coastlines_width
                             ]
                     , onClick = ExpandCollapse DisplayMenu
                     }
@@ -1502,6 +1511,11 @@ viewCoastlineCheckbox flag =
         ]
 
 
+{-| Color picker
+
+HTML input tag with type set to color
+
+-}
 viewColorPicker : (String -> Msg) -> String -> Html Msg
 viewColorPicker toMsg str =
     let
@@ -1541,6 +1555,21 @@ viewColorPicker toMsg str =
             ]
             [ text "Choose coastline color" ]
         ]
+
+
+{-| Number widget
+
+HTML input tag with type set to number
+
+-}
+viewInputNumber : (String -> Msg) -> Int -> Html Msg
+viewInputNumber toMsg n =
+    input
+        [ attribute "type" "number"
+        , value (String.fromInt n)
+        , onSelect toMsg
+        ]
+        []
 
 
 
