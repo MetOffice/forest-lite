@@ -3,6 +3,7 @@
  */
 import {
     SET_ACTIVE,
+    SET_OPACITY,
     SET_VISIBLE,
     TOGGLE_ACTIVE,
     SET_ONLY_ACTIVE,
@@ -127,6 +128,8 @@ export const toggleActiveReducer = (state, action) => {
 export const rootReducer = (state = "", action) => {
     const { type, payload } = action
     switch (type) {
+        case SET_OPACITY:
+            return Object.assign({}, state, {opacity: payload})
         case SET_VISIBLE:
             return Object.assign({}, state, {visible: payload})
         case SET_ACTIVE:

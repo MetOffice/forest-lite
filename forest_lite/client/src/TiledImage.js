@@ -25,6 +25,7 @@ import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
 import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 import AutoLimits from "./AutoLimits.js"
 import { findById } from "./helpers.js"
+import { selectOpacity } from "./opacity-selector.js"
 import { selectPorts } from "./ports-selector.js"
 
 
@@ -318,6 +319,8 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
     // Render component
     const ranges = useSelector(state => state.figure || null)
 
+    const opacity = useSelector(selectOpacity)
+
     const active = useSelector(state => {
         const { datasets = [], visible = true } = state
         if (visible === false) return false
@@ -343,6 +346,7 @@ const TiledImage = ({ figure, datasetId, baseURL }) => {
 
     if (renderer != null) {
         renderer.visible = active
+        renderer.glyph.global_alpha = opacity
     }
 
     // Compute URLs

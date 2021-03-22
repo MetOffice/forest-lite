@@ -69,6 +69,7 @@ import MapExtent
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import NaturalEarthFeature.Action exposing (Action(..))
+import Opacity exposing (Opacity)
 import Quadkey exposing (Quadkey)
 import Request exposing (Request(..))
 import Scale exposing (Scale)
@@ -183,6 +184,7 @@ type alias Model =
     , coastlines_color : String
     , coastlines_width : Int
     , limits : Limits
+    , opacity : Opacity
     , collapsed : Dict String Bool
     }
 
@@ -276,6 +278,7 @@ type Msg
     | CopyDataLimits Bound
     | ExpandCollapse SubMenu
     | NaturalEarthFeature NaturalEarthFeature.Msg
+    | SetOpacityMsg Opacity
 
 
 type SubMenu
@@ -329,6 +332,7 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
+            , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
             }
@@ -808,6 +812,15 @@ update msg model =
                     setCollapsed menu (not flag) model.collapsed
             in
             ( { model | collapsed = collapsed }, Cmd.none )
+
+        SetOpacityMsg value ->
+            let
+                cmd =
+                    SetOpacityAction value
+                        |> encodeAction
+                        |> sendAction
+            in
+            ( { model | opacity = value }, cmd )
 
 
 setLimits : Limits -> Model -> Model
@@ -1303,6 +1316,12 @@ viewLayerMenu model =
                     , body =
                         div []
                             [ viewHideShowIcon model.visible
+                            , viewOpacity
+                                (SetOpacityMsg
+                                    << Maybe.withDefault Opacity.opaque
+                                    << Opacity.fromString
+                                )
+                                model.opacity
                             , viewCoastlineCheckbox model.coastlines
                             , viewColorPicker
                                 (NaturalEarthFeature
@@ -1461,6 +1480,27 @@ viewDatasetLabel model =
             label [ class "select__label" ] [ text "Dataset:" ]
 
 
+viewOpacity : (String -> Msg) -> Opacity -> Html Msg
+viewOpacity toMsg opacity =
+    div
+        [ style "margin" "0.5em"
+        ]
+        [ div
+            []
+            [ text ("Opacity: " ++ Opacity.toString opacity)
+            ]
+        , input
+            [ attribute "type" "range"
+            , attribute "min" "0"
+            , attribute "max" "1"
+            , attribute "step" "0.01"
+            , value (Opacity.toString opacity)
+            , onSelect toMsg
+            ]
+            []
+        ]
+
+
 viewHideShowIcon : Bool -> Html Msg
 viewHideShowIcon flag =
     let
@@ -1608,6 +1648,7 @@ type Action
     | SetItems Items
     | GoToItem Item
     | SetVisible Bool
+    | SetOpacityAction Opacity
     | SetFlag Bool
     | SetLimits Float Float Dataset.ID.ID DataVar.Label.Label
     | SetQuadkeys (List Quadkey)
@@ -1695,6 +1736,10 @@ encodeAction action =
         SetVisible flag ->
             Action.toString "SET_VISIBLE"
                 (Json.Encode.bool flag)
+
+        SetOpacityAction opacity ->
+            Action.toString "SET_OPACITY"
+                (Opacity.encode opacity)
 
         SetFlag flag ->
             Action.toString "SET_FLAG"
