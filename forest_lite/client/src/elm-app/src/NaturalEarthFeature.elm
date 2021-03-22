@@ -1,15 +1,52 @@
 module NaturalEarthFeature exposing
-    ( NaturalEarthFeature(..)
+    ( Msg(..)
+    , NaturalEarthFeature(..)
     , decoder
     , encode
     , endpoint
+    , update
     )
 
 import BoundingBox exposing (BoundingBox)
 import Endpoint
 import Json.Decode exposing (Decoder)
 import Json.Encode
+import NaturalEarthFeature.Action as Action exposing (Action(..))
 import Scale exposing (Scale)
+
+
+
+-- MODEL
+
+
+type alias Model r =
+    { r
+        | coastlines_color : String
+        , coastlines_width : Int
+    }
+
+
+
+-- UPDATE
+
+
+type Msg
+    = SelectColor String
+    | SelectWidth Int
+
+
+update : Msg -> Model r -> ( Model r, Action )
+update msg model =
+    case msg of
+        SelectColor str ->
+            ( { model | coastlines_color = str }, SetColor str )
+
+        SelectWidth n ->
+            ( { model | coastlines_width = n }, SetWidth n )
+
+
+
+-- API
 
 
 type NaturalEarthFeature

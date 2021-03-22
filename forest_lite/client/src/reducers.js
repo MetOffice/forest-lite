@@ -10,6 +10,7 @@ import {
     SET_FIGURE,
     UPDATE_NATURAL_EARTH_FEATURE,
     SET_COASTLINES_COLOR,
+    SET_COASTLINES_WIDTH,
     SET_DATASET,
     SET_DATASETS,
     SET_DATASET_DESCRIPTION,
@@ -186,6 +187,7 @@ export const rootReducer = (state = "", action) => {
             return quadkeysReducer(state, action)
         case UPDATE_NATURAL_EARTH_FEATURE:
         case SET_COASTLINES_COLOR:
+        case SET_COASTLINES_WIDTH:
             return coastlinesReducer(state, action)
         default:
             return state
@@ -252,6 +254,8 @@ const coastlinesReducer = (state, action) => {
 
     } else if (type === SET_COASTLINES_COLOR) {
         return Object.assign({}, state, { coastlines_color: payload })
+    } else if (type === SET_COASTLINES_WIDTH) {
+        return Object.assign({}, state, { coastlines_width: payload })
     } else {
         return state
     }
