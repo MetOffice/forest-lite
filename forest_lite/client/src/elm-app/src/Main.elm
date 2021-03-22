@@ -180,6 +180,7 @@ type alias Model =
     , visible : Bool
     , coastlines : Bool
     , coastlines_color : String
+    , coastlines_width : Int
     , limits : Limits
     , collapsed : Dict String Bool
     }
@@ -321,6 +322,7 @@ init flags =
             , visible = True
             , coastlines = True
             , coastlines_color = "black"
+            , coastlines_width = 1
             , limits =
                 { user_input = TextLimits "0" "1"
                 , data_source = Undefined
@@ -507,21 +509,16 @@ update msg model =
                     ( model, Cmd.none )
 
         NaturalEarthFeature subMsg ->
-            case subMsg of
-                NaturalEarthFeature.SelectColor str ->
-                    let
-                        toAction =
-                            NaturalEarthFeatureAction << NaturalEarthFeature.Action.SetColor
+            let
+                ( newModel, subAction ) =
+                    NaturalEarthFeature.update subMsg model
 
-                        cmd =
-                            str
-                                |> toAction
-                                |> encodeAction
-                                |> sendAction
-                    in
-                    ( NaturalEarthFeature.update subMsg model
-                    , cmd
-                    )
+                cmd =
+                    NaturalEarthFeatureAction subAction
+                        |> encodeAction
+                        |> sendAction
+            in
+            ( newModel, cmd )
 
         -- DIMENSIONS
         GotAxis dataset_id result ->

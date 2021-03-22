@@ -4,15 +4,15 @@ import Json.Encode
 
 
 type Action
-    = SetLineWidth Int
+    = SetWidth Int
     | SetColor String
 
 
 key : Action -> String
 key action =
     case action of
-        SetLineWidth _ ->
-            "SET_NATURAL_EARTH_FEATURE_LINEWIDTH"
+        SetWidth _ ->
+            "SET_COASTLINES_WIDTH"
 
         SetColor color ->
             "SET_COASTLINES_COLOR"
@@ -21,7 +21,7 @@ key action =
 payload : Action -> Json.Encode.Value
 payload action =
     case action of
-        SetLineWidth n ->
+        SetWidth n ->
             Json.Encode.int n
 
         SetColor color ->
