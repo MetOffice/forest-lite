@@ -1,5 +1,6 @@
 port module Main exposing (..)
 
+import Action
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
@@ -1579,7 +1580,7 @@ encodeAction : Action -> String
 encodeAction action =
     case action of
         SetFigure x_start x_end y_start y_end ->
-            buildAction "SET_FIGURE"
+            Action.toString "SET_FIGURE"
                 (Json.Encode.object
                     [ ( "x_range"
                       , Json.Encode.object
@@ -1597,7 +1598,7 @@ encodeAction action =
                 )
 
         SetHttpNaturalEarthFeature feature box quadkey data ->
-            buildAction "SET_HTTP_NATURAL_EARTH_FEATURE"
+            Action.toString "SET_HTTP_NATURAL_EARTH_FEATURE"
                 (Json.Encode.object
                     [ ( "feature", NaturalEarthFeature.encode feature )
                     , ( "data", MultiLine.encode data )
@@ -1607,7 +1608,7 @@ encodeAction action =
                 )
 
         GetHttpNaturalEarthFeature feature quadkey ->
-            buildAction "GET_HTTP_NATURAL_EARTH_FEATURE"
+            Action.toString "GET_HTTP_NATURAL_EARTH_FEATURE"
                 (Json.Encode.object
                     [ ( "feature", NaturalEarthFeature.encode feature )
                     , ( "quadkey", Quadkey.encode quadkey )
@@ -1615,42 +1616,42 @@ encodeAction action =
                 )
 
         SetQuadkeys quadkeys ->
-            buildAction "SET_QUADKEYS"
+            Action.toString "SET_QUADKEYS"
                 (Json.Encode.list Quadkey.encode quadkeys)
 
         SetDatasets datasets ->
-            buildAction "SET_DATASETS"
+            Action.toString "SET_DATASETS"
                 (Json.Encode.list encodeDataset datasets)
 
         SetDatasetDescription payload ->
-            buildAction "SET_DATASET_DESCRIPTION"
+            Action.toString "SET_DATASET_DESCRIPTION"
                 (Dataset.Description.encode payload)
 
         SetOnlyActive active ->
-            buildAction "SET_ONLY_ACTIVE"
+            Action.toString "SET_ONLY_ACTIVE"
                 (encodeOnlyActive active)
 
         SetItems items ->
-            buildAction "SET_ITEMS"
+            Action.toString "SET_ITEMS"
                 (encodeItems items)
 
         GoToItem item ->
-            buildAction "GOTO_ITEM"
+            Action.toString "GOTO_ITEM"
                 (encodeItem item)
 
         SetVisible flag ->
-            buildAction "SET_VISIBLE"
+            Action.toString "SET_VISIBLE"
                 (Json.Encode.bool flag)
 
         SetFlag flag ->
-            buildAction "SET_FLAG"
+            Action.toString "SET_FLAG"
                 (Json.Encode.object
                     [ ( "coastlines", Json.Encode.bool flag )
                     ]
                 )
 
         SetLimits lower upper dataset_id datavar ->
-            buildAction "SET_LIMITS"
+            Action.toString "SET_LIMITS"
                 (Json.Encode.object
                     [ ( "high", Json.Encode.float upper )
                     , ( "low", Json.Encode.float lower )
@@ -1666,17 +1667,7 @@ encodeAction action =
                 key =
                     NaturalEarthFeature.Action.key subAction
             in
-            buildAction key payload
-
-
-buildAction : String -> Json.Encode.Value -> String
-buildAction key payload =
-    Json.Encode.encode 0
-        (Json.Encode.object
-            [ ( "type", Json.Encode.string key )
-            , ( "payload", payload )
-            ]
-        )
+            Action.toString key payload
 
 
 encodeLimitPath : Dataset.ID.ID -> DataVar.Label.Label -> Json.Encode.Value
