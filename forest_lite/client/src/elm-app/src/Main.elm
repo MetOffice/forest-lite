@@ -67,7 +67,7 @@ import Json.Encode
 import MapExtent
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
-import NaturalEarthFeature.Action exposing (Action)
+import NaturalEarthFeature.Action exposing (Action(..))
 import Quadkey exposing (Quadkey)
 import Request exposing (Request(..))
 import Scale exposing (Scale)
@@ -273,7 +273,7 @@ type Msg
     | SetLimitOrigin Bool
     | CopyDataLimits Bound
     | ExpandCollapse SubMenu
-    | SelectCoastlineColor String
+    | NaturalEarthFeature NaturalEarthFeature.Msg
 
 
 type SubMenu
@@ -506,14 +506,20 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        SelectCoastlineColor str ->
-            let
-                cmd =
-                    SetCoastlineColor str
-                        |> encodeAction
-                        |> sendAction
-            in
-            ( { model | coastlines_color = str }, cmd )
+        NaturalEarthFeature subMsg ->
+            case subMsg of
+                NaturalEarthFeature.SelectColor str ->
+                    let
+                        toAction =
+                            NaturalEarthFeatureAction << NaturalEarthFeature.Action.SetColor
+
+                        cmd =
+                            str
+                                |> toAction
+                                |> encodeAction
+                                |> sendAction
+                    in
+                    ( { model | coastlines_color = str }, cmd )
 
         -- DIMENSIONS
         GotAxis dataset_id result ->
@@ -1298,7 +1304,9 @@ viewLayerMenu model =
                         div []
                             [ viewHideShowIcon model.visible
                             , viewCoastlineCheckbox model.coastlines
-                            , viewCoastlineColorPicker model.coastlines_color
+                            , viewColorPicker
+                                (NaturalEarthFeature << NaturalEarthFeature.SelectColor)
+                                model.coastlines_color
                             ]
                     , onClick = ExpandCollapse DisplayMenu
                     }
@@ -1494,8 +1502,8 @@ viewCoastlineCheckbox flag =
         ]
 
 
-viewCoastlineColorPicker : String -> Html Msg
-viewCoastlineColorPicker str =
+viewColorPicker : (String -> Msg) -> String -> Html Msg
+viewColorPicker toMsg str =
     let
         inputId =
             "coastline-color"
@@ -1515,7 +1523,7 @@ viewCoastlineColorPicker str =
             [ input
                 [ attribute "type" "color"
                 , value str
-                , onSelect SelectCoastlineColor
+                , onSelect toMsg
                 , id inputId
                 , style "background-color" "white"
                 , style "border" "none"
@@ -1550,7 +1558,6 @@ type Action
     | SetFlag Bool
     | SetLimits Float Float Dataset.ID.ID DataVar.Label.Label
     | SetQuadkeys (List Quadkey)
-    | SetCoastlineColor String
     | SetFigure Float Float Float Float
     | GetHttpNaturalEarthFeature NaturalEarthFeature Quadkey
     | SetHttpNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey MultiLine
@@ -1612,10 +1619,6 @@ encodeAction action =
             buildAction "SET_QUADKEYS"
                 (Json.Encode.list Quadkey.encode quadkeys)
 
-        SetCoastlineColor color ->
-            buildAction "SET_COASTLINES_COLOR"
-                (Json.Encode.string color)
-
         SetDatasets datasets ->
             buildAction "SET_DATASETS"
                 (Json.Encode.list encodeDataset datasets)
@@ -1659,7 +1662,7 @@ encodeAction action =
         NaturalEarthFeatureAction subAction ->
             let
                 payload =
-                    NaturalEarthFeature.Action.encode subAction
+                    NaturalEarthFeature.Action.payload subAction
 
                 key =
                     NaturalEarthFeature.Action.key subAction

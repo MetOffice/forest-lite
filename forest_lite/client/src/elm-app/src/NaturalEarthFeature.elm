@@ -1,5 +1,6 @@
 module NaturalEarthFeature exposing
-    ( NaturalEarthFeature(..)
+    ( Msg(..)
+    , NaturalEarthFeature(..)
     , decoder
     , encode
     , endpoint
@@ -10,6 +11,10 @@ import Endpoint
 import Json.Decode exposing (Decoder)
 import Json.Encode
 import Scale exposing (Scale)
+
+
+type Msg
+    = SelectColor String
 
 
 type NaturalEarthFeature
