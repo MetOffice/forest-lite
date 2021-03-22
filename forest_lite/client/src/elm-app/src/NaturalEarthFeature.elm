@@ -4,6 +4,7 @@ module NaturalEarthFeature exposing
     , decoder
     , encode
     , endpoint
+    , update
     )
 
 import BoundingBox exposing (BoundingBox)
@@ -15,6 +16,23 @@ import Scale exposing (Scale)
 
 type Msg
     = SelectColor String
+
+
+type alias Model r =
+    { r
+        | coastlines_color : String
+    }
+
+
+
+-- UPDATE
+
+
+update : Msg -> Model r -> Model r
+update msg model =
+    case msg of
+        SelectColor str ->
+            { model | coastlines_color = str }
 
 
 type NaturalEarthFeature

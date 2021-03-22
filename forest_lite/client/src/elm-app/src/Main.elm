@@ -519,7 +519,9 @@ update msg model =
                                 |> encodeAction
                                 |> sendAction
                     in
-                    ( { model | coastlines_color = str }, cmd )
+                    ( NaturalEarthFeature.update subMsg model
+                    , cmd
+                    )
 
         -- DIMENSIONS
         GotAxis dataset_id result ->
