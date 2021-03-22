@@ -1564,12 +1564,36 @@ HTML input tag with type set to number
 -}
 viewInputNumber : (String -> Msg) -> Int -> Html Msg
 viewInputNumber toMsg n =
-    input
-        [ attribute "type" "number"
-        , value (String.fromInt n)
-        , onSelect toMsg
+    let
+        inputId =
+            "coastline-width"
+    in
+    div
+        [ style "margin-top" "0.3em"
         ]
-        []
+        [ div
+            [ style "display" "inline-block"
+            , style "margin" "0 0.5em"
+            ]
+            [ input
+                [ attribute "type" "number"
+                , value (String.fromInt n)
+                , attribute "min" "1"
+                , onSelect toMsg
+                , id inputId
+                , style "width" "2em"
+                , style "border" "1px solid #ccc"
+                , style "border-radius" "4px"
+                , style "padding" "6px 4px"
+                ]
+                []
+            ]
+        , label
+            [ for inputId
+            , style "cursor" "pointer"
+            ]
+            [ text "Choose coastline width" ]
+        ]
 
 
 
