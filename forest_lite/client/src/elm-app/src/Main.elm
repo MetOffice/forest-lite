@@ -67,6 +67,7 @@ import Json.Encode
 import MapExtent
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
+import NaturalEarthFeature.Action exposing (Action)
 import Quadkey exposing (Quadkey)
 import Request exposing (Request(..))
 import Scale exposing (Scale)
@@ -1553,6 +1554,7 @@ type Action
     | SetFigure Float Float Float Float
     | GetHttpNaturalEarthFeature NaturalEarthFeature Quadkey
     | SetHttpNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey MultiLine
+    | NaturalEarthFeatureAction NaturalEarthFeature.Action.Action
 
 
 type alias OnlyActive =
@@ -1653,6 +1655,16 @@ encodeAction action =
                     , ( "path", encodeLimitPath dataset_id datavar )
                     ]
                 )
+
+        NaturalEarthFeatureAction subAction ->
+            let
+                payload =
+                    NaturalEarthFeature.Action.encode subAction
+
+                key =
+                    NaturalEarthFeature.Action.key subAction
+            in
+            buildAction key payload
 
 
 buildAction : String -> Json.Encode.Value -> String
