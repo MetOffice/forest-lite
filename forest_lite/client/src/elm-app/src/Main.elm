@@ -1323,18 +1323,25 @@ viewLayerMenu model =
                                 )
                                 model.opacity
                             , viewCoastlineCheckbox model.coastlines
-                            , viewColorPicker
-                                (NaturalEarthFeature
-                                    << NaturalEarthFeature.SelectColor
-                                )
-                                model.coastlines_color
-                            , viewInputNumber
-                                (NaturalEarthFeature
-                                    << NaturalEarthFeature.SelectWidth
-                                    << Maybe.withDefault 1
-                                    << String.toInt
-                                )
-                                model.coastlines_width
+                            , div
+                                [ style "border" "1px solid #ccc"
+                                , style "border-radius" "4px"
+                                , style "margin" "0.5em"
+                                , style "padding" "0.5em"
+                                ]
+                                [ viewColorPicker
+                                    (NaturalEarthFeature
+                                        << NaturalEarthFeature.SelectColor
+                                    )
+                                    model.coastlines_color
+                                , viewInputNumber
+                                    (NaturalEarthFeature
+                                        << NaturalEarthFeature.SelectWidth
+                                        << Maybe.withDefault 1
+                                        << String.toInt
+                                    )
+                                    model.coastlines_width
+                                ]
                             ]
                     , onClick = ExpandCollapse DisplayMenu
                     }
@@ -1482,18 +1489,46 @@ viewDatasetLabel model =
 
 viewOpacity : (String -> Msg) -> Opacity -> Html Msg
 viewOpacity toMsg opacity =
+    let
+        minValue =
+            "0"
+
+        maxValue =
+            "1"
+
+        stepValue =
+            "0.01"
+    in
     div
         [ style "margin" "0.5em"
+        , style "border" "1px solid #ccc"
+        , style "border-radius" "4px"
+        , style "padding" "0.5em"
         ]
         [ div
             []
-            [ text ("Opacity: " ++ Opacity.toString opacity)
+            [ input
+                [ attribute "type" "number"
+                , attribute "min" minValue
+                , attribute "max" maxValue
+                , attribute "step" stepValue
+                , style "width" "4em"
+                , value (Opacity.toString opacity)
+                , onSelect toMsg
+                ]
+                []
+            , span
+                [ style "margin-left" "1em"
+                ]
+                [ text "Opacity"
+                ]
             ]
         , input
             [ attribute "type" "range"
-            , attribute "min" "0"
-            , attribute "max" "1"
-            , attribute "step" "0.01"
+            , attribute "min" minValue
+            , attribute "max" maxValue
+            , attribute "step" stepValue
+            , style "width" "100%"
             , value (Opacity.toString opacity)
             , onSelect toMsg
             ]
