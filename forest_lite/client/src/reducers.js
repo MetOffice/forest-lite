@@ -26,7 +26,6 @@ import {
     SET_PLAYING,
     SET_LIMITS,
     SET_STATE,
-    SET_TIME_INDEX,
     UPDATE_NAVIGATE,
     GOTO_ITEM,
     NEXT_ITEM,
@@ -169,8 +168,6 @@ export const rootReducer = (state = "", action) => {
             return setLimitsReducer(state, action)
         case SET_STATE:
             return R.clone(payload)
-        case SET_TIME_INDEX:
-            return Object.assign({}, state, {time_index: payload})
         case FETCH_IMAGE:
             return Object.assign({}, state, {is_fetching: true, image_url: payload})
         case FETCH_IMAGE_SUCCESS:
