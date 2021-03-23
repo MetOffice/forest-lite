@@ -1,6 +1,5 @@
 import {
     SET_ACTIVE,
-    SET_VISIBLE,
     TOGGLE_ACTIVE,
     SET_ONLY_ACTIVE,
     SET_STATE,
@@ -40,7 +39,6 @@ import {
 } from "./action-types"
 
 // Action creators
-export const setVisible = payload => ({ type: SET_VISIBLE, payload })
 export const setActive = payload => ({ type: SET_ACTIVE, payload })
 export const setOnlyActive = payload => ({ type: SET_ONLY_ACTIVE, payload })
 export const toggleActive = payload => ({ type: TOGGLE_ACTIVE, payload })

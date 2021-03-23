@@ -1,6 +1,5 @@
 // Action keywords
 export const SET_ACTIVE = 'SET_ACTIVE'
-export const SET_VISIBLE = 'SET_VISIBLE'
 export const TOGGLE_ACTIVE = 'TOGGLE_ACTIVE'
 export const SET_ONLY_ACTIVE = 'SET_ONLY_ACTIVE'
 export const SET_URL = 'SET_URL'
@@ -28,6 +27,7 @@ export const ZOOM_IN = "ZOOM_IN"
 export const ZOOM_OUT = "ZOOM_OUT"
 
 // Elm-only action types
+export const SET_VISIBLE = 'SET_VISIBLE'
 export const SET_OPACITY = 'SET_OPACITY'
 export const SET_COASTLINES_COLOR = 'SET_COASTLINES_COLOR'
 export const SET_COASTLINES_WIDTH = 'SET_COASTLINES_WIDTH'
