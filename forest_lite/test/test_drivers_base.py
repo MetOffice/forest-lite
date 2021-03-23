@@ -4,7 +4,6 @@ from forest_lite.server.drivers.base import BaseDriver
 def test_base_driver_api():
     driver = BaseDriver()
     settings = {}
-    assert driver.get_times() == []
     data_var = None
     timestamp_ms = 0
     tilable = driver.tilable(settings, data_var, timestamp_ms)

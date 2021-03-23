@@ -22,7 +22,7 @@ import {
 } from "ramda"
 import * as tiling from "./tiling.js"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
-import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
+import { set_limits, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 import AutoLimits from "./AutoLimits.js"
 import { findById } from "./helpers.js"
 import { selectOpacity } from "./opacity-selector.js"
