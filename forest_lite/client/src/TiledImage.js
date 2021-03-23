@@ -22,7 +22,7 @@ import {
 } from "ramda"
 import * as tiling from "./tiling.js"
 import { colorbarByIdAndVar, dataVarById } from "./datavar-selector.js"
-import { set_limits, set_times, setDatasetDescription, setDatasetColorbar } from "./actions.js"
+import { set_limits, setDatasetDescription, setDatasetColorbar } from "./actions.js"
 import AutoLimits from "./AutoLimits.js"
 import { findById } from "./helpers.js"
 import { selectOpacity } from "./opacity-selector.js"
@@ -173,31 +173,6 @@ export const getURLs = (templateURL, ranges) => {
         level
     ).map(({x, y, z}) => [x, y, z])
     return tiles.map(([x, y, z]) => tiling.getURL(templateURL, x, y, z))
-}
-
-
-/**
- * Initialise application navigation state
- */
-export const InitialTimes = ({ baseURL, datasetId, label }) => {
-    const dispatch = useDispatch()
-    useEffect(() => {
-        if (datasetId === 0) {
-            const endpoint = `${baseURL}/datasets/${label}/times?limit=7`
-            fetch(endpoint)
-                .then(response => {
-                    if (!response.ok) {
-                        console.error("Not OK")
-                    }
-                    return response.json()
-                })
-                .then((data) => {
-                    let action = set_times(data)
-                    dispatch(action)
-                })
-        }
-    }, [])
-    return null
 }
 
 

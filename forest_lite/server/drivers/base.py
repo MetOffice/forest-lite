@@ -5,9 +5,6 @@ from forest_lite.server.inject import Injectable
 
 class BaseDriver(Injectable):
     """Extendable interface"""
-    def get_times(self, limit=None):
-        return []
-
     def points(self, settings, data_var, dim_name, query=None):
         """Coordinate/Dimension meta-data and values"""
         return []

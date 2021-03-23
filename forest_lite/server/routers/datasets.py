@@ -54,28 +54,6 @@ async def datasets_images(dataset_name: str, time: int,
                 return response
 
 
-@router.get("/datasets/{dataset_name}/times")
-async def dataset_times(dataset_name, limit: int = 10,
-                        settings: config.Settings = Depends(config.get_settings)):
-    datasets = list(find_datasets(settings, dataset_name))
-    if len(datasets) == 0:
-        raise Exception(f"{dataset_name} not found")
-    spec = datasets[0].driver
-    driver = drivers.from_spec(spec)
-    obj = driver.get_times(limit)
-    content = serialize_json(obj)
-    response = Response(content=content,
-                        media_type="application/json")
-    #  response.headers["Cache-Control"] = "max-age=31536000"
-    return response
-
-
-def find_datasets(settings, label):
-    for dataset in settings.datasets:
-        if dataset.label == label:
-            yield dataset
-
-
 def by_id(datasets, uid):
     for dataset in datasets:
         if dataset.uid == uid:

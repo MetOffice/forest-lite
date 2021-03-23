@@ -26,21 +26,6 @@ def data_tile(settings, data_var, z, x, y, query=None):
     return core.get_data_tile(pattern, data_var, z, x, y, query)
 
 
-# TODO: Deprecate this endpoint
-def get_times(self, limit):
-    pattern = self.settings.pattern
-    paths = sorted(glob.glob(pattern))
-    if len(paths) > 0:
-        return _times(paths[-1])[-limit:]
-    else:
-        return []
-
-def _times(path):
-    with xarray.open_dataset(path, engine="h5netcdf") as nc:
-        times = nc.time.values
-    return times
-
-
 @driver.override("description")
 def description(settings):
     settings = Settings(**settings)
