@@ -8,7 +8,8 @@ module.exports = {
     },
     output: {
         filename: '[name].min.js',
-        path: path.resolve(__dirname, "static")
+        path: path.resolve(__dirname, "static"),
+        publicPath: "./static/"
     },
     resolve: {
         extensions: [".tsx", ".ts", ".js"],
