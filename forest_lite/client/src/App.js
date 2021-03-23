@@ -4,7 +4,6 @@ import AnimationControls from "./AnimationControls.js"
 import MapFigure from "./MapFigure.js"
 import ColorbarStack from "./ColorbarStack.js"
 import ColorPaletteFetch from "./ColorPaletteFetch.js"
-import FetchDatasets from "./FetchDatasets.js"
 import Sidebar from "./Sidebar.js"
 import ViewPort from "./ViewPort.js"
 import ZoomButton from "./ZoomButton.js"
@@ -104,7 +103,6 @@ const App = ({ baseURL }) => {
  * Map interface for exploring datasets
  */
 const Main = ({ baseURL, flags }) => {
-    //        <FetchDatasets baseURL={ baseURL } />
     const dispatch = useDispatch()
     return (
         <div className="App-container">

@@ -5,7 +5,6 @@ export const SET_ONLY_ACTIVE = 'SET_ONLY_ACTIVE'
 export const SET_URL = 'SET_URL'
 export const SET_FIGURE = 'SET_FIGURE'
 export const SET_DATASET = 'SET_DATASET'
-export const SET_DATASETS = 'SET_DATASETS'
 export const SET_DATASET_DESCRIPTION = "SET_DATASET_DESCRIPTION"
 export const SET_DATASET_COLORBAR = "SET_DATASET_COLORBAR"
 export const SET_PALETTE = 'SET_PALETTE'
@@ -27,6 +26,7 @@ export const ZOOM_IN = "ZOOM_IN"
 export const ZOOM_OUT = "ZOOM_OUT"
 
 // Elm-only action types
+export const SET_DATASETS = 'SET_DATASETS'
 export const SET_VISIBLE = 'SET_VISIBLE'
 export const SET_OPACITY = 'SET_OPACITY'
 export const SET_COASTLINES_COLOR = 'SET_COASTLINES_COLOR'
