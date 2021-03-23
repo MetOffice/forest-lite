@@ -1,7 +1,6 @@
 import * as Redux from "redux"
 import { rootReducer } from "./reducers.js"
 import { colorPaletteMiddleware } from "./colorpalette-middleware.js"
-import { timeMiddleware } from "./time-middleware.js"
 import { toolMiddleware } from "./middlewares.js"
 import { zoomMiddleware } from "./zoom-middleware.js"
 import { webWorkerMiddleware } from "./web-worker-middleware.js"
@@ -43,7 +42,6 @@ export const createStore = ({ log=false } = {}) => {
     middlewares = middlewares.concat([
             toolMiddleware,
             colorPaletteMiddleware,
-            timeMiddleware,
             datasetsMiddleware,
             zoomMiddleware,
             navMiddleware,

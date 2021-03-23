@@ -18,7 +18,6 @@ import {
     SET_PALETTE_NUMBERS,
     SET_PLAYING,
     SET_LIMITS,
-    SET_TIMES,
     SET_TIME_INDEX,
     NEXT_TIME_INDEX,
     GOTO_ITEM,
@@ -57,7 +56,6 @@ export const set_palette_number = data => { return { type: SET_PALETTE_NUMBER, p
 export const set_palette_numbers = data => { return { type: SET_PALETTE_NUMBERS, payload: data } }
 export const set_playing = flag => { return { type: SET_PLAYING, payload: flag } }
 export const set_limits = limits => { return { type: SET_LIMITS, payload: limits } }
-export const set_times = times => { return { type: SET_TIMES, payload: times } }
 export const set_time_index = index => { return { type: SET_TIME_INDEX, payload: index } }
 export const next_time_index = () => { return { type: NEXT_TIME_INDEX } }
 export const previous_time_index = () => { return { type: PREVIOUS_TIME_INDEX } }
