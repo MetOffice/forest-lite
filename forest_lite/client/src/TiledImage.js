@@ -126,16 +126,6 @@ export const ImageURL = ({ urls, source, }) => {
 /**
  * Map state to {Z}/{X}/{Y} URL
  */
-export const getTemplate = (baseURL, datasetId, dataVar, time) => {
-    if (dataVar == null) return null
-    if (time == null) return null
-    return `${baseURL}/datasets/${datasetId}/${dataVar}/times/${time}/tiles/{Z}/{X}/{Y}`
-}
-
-
-/**
- * Map state to {Z}/{X}/{Y} URL
- */
 export const getTemplateQuery = (baseURL, datasetId, dataVar, query=null) => {
     if (dataVar == null) return null
     const url = `${baseURL}/datasets/${datasetId}/${dataVar}/tiles/{Z}/{X}/{Y}`
