@@ -35,25 +35,6 @@ async def datasets(response: Response,
                  for dataset in _datasets]}
 
 
-# TODO: Deprecate this endpoint
-@router.get("/datasets/{dataset_name}/times/{time}")
-async def datasets_images(dataset_name: str, time: int,
-                          settings: config.Settings = Depends(config.get_settings)):
-    for dataset in settings.datasets:
-        if dataset.label == dataset_name:
-            pattern = dataset.driver.settings["pattern"]
-            paths = sorted(glob.glob(pattern))
-            if len(paths) > 0:
-                obj = core.image_data(dataset_name,
-                                      paths[-1],
-                                      time)
-                content = serialize_json(obj)
-                response = Response(content=content,
-                                    media_type="application/json")
-                #  response.headers["Cache-Control"] = "max-age=31536000"
-                return response
-
-
 def by_id(datasets, uid):
     for dataset in datasets:
         if dataset.uid == uid:
