@@ -16,6 +16,7 @@ class Driver:
         self.name = name
         self.settings = settings
 
+    # TODO: Migrate this to general coordinates
     def get_times(self, limit):
         paths = glob.glob(os.path.join(DIRECTORY, GLOB_PATTERN))
         times = [parse_time(path) for path in paths]

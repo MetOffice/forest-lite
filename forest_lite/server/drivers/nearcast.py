@@ -76,12 +76,6 @@ def parse_date(path):
                            .replace(tzinfo=UTC))
 
 
-@driver.override("get_times")
-def nearcast_times(limits=None):
-    # TODO: Deprecate this endpoint
-    return []
-
-
 @driver.override("description")
 def nearcast_description(settings):
     file_names = get_file_names(settings["pattern"])

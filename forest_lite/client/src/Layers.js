@@ -1,6 +1,6 @@
 import React from "react"
 import { useSelector } from "react-redux"
-import TiledImage, { InitialTimes, DatasetDescription } from "./TiledImage.js"
+import TiledImage, { DatasetDescription } from "./TiledImage.js"
 import RDT from "./RDT.js"
 import { map } from "ramda"
 
@@ -11,10 +11,6 @@ const selectDatasets = ({ datasets=[] }) => datasets
 const TileRenderer = ({ baseURL, datasetId, label, figure  }) => {
     return (
         <>
-            <InitialTimes
-                baseURL={ baseURL }
-                datasetId={ datasetId }
-                label={ label } />
             <DatasetDescription
                 baseURL={ baseURL }
                 datasetId={ datasetId } />

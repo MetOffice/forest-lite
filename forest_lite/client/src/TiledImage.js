@@ -177,31 +177,6 @@ export const getURLs = (templateURL, ranges) => {
 
 
 /**
- * Initialise application navigation state
- */
-export const InitialTimes = ({ baseURL, datasetId, label }) => {
-    const dispatch = useDispatch()
-    useEffect(() => {
-        if (datasetId === 0) {
-            const endpoint = `${baseURL}/datasets/${label}/times?limit=7`
-            fetch(endpoint)
-                .then(response => {
-                    if (!response.ok) {
-                        console.error("Not OK")
-                    }
-                    return response.json()
-                })
-                .then((data) => {
-                    let action = set_times(data)
-                    dispatch(action)
-                })
-        }
-    }, [])
-    return null
-}
-
-
-/**
  * Initialise dataset description state
  */
 export const DatasetDescription = ({ baseURL, datasetId }) => {
