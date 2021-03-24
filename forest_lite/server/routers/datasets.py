@@ -110,6 +110,10 @@ async def points(dataset_id: int, timestamp_ms: int,
 @router.get("/datasets/{dataset_id}/palette")
 async def palette(dataset_id: int,
                   settings: config.Settings = Depends(config.get_settings)):
+    """Color palettes related to data variables in a dataset
+
+    :returns: dataset.palettes
+    """
     dataset = by_id(settings.datasets, dataset_id)
     return dataset.palettes
 
