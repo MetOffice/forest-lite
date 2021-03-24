@@ -6,6 +6,7 @@ import numpy as np
 from forest_lite.server import config
 from typing import Optional
 import json
+import urllib.parse
 from forest_lite.server.config import Settings, get_settings
 
 
@@ -85,7 +86,21 @@ async def description(dataset_id: int,
     if not isinstance(data, dict):
         data = data.dict()
     data["dataset_id"] = dataset_id
+
+    # Add links to discover axis information
+    data["links"] = { "coords": {} }
+    for data_var, desc in data.get("data_vars", {}).items():
+        for dim_name in desc.get("dims", []):
+            uri = axis_link(dataset_id, data_var, dim_name)
+            if data_var in data["links"]["coords"]:
+                data["links"]["coords"][data_var][dim_name] = uri
+            else:
+                data["links"]["coords"][data_var] = {dim_name: uri}
     return data
+
+
+def axis_link(dataset_id, data_var, dim_name):
+    return urllib.parse.quote(f"/datasets/{dataset_id}/{data_var}/axis/{dim_name}")
 
 
 

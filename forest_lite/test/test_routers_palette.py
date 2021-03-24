@@ -67,7 +67,6 @@ def sample_file(tmpdir):
 def test_get_dataset_data_vars(sample_file):
     """HTTP GET endpoint variable meta-data"""
     # Fake config
-    var_name = "air_temperature"
     use_settings({
         "datasets": [
             {
@@ -89,6 +88,9 @@ def test_get_dataset_data_vars(sample_file):
     url = links["data_vars"]
     response = client.get(url)
     actual = response.json()
+
+    # Remove links since API details not under test
+    actual.pop("links")
 
     # Assertions
     expected = {
@@ -142,5 +144,47 @@ def test_get_dataset_data_vars(sample_file):
                 "shape": [1, 2, 2]
             }
         }
+    }
+    assert expected == actual
+
+
+def test_get_dataset_data_var_axis(sample_file):
+    """HTTP GET endpoint dimension data"""
+    # Fake config
+    use_settings({
+        "datasets": [
+            {
+                "label": "Label",
+                "driver": {
+                    "name": "xarray_h5netcdf",
+                    "settings": {
+                        "pattern": sample_file
+                    }
+                }
+            }
+        ]
+    })
+
+    # System under test
+    # GET datasets
+    response = client.get("/datasets")
+    index = 0
+    links = response.json()["datasets"][index]["links"]
+
+    # GET data_vars
+    url = links["data_vars"]
+    response = client.get(url)
+
+    # GET time dimension
+    url = response.json()["links"]["coords"]["data"]["time"]
+    response = client.get(url)
+    actual = response.json()
+
+    # Assertions
+    expected = {
+        "attrs": {"axis": "T", "standard_name": "time"},
+        "data": [0.0],
+        "data_var": "data",
+        "dim_name": "time"
     }
     assert expected == actual
