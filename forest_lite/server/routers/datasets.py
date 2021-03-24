@@ -31,8 +31,18 @@ async def datasets(response: Response,
     return {"datasets": [{"label": dataset.label,
                           "driver": dataset.driver.name,
                           "view": dataset.view,
-                          "id": dataset.uid}
+                          "id": dataset.uid,
+                          "links": links(dataset.uid)
+                          }
                  for dataset in _datasets]}
+
+
+def links(dataset_id):
+    """Endpoints related to a dataset id"""
+    return {
+        "data_vars": f"/datasets/{dataset_id}",
+        "palette": f"/datasets/{dataset_id}/palette"
+    }
 
 
 def by_id(datasets, uid):
