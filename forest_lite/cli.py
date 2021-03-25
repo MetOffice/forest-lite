@@ -120,3 +120,11 @@ def run(config_file: str,
 
     _main.app.dependency_overrides[config.get_settings] = get_settings
     uvicorn.run(_main.app, port=port)
+
+
+@app.command()
+def init(config_file: str ="config.yaml"):
+    """
+    Create a config file.
+    """
+    raise NotImplemented
