@@ -88,20 +88,41 @@ async def description(dataset_id: int,
     data["dataset_id"] = dataset_id
 
     # Add links to discover axis information
-    data["links"] = { "coords": {} }
-    for data_var, desc in data.get("data_vars", {}).items():
-        for dim_name in desc.get("dims", []):
-            uri = axis_link(dataset_id, data_var, dim_name)
-            if data_var in data["links"]["coords"]:
-                data["links"]["coords"][data_var][dim_name] = uri
-            else:
-                data["links"]["coords"][data_var] = {dim_name: uri}
+    data["links"] = {}
+    data["links"]["coords"] = coords_links(dataset_id, data)
+    data["links"]["tiles"] = tiles_links(dataset_id, data)
     return data
 
 
-def axis_link(dataset_id, data_var, dim_name):
-    return urllib.parse.quote(f"/datasets/{dataset_id}/{data_var}/axis/{dim_name}")
+def coords_links(dataset_id, data):
+    result = {}
+    for data_var, desc in data.get("data_vars", {}).items():
+        for dim_name in desc.get("dims", []):
+            uri = axis_link(dataset_id, data_var, dim_name)
+            if data_var in result:
+                result[data_var][dim_name] = uri
+            else:
+                result[data_var] = {dim_name: uri}
+    return result
 
+
+def axis_link(dataset_id, data_var, dim_name):
+    """Link for a dimension endpoint"""
+    endpoint = f"/datasets/{dataset_id}/{data_var}/axis/{dim_name}"
+    return urllib.parse.quote(endpoint)
+
+
+def tiles_links(dataset_id, data):
+    """Generate nested links structure for tile endpoints"""
+    data_vars = data.get("data_vars", {}).keys()
+    return {data_var: tile_link(dataset_id, data_var)
+            for data_var in data_vars}
+
+
+def tile_link(dataset_id, data_var):
+    """Link prefix for a tile endpoint"""
+    endpoint = f"/datasets/{dataset_id}/{data_var}/tiles"
+    return urllib.parse.quote(endpoint)
 
 
 @router.get("/datasets/{dataset_id}/times/{timestamp_ms}/geojson")

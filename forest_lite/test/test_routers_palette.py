@@ -3,6 +3,7 @@ from forest_lite.server import main, config
 from forest_lite.server.lib.config import Config
 from forest_lite.test import helpers
 import pytest
+import json
 
 client = TestClient(main.app)
 
@@ -188,3 +189,49 @@ def test_get_dataset_data_var_axis(sample_file):
         "dim_name": "time"
     }
     assert expected == actual
+
+
+def test_get_dataset_data_var_tile(sample_file):
+    """HTTP GET endpoint tile data"""
+    # Fake config
+    use_settings({
+        "datasets": [
+            {
+                "label": "Label",
+                "driver": {
+                    "name": "xarray_h5netcdf",
+                    "settings": {
+                        "pattern": sample_file
+                    }
+                }
+            }
+        ]
+    })
+
+    # System under test
+    # GET datasets
+    response = client.get("/datasets")
+    index = 0
+    links = response.json()["datasets"][index]["links"]
+
+    # GET data_vars
+    url = links["data_vars"]
+    response = client.get(url)
+
+    # GET tile link
+    link = response.json()["links"]["tiles"]["data"]
+    query = json.dumps({"time": 0})
+    response = client.get(f"{link}/0/0/0?query={query}")
+    actual = response.json()
+
+    # Assertions
+    expected = [ "dh"
+               , "dw"
+               , "image"
+               , "level"
+               , "tile_key"
+               , "units"
+               , "x"
+               , "y"
+               ]
+    assert set(expected) == set(actual["data"].keys())
