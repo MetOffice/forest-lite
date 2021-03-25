@@ -8,6 +8,7 @@ SUCCESS = typer.style("SUCCESS", fg=typer.colors.BLUE) + ": "
 typer.echo(f"{INFO} Importing modules, please wait")
 
 import os
+import yaml
 import uvicorn
 import forest_lite.server.main as _main
 from forest_lite.server import config
@@ -127,4 +128,48 @@ def init(config_file: str ="config.yaml"):
     """
     Create a config file.
     """
-    raise NotImplemented
+    data = {
+        "datasets": [
+        ],
+    }
+
+    typer.echo(f"Welcome to FOREST-Lite!")
+
+    # Datasets
+    while True:
+        typer.echo(f"Configure a dataset")
+
+        # Template
+        dataset = { "driver": {} }
+
+        # Label
+        default = "MyDataset"
+        response = str(input(f"Please specify a dataset label [{default}]: "))
+        if response == "":
+            response = default
+        dataset["label"] = response
+
+        # Driver
+        default = "iris"
+        response = str(input(f"Please specify a driver name [{default}]: "))
+        if response == "":
+            response = default
+        dataset["driver"]["name"] = response
+
+        data["datasets"].append(dataset)
+
+        # Ask to continue
+        default = "Y"
+        response = str(input(f"Configure another dataset? [Y]/n "))
+        if response == "":
+            response = default
+        if response.lower().startswith("y"):
+            continue
+        else:
+            break
+
+
+    # Output configuration to file
+    typer.echo(f"{INFO} Write configuration to '{config_file}'")
+    with open(config_file, "w") as stream:
+        yaml.dump(data, stream)
