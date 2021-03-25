@@ -8,12 +8,23 @@ router = APIRouter()
 
 @router.get("/natural_earth_feature")
 async def links():
+    resources = [
+        ("physical", [
+            "coastline",
+            "lakes"
+        ]),
+        ("cultural", [
+            "admin_0_boundary_lines_land",
+            "admin_0_boundary_lines_disputed_areas"
+        ]),
+    ]
+    links = {}
+    for name, categories in resources:
+        links[name] = {}
+        for category in categories:
+            links[name][category] = link(name, category)
     return {
-        "links": {
-            "physical": {
-                "coastline": link("physical", "coastline")
-            }
-        }
+        "links": links
     }
 
 
