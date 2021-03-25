@@ -10,6 +10,7 @@ async def api():
     return {
         "links": {
             "datasets": "/datasets",
+            "natural_earth_feature": "/natural_earth_feature",
             "viewport": "/viewport"
         }
     }

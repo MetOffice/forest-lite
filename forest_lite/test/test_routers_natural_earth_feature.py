@@ -12,6 +12,21 @@ client = TestClient(main.app)
     pytest.param("50m", 1429, id="medium-res"),
     pytest.param("10m", 4133, id="high-res")
 ])
+def test_discoverable_api(scale, expect):
+    response = client.get("/api")
+    url = response.json()["links"]["natural_earth_feature"]
+    response = client.get(url)
+    url = response.json()["links"]["physical"]["coastline"]
+    response = client.get(f"{url}?scale={scale}")
+    result = response.json()
+    assert len(result["xs"]) == expect
+
+
+@pytest.mark.parametrize("scale,expect", [
+    pytest.param("110m", 137, id="low-res"),
+    pytest.param("50m", 1429, id="medium-res"),
+    pytest.param("10m", 4133, id="high-res")
+])
 def test_coastlines_scale(scale, expect):
     url = f"/natural_earth_feature/physical/coastline?scale={scale}"
     response = client.get(url)

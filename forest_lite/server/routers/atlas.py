@@ -6,6 +6,21 @@ from bokeh.core.json_encoder import serialize_json
 router = APIRouter()
 
 
+@router.get("/natural_earth_feature")
+async def links():
+    return {
+        "links": {
+            "physical": {
+                "coastline": link("physical", "coastline")
+            }
+        }
+    }
+
+
+def link(category, name):
+    return f"/natural_earth_feature/{category}/{name}"
+
+
 @router.get("/natural_earth_feature/{category}/{name}")
 async def natural_earth_feature(category: str,
                         name: str,
