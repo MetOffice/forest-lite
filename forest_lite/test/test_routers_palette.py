@@ -41,7 +41,10 @@ def test_get_dataset_palette(dataset_id):
     })
 
     # System under test
-    response = client.get("/datasets")
+    response = client.get("/api")
+    datasets_url = response.json()["links"]["datasets"]
+
+    response = client.get(datasets_url)
     links = response.json()["datasets"][dataset_id]["links"]
     url = links["palette"]
     response = client.get(url)
