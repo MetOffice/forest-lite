@@ -156,6 +156,34 @@ def init(config_file: str ="config.yaml"):
             response = default
         dataset["driver"]["name"] = response
 
+        settings = {}
+        while True:
+            typer.echo("Add a driver setting:")
+
+            default = "pattern"
+            key = str(input(f"Settings key, e.g. [{default}]: "))
+            if key == "":
+                key = default
+
+            default = "*.nc"
+            value = str(input(f"Value associated with {key}, e.g. [{default}]: "))
+            if value == "":
+                value = default
+
+            settings[key] = value
+
+            # Prompt to continue
+            default = "Y"
+            response = str(input(f"Enter another driver setting? [Y]/n "))
+            if response == "":
+                response = default
+            if response.lower().startswith("y"):
+                continue
+            else:
+                break
+
+        dataset["driver"]["settings"] = settings
+
         data["datasets"].append(dataset)
 
         # Ask to continue
