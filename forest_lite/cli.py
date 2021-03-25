@@ -10,7 +10,7 @@ typer.echo(f"{INFO} Importing modules, please wait")
 import os
 import uvicorn
 import forest_lite.server.main as _main
-from forest_lite.server import config, user_db
+from forest_lite.server import config
 
 
 app = typer.Typer()
@@ -66,14 +66,14 @@ def browser_thread(url):
     return threading.Thread(target=webbrowser.open, args=(url,))
 
 
-@app.command()
-def view(file_name: str, driver: str = "eida50", open_tab: bool = True,
-         palette: str = "Viridis",
-         port: int = 1234):
+@app.command("open")  # NOTE open is a Python built-in
+def open_cmd(file_name: str,
+             driver: str = "iris",
+             open_tab: bool = True,
+             palette: str = "Viridis",
+             port: int = 1234):
     """
-    FOREST Lite viewer
-
-    A simplified interface to the FOREST Lite server tool
+    Explore a file.
     """
     port = scan_port(port)
 
@@ -88,14 +88,11 @@ def view(file_name: str, driver: str = "eida50", open_tab: bool = True,
 
 
 @app.command()
-def serve(config_file: str,
-          open_tab: bool = True,
-          port: int = 1234):
+def run(config_file: str,
+        open_tab: bool = True,
+        port: int = 1234):
     """
-    FOREST Lite server
-
-    A simplified interface to uvicorn and configuration files
-    used to serve the app
+    Run a long-running instance with a config file.
     """
     if not os.path.exists(config_file):
         typer.echo(f"{FAIL} {config_file} not found on file system")
@@ -123,11 +120,3 @@ def serve(config_file: str,
 
     _main.app.dependency_overrides[config.get_settings] = get_settings
     uvicorn.run(_main.app, port=port)
-
-
-@app.command()
-def database(user_name: str, password: str, db_file: str,
-             user_group: str = "anonymous"):
-    print(f"save: {user_name} to {db_file}")
-    user_db.save_user(user_name, password, db_file,
-                      user_group=user_group)

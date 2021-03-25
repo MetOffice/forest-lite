@@ -54,7 +54,7 @@ with an overridden `get_settings` function, see `forest_lite/cli.py`
 for further details.
 
 ```bash
-SECRET_KEY=foo DB_FILE=users.yaml forest_lite view --driver $DRIVER $FILE_NAME
+SECRET_KEY=foo DB_FILE=users.yaml forest_lite open --driver $DRIVER $FILE_NAME
 ```
 
 As the command line interface is brand new and
@@ -78,7 +78,7 @@ forest_lite database $USERNAME $PASSWORD $DB_DIR/users_db.yaml
 # Start FOREST-Lite server
 SECRET_KEY=foobar \
 DB_FILE=$DB_DIR/users_db.yaml \
-forest_lite view --driver xarray_h5netcdf $FILE_NAME
+forest_lite open --driver xarray_h5netcdf $FILE_NAME
 ```
 
 
