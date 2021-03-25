@@ -67,14 +67,13 @@ def browser_thread(url):
 
 
 @app.command("open")  # NOTE open is a Python built-in
-def open_cmd(file_name: str, driver: str = "eida50",
+def open_cmd(file_name: str,
+             driver: str = "iris",
              open_tab: bool = True,
              palette: str = "Viridis",
              port: int = 1234):
     """
-    FOREST Lite viewer
-
-    A simplified interface to the FOREST Lite server tool
+    Explore a file.
     """
     port = scan_port(port)
 
@@ -93,9 +92,7 @@ def run(config_file: str,
         open_tab: bool = True,
         port: int = 1234):
     """
-    FOREST Lite
-
-    Run an instance using a config file
+    Run a long-running instance with a config file.
     """
     if not os.path.exists(config_file):
         typer.echo(f"{FAIL} {config_file} not found on file system")
