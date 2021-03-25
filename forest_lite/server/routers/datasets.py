@@ -6,6 +6,7 @@ import numpy as np
 from forest_lite.server import config
 from typing import Optional
 import json
+import urllib.parse
 from forest_lite.server.config import Settings, get_settings
 
 
@@ -31,8 +32,18 @@ async def datasets(response: Response,
     return {"datasets": [{"label": dataset.label,
                           "driver": dataset.driver.name,
                           "view": dataset.view,
-                          "id": dataset.uid}
+                          "id": dataset.uid,
+                          "links": links(dataset.uid)
+                          }
                  for dataset in _datasets]}
+
+
+def links(dataset_id):
+    """Endpoints related to a dataset id"""
+    return {
+        "data_vars": f"/datasets/{dataset_id}",
+        "palette": f"/datasets/{dataset_id}/palette"
+    }
 
 
 def by_id(datasets, uid):
@@ -75,8 +86,43 @@ async def description(dataset_id: int,
     if not isinstance(data, dict):
         data = data.dict()
     data["dataset_id"] = dataset_id
+
+    # Add links to discover axis information
+    data["links"] = {}
+    data["links"]["coords"] = coords_links(dataset_id, data)
+    data["links"]["tiles"] = tiles_links(dataset_id, data)
     return data
 
+
+def coords_links(dataset_id, data):
+    result = {}
+    for data_var, desc in data.get("data_vars", {}).items():
+        for dim_name in desc.get("dims", []):
+            uri = axis_link(dataset_id, data_var, dim_name)
+            if data_var in result:
+                result[data_var][dim_name] = uri
+            else:
+                result[data_var] = {dim_name: uri}
+    return result
+
+
+def axis_link(dataset_id, data_var, dim_name):
+    """Link for a dimension endpoint"""
+    endpoint = f"/datasets/{dataset_id}/{data_var}/axis/{dim_name}"
+    return urllib.parse.quote(endpoint)
+
+
+def tiles_links(dataset_id, data):
+    """Generate nested links structure for tile endpoints"""
+    data_vars = data.get("data_vars", {}).keys()
+    return {data_var: tile_link(dataset_id, data_var)
+            for data_var in data_vars}
+
+
+def tile_link(dataset_id, data_var):
+    """Link prefix for a tile endpoint"""
+    endpoint = f"/datasets/{dataset_id}/{data_var}/tiles"
+    return urllib.parse.quote(endpoint)
 
 
 @router.get("/datasets/{dataset_id}/times/{timestamp_ms}/geojson")
@@ -110,6 +156,10 @@ async def points(dataset_id: int, timestamp_ms: int,
 @router.get("/datasets/{dataset_id}/palette")
 async def palette(dataset_id: int,
                   settings: config.Settings = Depends(config.get_settings)):
+    """Color palettes related to data variables in a dataset
+
+    :returns: dataset.palettes
+    """
     dataset = by_id(settings.datasets, dataset_id)
     return dataset.palettes
 

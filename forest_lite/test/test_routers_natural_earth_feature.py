@@ -1,10 +1,32 @@
 import pytest
+from pytest import param
 from fastapi.testclient import TestClient
 from forest_lite.server import main
 from forest_lite.server.routers import atlas
 
 
 client = TestClient(main.app)
+
+
+@pytest.mark.parametrize("name,category,scale,expect", [
+    param("physical", "coastline", "110m",
+          137, id="coastline"),
+    param("physical", "lakes", "110m",
+          25, id="lakes"),
+    param("cultural", "admin_0_boundary_lines_land", "110m",
+          186, id="border"),
+    param("cultural", "admin_0_boundary_lines_disputed_areas", "50m",
+          24, id="disputed"),
+])
+def test_discoverable_api(name, category, scale, expect):
+    """Explore links from /natural_earth_feature endpoint"""
+    response = client.get("/api")
+    url = response.json()["links"]["natural_earth_feature"]
+    response = client.get(url)
+    url = response.json()["links"][name][category]
+    response = client.get(f"{url}?scale={scale}")
+    result = response.json()
+    assert len(result["xs"]) == expect
 
 
 @pytest.mark.parametrize("scale,expect", [
