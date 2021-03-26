@@ -7,7 +7,10 @@ SUCCESS = typer.style("SUCCESS", fg=typer.colors.BLUE) + ": "
 
 typer.echo(f"{INFO} Importing modules, please wait")
 
+import click
+import bokeh.palettes
 import os
+import yaml
 import uvicorn
 import forest_lite.server.main as _main
 from forest_lite.server import config
@@ -120,3 +123,124 @@ def run(config_file: str,
 
     _main.app.dependency_overrides[config.get_settings] = get_settings
     uvicorn.run(_main.app, port=port)
+
+
+# INIT sub-command
+
+def palette_names(N=256):
+    for key, palette in bokeh.palettes.all_palettes.items():
+        if N in palette:
+            yield key
+
+def echo_heading(msg):
+    typer.secho("\n" + msg, fg="blue")
+
+
+@app.command()
+def init(config_file: str ="config.yaml"):
+    """
+    Create a config file.
+    """
+    data = {
+        "datasets": [
+        ],
+    }
+
+    # Introduction
+    click.clear()
+    typer.echo("\nWelcome to FOREST-Lite!")
+    typer.echo("""
+This tool will guide you through the additional configuration needed to
+make best use of forest_lite.
+""")
+    typer.confirm("Are you ready to continue", abort=True)
+
+    # Datasets
+    echo_heading("Datasets")
+    typer.echo("""
+Datasets are collections of related data, e.g. a particular model run or
+observation platform. They use drivers to find/load their data, multiple
+datasets can share the same driver with different settings.
+""")
+    while True:
+        echo_heading("Add a dataset")
+        dataset = {"driver": {},
+                   "palettes": {}}
+
+        # Label
+        response = typer.prompt("Please specify a label for your dataset",
+                                default="MyDataset")
+        dataset["label"] = response
+
+        # Driver
+        echo_heading("Driver")
+        drivers = click.Choice(["iris", "xarray_h5netcdf"])
+        driver_name = typer.prompt("Which driver would it use?",
+                                   default="iris",
+                                   type=drivers)
+        dataset["driver"]["name"] = driver_name
+
+        echo_heading("Driver setting(s)")
+        typer.echo(f"""Drivers need to be configured before use.
+You selected '{driver_name}'. I'll need some additional information to configure it.
+""")
+        settings = {}
+        for key, description in [("pattern", "file system pattern")]:
+            # Gather a key, value pair
+            value = typer.prompt(f"Enter a {description}")
+            settings[key] = value
+
+        dataset["driver"]["settings"] = settings
+
+        # ColorPalette
+        echo_heading("Color palette")
+        typer.echo(f"""Data needs color or at least a default palette.
+""")
+        palettes = click.Choice(sorted(palette_names()))
+        name = typer.prompt("Which palette would it use?",
+                            default="Viridis",
+                            type=palettes)
+        dataset["palettes"]["default"] = {
+            "name": name,
+            "number": 256
+        }
+
+        data["datasets"].append(dataset)
+
+        # Ask to continue
+        response = typer.confirm(f"Would you like to add another dataset?")
+        if response:
+            continue
+        else:
+            break
+
+    # Confirm settings are correct
+    echo_heading("Review")
+    typer.echo("""
+Please take a look at the configuration that has been generated
+by your answers.
+""")
+    typer.echo(yaml.dump(data))
+    typer.confirm("Are you happy with these settings?", abort=True)
+
+    # Output configuration to file
+    typer.secho(f"Writing configuration to '{config_file}'",
+                fg="magenta")
+    with open(config_file, "w") as stream:
+        yaml.dump(data, stream)
+
+    # Next steps
+    echo_heading("Next steps")
+    note = typer.style("Note:", bold=True)
+    typer.echo(f"""
+Congratulations! You have successfully generated a forest_lite
+configuration. To try it out run the following command
+""")
+    typer.secho(f"forest_lite run {config_file}", fg="cyan")
+    typer.echo(f"""
+A browser tab should open with an app displaying your data.
+
+{note} This tool provides a subset of functionality, use your favourite text editor
+to continue crafting '{config_file}'.
+
+""")
