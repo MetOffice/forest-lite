@@ -123,6 +123,13 @@ def run(config_file: str,
     uvicorn.run(_main.app, port=port)
 
 
+# INIT sub-command
+
+
+def echo_heading(msg):
+    typer.secho("\n" + msg, fg="blue")
+
+
 @app.command()
 def init(config_file: str ="config.yaml"):
     """
@@ -133,51 +140,47 @@ def init(config_file: str ="config.yaml"):
         ],
     }
 
-    typer.echo(f"Welcome to FOREST-Lite!")
+    # Introduction
+    typer.echo("\nWelcome to FOREST-Lite!")
+    typer.echo("""
+This tool will guide you through the additional configuration needed to
+make best use of forest_lite.
+""")
+    typer.confirm("Are you ready to continue", abort=True)
 
     # Datasets
     while True:
-        typer.echo(f"Configure a dataset")
+        echo_heading("Datasets")
 
-        # Template
-        dataset = { "driver": {} }
+        dataset = {"driver": {}}
 
         # Label
-        default = "MyDataset"
-        response = str(input(f"Please specify a dataset label [{default}]: "))
-        if response == "":
-            response = default
+        response = typer.prompt("Please specify a label for your dataset",
+                                default="MyDataset")
         dataset["label"] = response
 
         # Driver
-        default = "iris"
-        response = str(input(f"Please specify a driver name [{default}]: "))
-        if response == "":
-            response = default
+        echo_heading("Driver")
+        response = typer.prompt("Which driver does it need?",
+                                default="iris")
         dataset["driver"]["name"] = response
 
+        echo_heading("Driver setting(s)")
+        typer.echo("""
+Drivers are configured using key, value pairs.
+""")
         settings = {}
         while True:
             typer.echo("Add a driver setting:")
 
-            default = "pattern"
-            key = str(input(f"Settings key, e.g. [{default}]: "))
-            if key == "":
-                key = default
-
-            default = "*.nc"
-            value = str(input(f"Value associated with {key}, e.g. [{default}]: "))
-            if value == "":
-                value = default
-
+            # Gather a key, value pair
+            key = typer.prompt("Provide a settings key", default="pattern")
+            value = typer.prompt(f"A value associated with {key}")
             settings[key] = value
 
             # Prompt to continue
-            default = "Y"
-            response = str(input(f"Enter another driver setting? [Y]/n "))
-            if response == "":
-                response = default
-            if response.lower().startswith("y"):
+            response = typer.confirm(f"Enter another driver setting?")
+            if response:
                 continue
             else:
                 break
@@ -187,17 +190,35 @@ def init(config_file: str ="config.yaml"):
         data["datasets"].append(dataset)
 
         # Ask to continue
-        default = "Y"
-        response = str(input(f"Configure another dataset? [Y]/n "))
-        if response == "":
-            response = default
-        if response.lower().startswith("y"):
+        response = typer.confirm(f"Configure another dataset?")
+        if response:
             continue
         else:
             break
 
+    # Confirm settings are correct
+    echo_heading("Review")
+    typer.echo("""
+Please take a look at the configuration that has been generated
+by your answers.
+""")
+    typer.echo(yaml.dump(data))
+    typer.confirm("Are you happy with these settings?", abort=True)
 
     # Output configuration to file
-    typer.echo(f"{INFO} Write configuration to '{config_file}'")
+    typer.secho(f"Writing configuration to '{config_file}'",
+                fg="magenta")
     with open(config_file, "w") as stream:
         yaml.dump(data, stream)
+
+    # Next steps
+    echo_heading("Next steps")
+    typer.echo(f"""
+Congratulations! You have successfully generated a forest_lite
+configuration. To try it out run the following command
+""")
+    typer.secho(f"forest_lite run {config_file}", fg="cyan")
+    typer.echo(f"""
+A browser tab should open with an app displaying your data.
+
+""")
