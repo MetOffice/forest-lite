@@ -231,6 +231,7 @@ by your answers.
 
     # Next steps
     echo_heading("Next steps")
+    tip = typer.style("tip", bold=True)
     typer.echo(f"""
 Congratulations! You have successfully generated a forest_lite
 configuration. To try it out run the following command
@@ -238,5 +239,7 @@ configuration. To try it out run the following command
     typer.secho(f"forest_lite run {config_file}", fg="cyan")
     typer.echo(f"""
 A browser tab should open with an app displaying your data.
+
+{tip}: use your favourite text editor to continue crafting {config_file}
 
 """)
