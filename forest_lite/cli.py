@@ -173,7 +173,7 @@ make best use of forest_lite.
 Drivers need to be configured before use.
 """)
         settings = {}
-        typer.echo(f"You selected {driver_name}, I need some information to configure it.")
+        typer.echo(f"You selected '{driver_name}', I need some additional information to configure it.")
         for key, description in [("pattern", "file system pattern")]:
             # Gather a key, value pair
             value = typer.prompt(f"Enter a {description}")
