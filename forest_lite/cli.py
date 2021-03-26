@@ -8,6 +8,7 @@ SUCCESS = typer.style("SUCCESS", fg=typer.colors.BLUE) + ": "
 typer.echo(f"{INFO} Importing modules, please wait")
 
 import click
+import bokeh.palettes
 import os
 import yaml
 import uvicorn
@@ -126,6 +127,10 @@ def run(config_file: str,
 
 # INIT sub-command
 
+def palette_names(N=256):
+    for key, palette in bokeh.palettes.all_palettes.items():
+        if N in palette:
+            yield key
 
 def echo_heading(msg):
     typer.secho("\n" + msg, fg="blue")
@@ -142,6 +147,7 @@ def init(config_file: str ="config.yaml"):
     }
 
     # Introduction
+    click.clear()
     typer.echo("\nWelcome to FOREST-Lite!")
     typer.echo("""
 This tool will guide you through the additional configuration needed to
@@ -150,10 +156,16 @@ make best use of forest_lite.
     typer.confirm("Are you ready to continue", abort=True)
 
     # Datasets
+    echo_heading("Datasets")
+    typer.echo("""
+Datasets are collections of related data, e.g. a particular model run or
+observation platform. They use drivers to find/load their data, multiple
+datasets can share the same driver with different settings.
+""")
     while True:
-        echo_heading("Datasets")
-
-        dataset = {"driver": {}}
+        echo_heading("Add a dataset")
+        dataset = {"driver": {},
+                   "palettes": {}}
 
         # Label
         response = typer.prompt("Please specify a label for your dataset",
@@ -169,11 +181,10 @@ make best use of forest_lite.
         dataset["driver"]["name"] = driver_name
 
         echo_heading("Driver setting(s)")
-        typer.echo("""
-Drivers need to be configured before use.
+        typer.echo(f"""Drivers need to be configured before use.
+You selected '{driver_name}'. I'll need some additional information to configure it.
 """)
         settings = {}
-        typer.echo(f"You selected '{driver_name}', I need some additional information to configure it.")
         for key, description in [("pattern", "file system pattern")]:
             # Gather a key, value pair
             value = typer.prompt(f"Enter a {description}")
@@ -181,10 +192,23 @@ Drivers need to be configured before use.
 
         dataset["driver"]["settings"] = settings
 
+        # ColorPalette
+        echo_heading("Color palette")
+        typer.echo(f"""Data needs color or at least a default palette.
+""")
+        palettes = click.Choice(sorted(palette_names()))
+        name = typer.prompt("Which palette would it use?",
+                            default="Viridis",
+                            type=palettes)
+        dataset["palettes"]["default"] = {
+            "name": name,
+            "number": 256
+        }
+
         data["datasets"].append(dataset)
 
         # Ask to continue
-        response = typer.confirm(f"Configure another dataset?")
+        response = typer.confirm(f"Would you like to add another dataset?")
         if response:
             continue
         else:
