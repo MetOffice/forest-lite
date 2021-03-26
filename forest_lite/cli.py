@@ -7,6 +7,7 @@ SUCCESS = typer.style("SUCCESS", fg=typer.colors.BLUE) + ": "
 
 typer.echo(f"{INFO} Importing modules, please wait")
 
+import click
 import os
 import yaml
 import uvicorn
@@ -161,29 +162,22 @@ make best use of forest_lite.
 
         # Driver
         echo_heading("Driver")
-        response = typer.prompt("Which driver does it need?",
-                                default="iris")
-        dataset["driver"]["name"] = response
+        drivers = click.Choice(["iris", "xarray_h5netcdf"])
+        driver_name = typer.prompt("Which driver would it use?",
+                                   default="iris",
+                                   type=drivers)
+        dataset["driver"]["name"] = driver_name
 
         echo_heading("Driver setting(s)")
         typer.echo("""
-Drivers are configured using key, value pairs.
+Drivers need to be configured before use.
 """)
         settings = {}
-        while True:
-            typer.echo("Add a driver setting:")
-
+        typer.echo(f"You selected {driver_name}, I need some information to configure it.")
+        for key, description in [("pattern", "file system pattern")]:
             # Gather a key, value pair
-            key = typer.prompt("Provide a settings key", default="pattern")
-            value = typer.prompt(f"A value associated with {key}")
+            value = typer.prompt(f"Enter a {description}")
             settings[key] = value
-
-            # Prompt to continue
-            response = typer.confirm(f"Enter another driver setting?")
-            if response:
-                continue
-            else:
-                break
 
         dataset["driver"]["settings"] = settings
 
