@@ -231,7 +231,7 @@ by your answers.
 
     # Next steps
     echo_heading("Next steps")
-    tip = typer.style("tip", bold=True)
+    note = typer.style("Note:", bold=True)
     typer.echo(f"""
 Congratulations! You have successfully generated a forest_lite
 configuration. To try it out run the following command
@@ -240,6 +240,7 @@ configuration. To try it out run the following command
     typer.echo(f"""
 A browser tab should open with an app displaying your data.
 
-{tip}: use your favourite text editor to continue crafting {config_file}
+{note} This tool provides a subset of functionality, use your favourite text editor
+to continue crafting '{config_file}'.
 
 """)
