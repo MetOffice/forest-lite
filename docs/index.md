@@ -1,61 +1,54 @@
-# FOREST Lite
+# Introduction
 
-A lightweight FOREST - **F**orecast **O**bservation **R**esearch **E**xploration and **S**urvey **T**ool
+FOREST - **F**orecast **O**bservation **R**esearch **E**xploration and **S**urvey **T**ool
+
+Similar to it's bigger brother `forest`, `forest_lite` tries to minimize
+the barrier to entry to displaying meteorological data.
+
+## Open a file
+
+To quickly display a single file use the `open` command. This
+will start a server and open a browser tab with your data
+on display.
+
+```sh
+forest_lite open ${name_of_file}
+```
+
+!!! note
+    `forest_lite` uses the iris driver by default.
+    For alternative drivers please use the `--driver` flag
+
+
+## Dive in with init
+
+Init is a helper program to bridge the
+gap between using the `open` command and the full system `run`
+command. Think of it as
+a helpful assistant who can write your config file for you.
+
+```sh
+forest_lite init
+```
+
+Run the command and then follow the step-by-step on screen instructions
+to generate a basic configuration file.
+
+
+## Run a full system
+
+FOREST-Lite is a configurable system that can interface with
+arbitrary data sources. As long as there's a driver to connect
+user events to snippets of data.
+
+```sh
+forest_lite run ${config_file}
+```
+
+!!! note
+    Use `--no-open-tab` if running in a non-interactive environment
 
 ## Source code
 
 FOREST Lite source code is available at [GitHub](https://github.com/MetOffice/forest-lite).
 
-## Production environment
-
-To keep things simple the production environment deploys
-the API and client from the same server running on the same Docker container.
-
-```bash
-export BASE_URL=http://website.com  # No trailing /
-export CONFIG_FILE=/some/config.yaml
-python server/main.py --port ${CONTAINER_PORT}
-```
-
-When deploying behind a proxy server like NGINX or Traefik it
-becomes a little difficult to reverse engineer `X-Forwarded...` headers
-to create an appropriate `baseURL` to query the API. For convenience
-`BASE_URL` specifies the browser address that users are likely to visit.
-
-## Development environment
-
-The most frictionless workflow takes advantage of auto-reloading and
-re-compiling features in both `webpack-dev-server` and `uvicorn`.
-
-### API server
-
-To run FastAPI to reload on source change run the following command
-
-```bash
-export CONFIG_FILE=path/to/config.yaml
-cd server/
-uvicorn main:app --reload --port 8888
-```
-
-**TODO:** Make the default `port` customisable in the dev environment
-
-### Client server
-
-To start the client using `webpack-dev-server` run the following
-
-```bash
-cd client
-npm start
-```
-
-This will compile and serve the client application at `localhost:8080`
-
-
-### Developer guide
-
-Building the `forest-lite` client on a new machine requires a recent version of `npm`.
-Navigate to the `client` directory and run `npm install` to download the required
-packages into the `node_modules` directory.
-
-The data server Python dependencies are listed in `requirements.txt`, they can
-be installed using `conda install --file requirements.txt -c conda-forge`.
