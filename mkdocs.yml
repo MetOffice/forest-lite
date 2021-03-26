@@ -1,15 +1,14 @@
 site_name: FOREST Lite
 repo_url: https://github.com/MetOffice/forest-lite
 nav:
-  - FOREST Lite: index.md
-  - Getting started: beginner.md
+  - Getting started: index.md
   - Developer guide: dev-guide.md
   - design.md
 theme:
   name: material
   palette:
     scheme: default
-    primary: cyan
+    primary: light blue
     accent: blue
   favicon: img/favicon.png
   logo: img/logo_transparent_notext_white.png
