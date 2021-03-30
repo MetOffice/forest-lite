@@ -385,11 +385,6 @@ axisDecoder =
         (field "dim_name" string)
 
 
-datasetsDecoder : Decoder (List Dataset)
-datasetsDecoder =
-    field "datasets" (list Dataset.decoder)
-
-
 selectPointDecoder : Decoder SelectPoint
 selectPointDecoder =
     Json.Decode.map2
@@ -1103,10 +1098,13 @@ getDatasets baseURL =
     let
         endpoint =
             Endpoint.Datasets
+
+        decoder =
+            field "datasets" (list Dataset.decoder)
     in
     Http.get
         { url = baseURL ++ Endpoint.toString endpoint
-        , expect = Http.expectJson GotDatasets datasetsDecoder
+        , expect = Http.expectJson GotDatasets decoder
         }
 
 
