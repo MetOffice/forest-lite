@@ -1841,7 +1841,11 @@ viewSelected model =
                             in
                             case maybeVar of
                                 Just var ->
-                                    viewDims (List.map (selectDimension model) var.dims)
+                                    viewDims
+                                        (List.map
+                                            (getDimension model.dimensions)
+                                            var.dims
+                                        )
 
                                 Nothing ->
                                     text "No dims found"
@@ -1920,21 +1924,13 @@ selectDataVarLabel model =
             Nothing
 
 
-selectDimension : Model -> Dimension.Label.Label -> Dimension
-selectDimension model dim_name =
+getDimension : Dict String Dimension -> Dimension.Label.Label -> Maybe Dimension
+getDimension dimensions dim_name =
     let
         key =
             Dimension.Label.toString dim_name
-
-        maybeDimension =
-            Dict.get key model.dimensions
     in
-    case maybeDimension of
-        Just dimension ->
-            dimension
-
-        Nothing ->
-            { label = dim_name, points = [], kind = Numeric }
+    Dict.get key dimensions
 
 
 selectedDims :
@@ -1978,8 +1974,12 @@ selectedDims model dataset_id data_var =
             Nothing
 
 
-viewDims : List Dimension -> Html Msg
-viewDims dims =
+viewDims : List (Maybe Dimension) -> Html Msg
+viewDims maybeDims =
+    let
+        dims =
+            List.filterMap identity maybeDims
+    in
     div [] (List.map viewDim dims)
 
 
@@ -2019,15 +2019,20 @@ viewPoint dim point =
         value =
             pointToString { dim_name = dim_name, point = point }
     in
+    option [ attribute "value" value ] [ text (toString kind point) ]
+
+
+toString : Dimension.Kind.Kind -> Datum -> String
+toString kind point =
     case kind of
         Numeric ->
-            option [ attribute "value" value ] [ text (Datum.toString point) ]
+            Datum.toString point
 
         Temporal ->
-            option [ attribute "value" value ] [ text (formatTime (Datum.toInt point)) ]
+            formatTime (Datum.toInt point)
 
         Horizontal ->
-            option [ attribute "value" value ] [ text (Datum.toString point) ]
+            Datum.toString point
 
 
 formatTime : Int -> String
