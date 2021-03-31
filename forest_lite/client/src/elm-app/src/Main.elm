@@ -12,6 +12,7 @@ import Dataset.ID exposing (ID)
 import Dataset.Label exposing (Label)
 import Datum exposing (Datum)
 import Dict exposing (Dict)
+import Dimension.Kind exposing (Kind(..))
 import Dimension.Label exposing (Label)
 import Endpoint
 import Geometry
@@ -222,14 +223,8 @@ type alias Axis =
 type alias Dimension =
     { label : Dimension.Label.Label
     , points : List Datum
-    , kind : DimensionKind
+    , kind : Dimension.Kind.Kind
     }
-
-
-type DimensionKind
-    = Numeric
-    | Temporal
-    | Horizontal
 
 
 type alias SelectPoint =
@@ -413,7 +408,7 @@ insertDimension axis model =
         dimension =
             { label = axis.dim_name
             , points = axis.data
-            , kind = parseDimensionKind axis.dim_name
+            , kind = Dimension.Kind.parse axis.dim_name
             }
 
         dimensions =
@@ -530,7 +525,7 @@ update msg model =
                     in
                     case maybeDatasetLabel of
                         Just dataset_label ->
-                            case parseDimensionKind axis.dim_name of
+                            case Dimension.Kind.parse axis.dim_name of
                                 -- NOTE do not send action for lon/lat
                                 Horizontal ->
                                     ( model
@@ -1156,21 +1151,6 @@ parseRoute hashText =
         Nothing
 
 
-parseDimensionKind : Dimension.Label.Label -> DimensionKind
-parseDimensionKind (Dimension.Label.Label dim_name) =
-    if String.contains "time" dim_name then
-        Temporal
-
-    else if String.contains "latitude" dim_name then
-        Horizontal
-
-    else if String.contains "longitude" dim_name then
-        Horizontal
-
-    else
-        Numeric
-
-
 
 -- VIEW
 
@@ -1437,39 +1417,6 @@ viewCollapse collapse =
             [ collapse.body
             ]
         ]
-
-
-viewSelectedPoint : Maybe Point -> Html Msg
-viewSelectedPoint maybePoint =
-    case maybePoint of
-        Just point ->
-            div [] (List.map viewKeyValue (Dict.toList point))
-
-        Nothing ->
-            div [] []
-
-
-viewKeyValue : ( String, Datum ) -> Html Msg
-viewKeyValue ( key, value ) =
-    let
-        dim_label =
-            Dimension.Label.Label key
-    in
-    case parseDimensionKind dim_label of
-        Numeric ->
-            div []
-                [ div [] [ text (key ++ ":") ]
-                , div [ style "margin" "0.5em" ] [ text (Datum.toString value) ]
-                ]
-
-        Temporal ->
-            div []
-                [ div [] [ text (key ++ ":") ]
-                , div [ style "margin" "0.5em" ] [ text (formatTime (Datum.toInt value)) ]
-                ]
-
-        Horizontal ->
-            text ""
 
 
 viewDatasets : List Dataset -> Model -> Html Msg
