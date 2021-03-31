@@ -20,19 +20,16 @@ import Geometry
 import Helpers exposing (onSelect)
 import Html
     exposing
-        ( Attribute
-        , Html
+        ( Html
         , button
         , div
         , fieldset
         , h1
-        , h2
         , h3
         , i
         , input
         , label
         , li
-        , option
         , select
         , span
         , text
@@ -51,11 +48,9 @@ import Html.Attributes
         )
 import Html.Events
     exposing
-        ( on
-        , onCheck
+        ( onCheck
         , onClick
         , onInput
-        , targetValue
         )
 import Http
 import JWT
@@ -77,7 +72,6 @@ import Opacity exposing (Opacity)
 import Quadkey exposing (Quadkey)
 import Request exposing (Request(..))
 import Scale exposing (Scale)
-import Time
 import Viewport exposing (Viewport)
 import WebMercator
 import ZXY exposing (XY)
