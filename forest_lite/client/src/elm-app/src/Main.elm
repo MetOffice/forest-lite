@@ -215,7 +215,7 @@ type DataLimits
 type alias Axis =
     { attrs : Dict String String
     , data : List Datum
-    , data_var : String
+    , data_var : DataVar.Label.Label
     , dim_name : Dimension.Label.Label
     }
 
@@ -373,7 +373,7 @@ axisDecoder =
     Json.Decode.map4 Axis
         (field "attrs" Attrs.decoder)
         (field "data" (list Datum.decoder))
-        (field "data_var" string)
+        (field "data_var" DataVar.Label.decoder)
         (field "dim_name" Dimension.Label.decoder)
 
 
@@ -544,7 +544,7 @@ update msg model =
                                             { path =
                                                 [ "navigate"
                                                 , Dataset.Label.toString dataset_label
-                                                , axis.data_var
+                                                , DataVar.Label.toString axis.data_var
                                                 , Dimension.Label.toString axis.dim_name
                                                 ]
                                             , items = axis.data
