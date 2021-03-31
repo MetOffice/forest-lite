@@ -12,6 +12,8 @@ import Dataset.ID exposing (ID)
 import Dataset.Label exposing (Label)
 import Datum exposing (Datum)
 import Dict exposing (Dict)
+import Dimension.Kind exposing (Kind(..))
+import Dimension.Label exposing (Label)
 import Endpoint
 import Geometry
 import Html
@@ -213,30 +215,20 @@ type DataLimits
 type alias Axis =
     { attrs : Dict String String
     , data : List Datum
-    , data_var : String
-    , dim_name : String
+    , data_var : DataVar.Label.Label
+    , dim_name : Dimension.Label.Label
     }
 
 
 type alias Dimension =
-    { label : DimensionLabel
+    { label : Dimension.Label.Label
     , points : List Datum
-    , kind : DimensionKind
+    , kind : Dimension.Kind.Kind
     }
 
 
-type alias DimensionLabel =
-    String
-
-
-type DimensionKind
-    = Numeric
-    | Temporal
-    | Horizontal
-
-
 type alias SelectPoint =
-    { dim_name : String
+    { dim_name : Dimension.Label.Label
     , point : Datum
     }
 
@@ -381,15 +373,15 @@ axisDecoder =
     Json.Decode.map4 Axis
         (field "attrs" Attrs.decoder)
         (field "data" (list Datum.decoder))
-        (field "data_var" string)
-        (field "dim_name" string)
+        (field "data_var" DataVar.Label.decoder)
+        (field "dim_name" Dimension.Label.decoder)
 
 
 selectPointDecoder : Decoder SelectPoint
 selectPointDecoder =
     Json.Decode.map2
         SelectPoint
-        (field "dim_name" string)
+        (field "dim_name" Dimension.Label.decoder)
         (field "point" Datum.decoder)
 
 
@@ -411,12 +403,12 @@ insertDimension : Axis -> Model -> Model
 insertDimension axis model =
     let
         key =
-            axis.dim_name
+            Dimension.Label.toString axis.dim_name
 
         dimension =
             { label = axis.dim_name
             , points = axis.data
-            , kind = parseDimensionKind axis.dim_name
+            , kind = Dimension.Kind.parse axis.dim_name
             }
 
         dimensions =
@@ -428,6 +420,9 @@ insertDimension axis model =
 initPoint : Axis -> Model -> Model
 initPoint axis model =
     let
+        key =
+            Dimension.Label.toString axis.dim_name
+
         dim_name =
             axis.dim_name
 
@@ -438,13 +433,13 @@ initPoint axis model =
         Just value ->
             case model.point of
                 Just point ->
-                    if Dict.member dim_name point then
+                    if Dict.member key point then
                         model
 
                     else
                         let
                             newPoint =
-                                Dict.insert dim_name value point
+                                Dict.insert key value point
                         in
                         { model | point = Just newPoint }
 
@@ -454,7 +449,7 @@ initPoint axis model =
                             Dict.empty
 
                         newPoint =
-                            Dict.insert dim_name value container
+                            Dict.insert key value container
                     in
                     { model | point = Just newPoint }
 
@@ -530,7 +525,7 @@ update msg model =
                     in
                     case maybeDatasetLabel of
                         Just dataset_label ->
-                            case parseDimensionKind axis.dim_name of
+                            case Dimension.Kind.parse axis.dim_name of
                                 -- NOTE do not send action for lon/lat
                                 Horizontal ->
                                     ( model
@@ -549,8 +544,8 @@ update msg model =
                                             { path =
                                                 [ "navigate"
                                                 , Dataset.Label.toString dataset_label
-                                                , axis.data_var
-                                                , axis.dim_name
+                                                , DataVar.Label.toString axis.data_var
+                                                , Dimension.Label.toString axis.dim_name
                                                 ]
                                             , items = axis.data
                                             }
@@ -681,7 +676,7 @@ update msg model =
                                     [ "navigate"
                                     , Dataset.Label.toString dataset_label
                                     , DataVar.Label.toString data_var
-                                    , selectPoint.dim_name
+                                    , Dimension.Label.toString selectPoint.dim_name
                                     ]
 
                                 actionCmd =
@@ -1031,12 +1026,15 @@ linkAxis model selectPoint =
             selectDataVarLabel model
 
         dim =
-            "time"
+            Dimension.Label.Label "time"
 
         start_time =
             selectPoint.point
+
+        str =
+            Dimension.Label.toString selectPoint.dim_name
     in
-    if selectPoint.dim_name == "start_time" then
+    if str == "start_time" then
         case ( dataset_id, data_var ) of
             ( Just dataset_id_, Just data_var_ ) ->
                 [ getAxis model.baseURL dataset_id_ data_var_ dim (Just start_time)
@@ -1053,7 +1051,7 @@ updatePoint : Model -> SelectPoint -> Model
 updatePoint model selectPoint =
     let
         key =
-            selectPoint.dim_name
+            Dimension.Label.toString selectPoint.dim_name
 
         value =
             selectPoint.point
@@ -1120,7 +1118,13 @@ getDatasetDescription baseURL id =
         }
 
 
-getAxis : String -> Dataset.ID.ID -> DataVar.Label.Label -> String -> Maybe Datum -> Cmd Msg
+getAxis :
+    String
+    -> Dataset.ID.ID
+    -> DataVar.Label.Label
+    -> Dimension.Label.Label
+    -> Maybe Datum
+    -> Cmd Msg
 getAxis baseURL dataset_id data_var_label dim maybeStartTime =
     let
         data_var =
@@ -1145,21 +1149,6 @@ parseRoute hashText =
 
     else
         Nothing
-
-
-parseDimensionKind : String -> DimensionKind
-parseDimensionKind dim_name =
-    if String.contains "time" dim_name then
-        Temporal
-
-    else if String.contains "latitude" dim_name then
-        Horizontal
-
-    else if String.contains "longitude" dim_name then
-        Horizontal
-
-    else
-        Numeric
 
 
 
@@ -1428,35 +1417,6 @@ viewCollapse collapse =
             [ collapse.body
             ]
         ]
-
-
-viewSelectedPoint : Maybe Point -> Html Msg
-viewSelectedPoint maybePoint =
-    case maybePoint of
-        Just point ->
-            div [] (List.map viewKeyValue (Dict.toList point))
-
-        Nothing ->
-            div [] []
-
-
-viewKeyValue : ( String, Datum ) -> Html Msg
-viewKeyValue ( key, value ) =
-    case parseDimensionKind key of
-        Numeric ->
-            div []
-                [ div [] [ text (key ++ ":") ]
-                , div [ style "margin" "0.5em" ] [ text (Datum.toString value) ]
-                ]
-
-        Temporal ->
-            div []
-                [ div [] [ text (key ++ ":") ]
-                , div [ style "margin" "0.5em" ] [ text (formatTime (Datum.toInt value)) ]
-                ]
-
-        Horizontal ->
-            text ""
 
 
 viewDatasets : List Dataset -> Model -> Html Msg
@@ -1851,7 +1811,7 @@ pointToString : SelectPoint -> String
 pointToString props =
     Json.Encode.encode 0
         (Json.Encode.object
-            [ ( "dim_name", Json.Encode.string props.dim_name )
+            [ ( "dim_name", Dimension.Label.encode props.dim_name )
             , ( "point", Datum.encode props.point )
             ]
         )
@@ -1960,11 +1920,14 @@ selectDataVarLabel model =
             Nothing
 
 
-selectDimension : Model -> String -> Dimension
+selectDimension : Model -> Dimension.Label.Label -> Dimension
 selectDimension model dim_name =
     let
+        key =
+            Dimension.Label.toString dim_name
+
         maybeDimension =
-            Dict.get dim_name model.dimensions
+            Dict.get key model.dimensions
     in
     case maybeDimension of
         Just dimension ->
@@ -1974,7 +1937,11 @@ selectDimension model dim_name =
             { label = dim_name, points = [], kind = Numeric }
 
 
-selectedDims : Model -> Dataset.ID.ID -> String -> Maybe (List String)
+selectedDims :
+    Model
+    -> Dataset.ID.ID
+    -> String
+    -> Maybe (List Dimension.Label.Label)
 selectedDims model dataset_id data_var =
     let
         key =
@@ -2018,13 +1985,17 @@ viewDims dims =
 
 viewDim : Dimension -> Html Msg
 viewDim dim =
+    let
+        str =
+            Dimension.Label.toString dim.label
+    in
     case dim.kind of
         Horizontal ->
             text ""
 
         _ ->
             div [ class "select__container" ]
-                [ label [ class "select__label" ] [ text ("Dimension: " ++ dim.label) ]
+                [ label [ class "select__label" ] [ text ("Dimension: " ++ str) ]
                 , div
                     []
                     [ select

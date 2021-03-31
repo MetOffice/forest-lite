@@ -2,6 +2,7 @@ module Endpoint exposing (..)
 
 import Dataset.ID exposing (ID)
 import Datum exposing (Datum)
+import Dimension.Label exposing (Label)
 import Json.Encode
 
 
@@ -12,7 +13,7 @@ type alias Query =
 type Endpoint
     = Datasets
     | DatasetDescription Dataset.ID.ID
-    | Axis Dataset.ID.ID String String (Maybe Datum)
+    | Axis Dataset.ID.ID String Dimension.Label.Label (Maybe Datum)
 
 
 toString : Endpoint -> String
@@ -32,7 +33,7 @@ toString endpoint =
                         , Dataset.ID.toString dataset_id
                         , data_var
                         , "axis"
-                        , dim
+                        , Dimension.Label.toString dim
                         ]
             in
             case maybeStartTime of
