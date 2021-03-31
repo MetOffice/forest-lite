@@ -1841,11 +1841,11 @@ viewSelected model =
                             in
                             case maybeVar of
                                 Just var ->
-                                    viewDims
-                                        (List.map
+                                    var.dims
+                                        |> List.map
                                             (getDimension model.dimensions)
-                                            var.dims
-                                        )
+                                        |> List.filterMap identity
+                                        |> viewDims
 
                                 Nothing ->
                                     text "No dims found"
@@ -1974,12 +1974,8 @@ selectedDims model dataset_id data_var =
             Nothing
 
 
-viewDims : List (Maybe Dimension) -> Html Msg
-viewDims maybeDims =
-    let
-        dims =
-            List.filterMap identity maybeDims
-    in
+viewDims : List Dimension -> Html Msg
+viewDims dims =
     div [] (List.map viewDim dims)
 
 
