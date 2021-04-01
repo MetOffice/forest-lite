@@ -45,6 +45,7 @@ import Html.Attributes
         , classList
         , for
         , id
+        , selected
         , style
         , value
         )
@@ -71,6 +72,7 @@ import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import NaturalEarthFeature.Action exposing (Action(..))
 import Opacity exposing (Opacity)
+import Palettes exposing (Palettes)
 import Point exposing (Point)
 import Quadkey exposing (Quadkey)
 import Request exposing (Request(..))
@@ -185,7 +187,8 @@ type alias Model =
     , coastlines_color : String
     , coastlines_width : Int
     , limits : Limits
-    , palette : NamedPalette
+    , palette : PaletteName
+    , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
     }
@@ -250,7 +253,7 @@ type Msg
     | LowerBound String
     | UpperBound String
     | SetLimitOrigin Bool
-    | SetPalette NamedPalette
+    | SetPalette PaletteName
     | CopyDataLimits Bound
     | ExpandCollapse SubMenu
     | NaturalEarthFeature NaturalEarthFeature.Msg
@@ -308,7 +311,8 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
-            , palette = fromName "Blues"
+            , palette = PaletteName "Reds"
+            , palettes = Palettes.names
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
@@ -1315,7 +1319,7 @@ viewLayerMenu model =
                 , viewCollapse
                     { active = getCollapsed ColorbarMenu model.collapsed
                     , head = text "Colorbar settings"
-                    , body = viewColorbarMenu model.limits model.palette
+                    , body = viewColorbarMenu model
                     , onClick = ExpandCollapse ColorbarMenu
                     }
                 ]
@@ -1401,34 +1405,30 @@ viewCollapse collapse =
 -- NAMED PALETTE
 
 
-type NamedPalette
-    = NamedPalette String (List String)
+type PaletteName
+    = PaletteName String
 
 
-toColors : NamedPalette -> List String
-toColors (NamedPalette _ colors) =
-    colors
+toColors : PaletteName -> List String
+toColors (PaletteName str) =
+    Maybe.withDefault [ "#000000", "#FFFFFF" ] (Palettes.get str)
 
 
-toName : NamedPalette -> String
-toName (NamedPalette name _) =
+toName : PaletteName -> String
+toName (PaletteName name) =
     name
 
 
-fromName : String -> NamedPalette
-fromName str =
-    if str == "Blues" then
-        NamedPalette str [ "#0000FF", "#AAAAFF", "#000000" ]
-
-    else if str == "Reds" then
-        NamedPalette str [ "#FF0000", "#000000" ]
-
-    else
-        NamedPalette str [ "#FF00FF", "#AA00AA", "#000000" ]
+type alias ColorbarSettings r =
+    { r
+        | limits : Limits
+        , palettes : List String
+        , palette : PaletteName
+    }
 
 
-viewColorbarMenu : Limits -> NamedPalette -> Html Msg
-viewColorbarMenu limits palette =
+viewColorbarMenu : ColorbarSettings r -> Html Msg
+viewColorbarMenu { limits, palettes, palette } =
     div []
         [ Colorbar.view
             { title = "Title (placeholder)"
@@ -1438,7 +1438,7 @@ viewColorbarMenu limits palette =
             }
 
         -- CONTROLS
-        , viewControls (toName palette) (SetPalette << fromName)
+        , viewControls palettes (toName palette) (SetPalette << PaletteName)
         , viewLimits limits
         ]
 
@@ -1447,8 +1447,8 @@ viewColorbarMenu limits palette =
 -- COLORBAR CONTROLS
 
 
-viewControls : String -> (String -> Msg) -> Html Msg
-viewControls palette toMsg =
+viewControls : List String -> String -> (String -> Msg) -> Html Msg
+viewControls names name toMsg =
     div []
         [ label
             [ style "display" "block"
@@ -1459,10 +1459,15 @@ viewControls palette toMsg =
         , select
             [ onSelect toMsg
             ]
-            [ option [] [ text "Blues" ]
-            , option [] [ text "Reds" ]
-            , option [] [ text "Custom" ]
-            ]
+            (List.map
+                (\n ->
+                    option
+                        [ selected (n == name)
+                        ]
+                        [ text n ]
+                )
+                names
+            )
         ]
 
 
