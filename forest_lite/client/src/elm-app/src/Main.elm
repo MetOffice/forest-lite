@@ -1423,11 +1423,23 @@ type alias ColorbarSettings r =
 viewColorbarMenu : ColorbarSettings r -> Html Msg
 viewColorbarMenu { limits, palettes, palette, palette_level } =
     let
-        levelToMsg =
-            SetPaletteLevels << Maybe.withDefault 1 << String.toInt
+        level =
+            palette_level
 
         levels =
             Palettes.levels
+
+        levelToMsg =
+            SetPaletteLevels << Maybe.withDefault 1 << String.toInt
+
+        name =
+            Palettes.toString palette
+
+        names =
+            palettes
+
+        nameToMsg =
+            SetPalette << Palettes.fromString
     in
     div []
         [ Colorbar.view
@@ -1439,8 +1451,8 @@ viewColorbarMenu { limits, palettes, palette, palette_level } =
 
         -- CONTROLS
         , div []
-            [ viewLevels levels palette_level levelToMsg
-            , viewNames palettes (Palettes.toString palette) (SetPalette << Palettes.fromString)
+            [ viewLevels levels level levelToMsg
+            , viewNames names name nameToMsg
             ]
         , viewLimits limits
         ]
