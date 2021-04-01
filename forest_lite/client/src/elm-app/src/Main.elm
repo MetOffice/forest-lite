@@ -69,6 +69,7 @@ import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import NaturalEarthFeature.Action exposing (Action(..))
 import Opacity exposing (Opacity)
+import Point exposing (Point)
 import Quadkey exposing (Quadkey)
 import Request exposing (Request(..))
 import Scale exposing (Scale)
@@ -214,10 +215,6 @@ type alias Axis =
     , data_var : DataVar.Label.Label
     , dim_name : Dimension.Label.Label
     }
-
-
-type alias Point =
-    Dict String Datum
 
 
 type Route
@@ -1786,10 +1783,6 @@ encodeItem item =
         ]
 
 
-
--- JSON ENCODERS
-
-
 viewSelected : Model -> Html Msg
 viewSelected model =
     case model.selected of
@@ -1818,7 +1811,7 @@ viewSelected model =
                                         |> List.map
                                             (Dimension.get model.dimensions)
                                         |> List.filterMap identity
-                                        |> viewDims PointSelected
+                                        |> viewDims PointSelected model.point
 
                                 Nothing ->
                                     text "No dims found"
@@ -1839,7 +1832,7 @@ viewSelected model =
             text "Nothing selected"
 
 
-selectDatasetId : Maybe Select -> Maybe Dataset.ID.ID
+selectDatasetId : Maybe DataVar.Select.Select -> Maybe Dataset.ID.ID
 selectDatasetId =
     Maybe.map .dataset_id
 
@@ -1923,9 +1916,9 @@ selectedDims model dataset_id data_var =
             Nothing
 
 
-viewDims : (String -> Msg) -> List Dimension -> Html Msg
-viewDims toMsg dims =
-    div [] (List.map (Dimension.view toMsg) dims)
+viewDims : (String -> Msg) -> Maybe Point -> List Dimension -> Html Msg
+viewDims toMsg maybePoint dims =
+    div [] (List.map (Dimension.view toMsg maybePoint) dims)
 
 
 

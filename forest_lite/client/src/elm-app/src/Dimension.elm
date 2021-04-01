@@ -6,8 +6,9 @@ import Dimension.Kind exposing (Kind(..))
 import Dimension.Label exposing (Label)
 import Helpers exposing (onSelect)
 import Html exposing (Html, div, label, option, select, text)
-import Html.Attributes exposing (attribute, class)
+import Html.Attributes exposing (attribute, class, selected)
 import Json.Encode
+import Point exposing (Point)
 import Timestamp
 
 
@@ -41,11 +42,14 @@ get dimensions dim_name =
 -- VIEW
 
 
-view : (String -> msg) -> Dimension -> Html msg
-view toMsg dim =
+view : (String -> msg) -> Maybe Point -> Dimension -> Html msg
+view toMsg maybePoint dim =
     let
         str =
             Dimension.Label.toString dim.label
+
+        actives =
+            List.map (isActive maybePoint dim) dim.points
     in
     case dim.kind of
         Horizontal ->
@@ -60,24 +64,50 @@ view toMsg dim =
                         [ onSelect toMsg
                         , class "select__select"
                         ]
-                        (List.map (viewPoint dim) dim.points)
+                        (option [] [ text "Please select" ]
+                            :: List.map2
+                                (viewPoint dim)
+                                actives
+                                dim.points
+                        )
                     ]
                 ]
 
 
-viewPoint : Dimension -> Datum -> Html msg
-viewPoint dim point =
+viewPoint : Dimension -> Bool -> Datum -> Html msg
+viewPoint dim active datum =
     let
-        kind =
-            dim.kind
-
-        dim_name =
-            dim.label
+        content =
+            toString dim.kind datum
 
         value =
-            pointToString { dim_name = dim_name, point = point }
+            Json.Encode.encode 0 (encodePoint dim.label datum)
     in
-    option [ attribute "value" value ] [ text (toString kind point) ]
+    option
+        [ attribute "value" value
+        , selected active
+        ]
+        [ text content ]
+
+
+isActive : Maybe Point -> Dimension -> Datum -> Bool
+isActive maybePoint dim datum =
+    case maybePoint of
+        Nothing ->
+            False
+
+        Just point ->
+            let
+                key =
+                    Dimension.Label.toString dim.label
+            in
+            case Dict.get key point of
+                Nothing ->
+                    False
+
+                Just pointDatum ->
+                    Json.Encode.encode 0 (Datum.encode datum)
+                        == Json.Encode.encode 0 (Datum.encode pointDatum)
 
 
 toString : Dimension.Kind.Kind -> Datum -> String
@@ -97,11 +127,9 @@ toString kind point =
 -- SELECT POINT
 
 
-pointToString : SelectPoint -> String
-pointToString props =
-    Json.Encode.encode 0
-        (Json.Encode.object
-            [ ( "dim_name", Dimension.Label.encode props.dim_name )
-            , ( "point", Datum.encode props.point )
-            ]
-        )
+encodePoint : Dimension.Label.Label -> Datum -> Json.Encode.Value
+encodePoint dim_name point =
+    Json.Encode.object
+        [ ( "dim_name", Dimension.Label.encode dim_name )
+        , ( "point", Datum.encode point )
+        ]
