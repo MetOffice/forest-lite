@@ -31,6 +31,7 @@ import Html
         , input
         , label
         , li
+        , option
         , select
         , span
         , text
@@ -184,6 +185,7 @@ type alias Model =
     , coastlines_color : String
     , coastlines_width : Int
     , limits : Limits
+    , palette : NamedPalette
     , opacity : Opacity
     , collapsed : Dict String Bool
     }
@@ -248,6 +250,7 @@ type Msg
     | LowerBound String
     | UpperBound String
     | SetLimitOrigin Bool
+    | SetPalette NamedPalette
     | CopyDataLimits Bound
     | ExpandCollapse SubMenu
     | NaturalEarthFeature NaturalEarthFeature.Msg
@@ -305,6 +308,7 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
+            , palette = fromName "Blues"
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
@@ -792,6 +796,9 @@ update msg model =
                         |> sendAction
             in
             ( { model | opacity = value }, cmd )
+
+        SetPalette palette ->
+            ( { model | palette = palette }, Cmd.none )
 
 
 setLimits : Limits -> Model -> Model
@@ -1308,7 +1315,7 @@ viewLayerMenu model =
                 , viewCollapse
                     { active = getCollapsed ColorbarMenu model.collapsed
                     , head = text "Colorbar settings"
-                    , body = viewColorbarMenu model.limits
+                    , body = viewColorbarMenu model.limits model.palette
                     , onClick = ExpandCollapse ColorbarMenu
                     }
                 ]
@@ -1390,30 +1397,72 @@ viewCollapse collapse =
         ]
 
 
-viewColorbarMenu : Limits -> Html Msg
-viewColorbarMenu limits =
+
+-- NAMED PALETTE
+
+
+type NamedPalette
+    = NamedPalette String (List String)
+
+
+toColors : NamedPalette -> List String
+toColors (NamedPalette _ colors) =
+    colors
+
+
+toName : NamedPalette -> String
+toName (NamedPalette name _) =
+    name
+
+
+fromName : String -> NamedPalette
+fromName str =
+    if str == "Blues" then
+        NamedPalette str [ "#0000FF", "#AAAAFF", "#000000" ]
+
+    else if str == "Reds" then
+        NamedPalette str [ "#FF0000", "#000000" ]
+
+    else
+        NamedPalette str [ "#FF00FF", "#AA00AA", "#000000" ]
+
+
+viewColorbarMenu : Limits -> NamedPalette -> Html Msg
+viewColorbarMenu limits palette =
     div []
         [ Colorbar.view
             { title = "Title (placeholder)"
             , low = -10
             , high = 10
-            , palette =
-                List.reverse
-                    [ "#FF0000"
-                    , "#FF4444"
-                    , "#FF8888"
-                    , "#FFCCCC"
-                    , "#FFEEEE"
-                    , "#FFFFFF"
-                    , "#FFFFFF"
-                    , "#EEEEFF"
-                    , "#CCCCFF"
-                    , "#8888FF"
-                    , "#4444FF"
-                    , "#0000FF"
-                    ]
+            , palette = toColors palette
             }
+
+        -- CONTROLS
+        , viewControls (toName palette) (SetPalette << fromName)
         , viewLimits limits
+        ]
+
+
+
+-- COLORBAR CONTROLS
+
+
+viewControls : String -> (String -> Msg) -> Html Msg
+viewControls palette toMsg =
+    div []
+        [ label
+            [ style "display" "block"
+            , style "font-size" "0.9em"
+            ]
+            [ text "Named palette:"
+            ]
+        , select
+            [ onSelect toMsg
+            ]
+            [ option [] [ text "Blues" ]
+            , option [] [ text "Reds" ]
+            , option [] [ text "Custom" ]
+            ]
         ]
 
 
