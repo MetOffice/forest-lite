@@ -12,25 +12,24 @@ import Dataset.ID exposing (ID)
 import Dataset.Label exposing (Label)
 import Datum exposing (Datum)
 import Dict exposing (Dict)
+import Dimension exposing (Dimension, SelectPoint)
 import Dimension.Kind exposing (Kind(..))
 import Dimension.Label exposing (Label)
 import Endpoint
 import Geometry
+import Helpers exposing (onSelect)
 import Html
     exposing
-        ( Attribute
-        , Html
+        ( Html
         , button
         , div
         , fieldset
         , h1
-        , h2
         , h3
         , i
         , input
         , label
         , li
-        , option
         , select
         , span
         , text
@@ -49,11 +48,9 @@ import Html.Attributes
         )
 import Html.Events
     exposing
-        ( on
-        , onCheck
+        ( onCheck
         , onClick
         , onInput
-        , targetValue
         )
 import Http
 import JWT
@@ -72,10 +69,10 @@ import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import NaturalEarthFeature.Action exposing (Action(..))
 import Opacity exposing (Opacity)
+import Point exposing (Point)
 import Quadkey exposing (Quadkey)
 import Request exposing (Request(..))
 import Scale exposing (Scale)
-import Time
 import Viewport exposing (Viewport)
 import WebMercator
 import ZXY exposing (XY)
@@ -218,23 +215,6 @@ type alias Axis =
     , data_var : DataVar.Label.Label
     , dim_name : Dimension.Label.Label
     }
-
-
-type alias Dimension =
-    { label : Dimension.Label.Label
-    , points : List Datum
-    , kind : Dimension.Kind.Kind
-    }
-
-
-type alias SelectPoint =
-    { dim_name : Dimension.Label.Label
-    , point : Datum
-    }
-
-
-type alias Point =
-    Dict String Datum
 
 
 type Route
@@ -521,7 +501,7 @@ update msg model =
                 Ok axis ->
                     let
                         maybeDatasetLabel =
-                            selectDatasetLabelById model dataset_id
+                            selectDatasetLabelById model.datasets dataset_id
                     in
                     case maybeDatasetLabel of
                         Just dataset_label ->
@@ -619,7 +599,7 @@ update msg model =
                             DataVar.Label.toString selected.data_var
 
                         maybeDatasetLabel =
-                            selectDatasetLabelById model dataset_id
+                            selectDatasetLabelById model.datasets dataset_id
 
                         maybeDims =
                             selectedDims model dataset_id data_var
@@ -1020,7 +1000,7 @@ linkAxis : Model -> SelectPoint -> List (Cmd Msg)
 linkAxis model selectPoint =
     let
         dataset_id =
-            selectDatasetId model
+            selectDatasetId model.selected
 
         data_var =
             selectDataVarLabel model
@@ -1803,20 +1783,6 @@ encodeItem item =
         ]
 
 
-
--- JSON ENCODERS
-
-
-pointToString : SelectPoint -> String
-pointToString props =
-    Json.Encode.encode 0
-        (Json.Encode.object
-            [ ( "dim_name", Dimension.Label.encode props.dim_name )
-            , ( "point", Datum.encode props.point )
-            ]
-        )
-
-
 viewSelected : Model -> Html Msg
 viewSelected model =
     case model.selected of
@@ -1841,7 +1807,11 @@ viewSelected model =
                             in
                             case maybeVar of
                                 Just var ->
-                                    viewDims (List.map (selectDimension model) var.dims)
+                                    var.dims
+                                        |> List.map
+                                            (Dimension.get model.dimensions)
+                                        |> List.filterMap identity
+                                        |> viewDims PointSelected model.point
 
                                 Nothing ->
                                     text "No dims found"
@@ -1862,34 +1832,29 @@ viewSelected model =
             text "Nothing selected"
 
 
-selectDatasetId : Model -> Maybe Dataset.ID.ID
-selectDatasetId model =
-    case model.selected of
-        Just selected ->
-            Just selected.dataset_id
-
-        Nothing ->
-            Nothing
+selectDatasetId : Maybe DataVar.Select.Select -> Maybe Dataset.ID.ID
+selectDatasetId =
+    Maybe.map .dataset_id
 
 
 selectDatasetLabel : Model -> Maybe Dataset.Label.Label
 selectDatasetLabel model =
-    case selectDatasetId model of
+    case selectDatasetId model.selected of
         Just dataset_id ->
-            selectDatasetLabelById model dataset_id
+            selectDatasetLabelById model.datasets dataset_id
 
         Nothing ->
             Nothing
 
 
-selectDatasetLabelById : Model -> Dataset.ID.ID -> Maybe Dataset.Label.Label
-selectDatasetLabelById model dataset_id =
-    case model.datasets of
+selectDatasetLabelById : Request (List Dataset) -> Dataset.ID.ID -> Maybe Dataset.Label.Label
+selectDatasetLabelById requestDatasets dataset_id =
+    case requestDatasets of
         Success datasets ->
             datasets
                 |> List.filter (matchId dataset_id)
                 |> List.head
-                |> asDatasetLabel
+                |> Maybe.map .label
 
         _ ->
             Nothing
@@ -1900,16 +1865,6 @@ matchId dataset_id dataset =
     dataset.id == dataset_id
 
 
-asDatasetLabel : Maybe Dataset -> Maybe Dataset.Label.Label
-asDatasetLabel maybeDataset =
-    case maybeDataset of
-        Just dataset ->
-            Just dataset.label
-
-        Nothing ->
-            Nothing
-
-
 selectDataVarLabel : Model -> Maybe DataVar.Label.Label
 selectDataVarLabel model =
     case model.selected of
@@ -1918,23 +1873,6 @@ selectDataVarLabel model =
 
         Nothing ->
             Nothing
-
-
-selectDimension : Model -> Dimension.Label.Label -> Dimension
-selectDimension model dim_name =
-    let
-        key =
-            Dimension.Label.toString dim_name
-
-        maybeDimension =
-            Dict.get key model.dimensions
-    in
-    case maybeDimension of
-        Just dimension ->
-            dimension
-
-        Nothing ->
-            { label = dim_name, points = [], kind = Numeric }
 
 
 selectedDims :
@@ -1978,138 +1916,9 @@ selectedDims model dataset_id data_var =
             Nothing
 
 
-viewDims : List Dimension -> Html Msg
-viewDims dims =
-    div [] (List.map viewDim dims)
-
-
-viewDim : Dimension -> Html Msg
-viewDim dim =
-    let
-        str =
-            Dimension.Label.toString dim.label
-    in
-    case dim.kind of
-        Horizontal ->
-            text ""
-
-        _ ->
-            div [ class "select__container" ]
-                [ label [ class "select__label" ] [ text ("Dimension: " ++ str) ]
-                , div
-                    []
-                    [ select
-                        [ onSelect PointSelected
-                        , class "select__select"
-                        ]
-                        (List.map (viewPoint dim) dim.points)
-                    ]
-                ]
-
-
-viewPoint : Dimension -> Datum -> Html Msg
-viewPoint dim point =
-    let
-        kind =
-            dim.kind
-
-        dim_name =
-            dim.label
-
-        value =
-            pointToString { dim_name = dim_name, point = point }
-    in
-    case kind of
-        Numeric ->
-            option [ attribute "value" value ] [ text (Datum.toString point) ]
-
-        Temporal ->
-            option [ attribute "value" value ] [ text (formatTime (Datum.toInt point)) ]
-
-        Horizontal ->
-            option [ attribute "value" value ] [ text (Datum.toString point) ]
-
-
-formatTime : Int -> String
-formatTime millis =
-    let
-        posix =
-            Time.millisToPosix millis
-
-        year =
-            String.fromInt (Time.toYear Time.utc posix)
-
-        month =
-            formatMonth (Time.toMonth Time.utc posix)
-
-        day =
-            String.fromInt (Time.toDay Time.utc posix)
-
-        hour =
-            String.padLeft 2 '0' (String.fromInt (Time.toHour Time.utc posix))
-
-        minute =
-            String.padLeft 2 '0' (String.fromInt (Time.toMinute Time.utc posix))
-
-        date =
-            String.join " " [ year, month, day ]
-
-        time =
-            String.join ":" [ hour, minute ]
-
-        zone =
-            "UTC"
-    in
-    String.join " " [ date, time, zone ]
-
-
-formatMonth : Time.Month -> String
-formatMonth month =
-    case month of
-        Time.Jan ->
-            "January"
-
-        Time.Feb ->
-            "February"
-
-        Time.Mar ->
-            "March"
-
-        Time.Apr ->
-            "April"
-
-        Time.May ->
-            "May"
-
-        Time.Jun ->
-            "June"
-
-        Time.Jul ->
-            "July"
-
-        Time.Aug ->
-            "August"
-
-        Time.Sep ->
-            "September"
-
-        Time.Oct ->
-            "October"
-
-        Time.Nov ->
-            "November"
-
-        Time.Dec ->
-            "December"
-
-
-
--- Select on "change" event
-
-
-onSelect : (String -> msg) -> Attribute msg
-onSelect tagger =
-    on "change" (Json.Decode.map tagger targetValue)
+viewDims : (String -> Msg) -> Maybe Point -> List Dimension -> Html Msg
+viewDims toMsg maybePoint dims =
+    div [] (List.map (Dimension.view toMsg maybePoint) dims)
 
 
 
