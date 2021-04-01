@@ -32,6 +32,9 @@ import {
 // Web worker
 import { WebWorker } from "./web-worker-middleware.js"
 
+// Web components
+import "./web-components"
+
 
 // Elm ports
 const setupPorts = dispatch => ports => {

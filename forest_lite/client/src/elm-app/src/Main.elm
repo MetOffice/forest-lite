@@ -4,6 +4,7 @@ import Action
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
+import Colorbar
 import DataVar.Label exposing (Label)
 import DataVar.Select exposing (Select)
 import Dataset exposing (Dataset)
@@ -1155,16 +1156,6 @@ viewHome model =
     viewLayerMenu model
 
 
-viewLimits : Limits -> Html Msg
-viewLimits limits =
-    case limits.origin of
-        UserInput ->
-            viewUserLimits limits.user_input
-
-        DataSource ->
-            viewSourceLimits limits.data_source
-
-
 viewFollowCheckbox : LimitOrigin -> Html Msg
 viewFollowCheckbox origin =
     let
@@ -1317,7 +1308,7 @@ viewLayerMenu model =
                 , viewCollapse
                     { active = getCollapsed ColorbarMenu model.collapsed
                     , head = text "Colorbar settings"
-                    , body = viewLimits model.limits
+                    , body = viewColorbarMenu model.limits
                     , onClick = ExpandCollapse ColorbarMenu
                     }
                 ]
@@ -1397,6 +1388,43 @@ viewCollapse collapse =
             [ collapse.body
             ]
         ]
+
+
+viewColorbarMenu : Limits -> Html Msg
+viewColorbarMenu limits =
+    div []
+        [ Colorbar.view
+            { title = "Title (placeholder)"
+            , low = -10
+            , high = 10
+            , palette =
+                List.reverse
+                    [ "#FF0000"
+                    , "#FF4444"
+                    , "#FF8888"
+                    , "#FFCCCC"
+                    , "#FFEEEE"
+                    , "#FFFFFF"
+                    , "#FFFFFF"
+                    , "#EEEEFF"
+                    , "#CCCCFF"
+                    , "#8888FF"
+                    , "#4444FF"
+                    , "#0000FF"
+                    ]
+            }
+        , viewLimits limits
+        ]
+
+
+viewLimits : Limits -> Html Msg
+viewLimits limits =
+    case limits.origin of
+        UserInput ->
+            viewUserLimits limits.user_input
+
+        DataSource ->
+            viewSourceLimits limits.data_source
 
 
 viewDatasets : List Dataset -> Model -> Html Msg
