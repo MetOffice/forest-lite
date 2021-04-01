@@ -33,7 +33,7 @@ import {
 import { WebWorker } from "./web-worker-middleware.js"
 
 // Web components
-import "./web-component-colorbar.js"
+import "./web-components"
 
 
 // Elm ports

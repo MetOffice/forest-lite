@@ -1,15 +1,12 @@
 import * as Bokeh from "@bokeh/bokehjs"
 
 
-// A web component
+// Web component for Bokeh.Colorbar widget
 export class Colorbar extends HTMLElement {
     constructor() {
         super()
 
-        // TODO migrate title attribute
-
         let title = ""
-        console.log("data-title", this.getAttribute("data-title"))
 
         // Use shadow DOM
         this.attachShadow({ mode: 'open' })
