@@ -21,8 +21,7 @@ import Geometry
 import Helpers exposing (onSelect)
 import Html
     exposing
-        ( Attribute
-        , Html
+        ( Html
         , button
         , div
         , fieldset
@@ -32,7 +31,6 @@ import Html
         , input
         , label
         , li
-        , node
         , select
         , span
         , text
