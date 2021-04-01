@@ -4,6 +4,7 @@ module Palettes exposing
     , continuous
     , fromString
     , get
+    , levels
     , names
     , toColors
     , toString
@@ -20,9 +21,21 @@ type alias Palettes =
     List ( String, List String )
 
 
-toColors : Name -> List String
-toColors (Name str) =
-    Maybe.withDefault [ "#000000", "#FFFFFF" ] (get str)
+
+-- TODO implement a full solution
+
+
+toColors : Int -> Name -> List String
+toColors level (Name str) =
+    let
+        colors =
+            Maybe.withDefault [ "#000000", "#FFFFFF" ] (get str)
+    in
+    if level == 5 then
+        List.reverse colors
+
+    else
+        colors
 
 
 fromString : String -> Name
@@ -45,6 +58,11 @@ names =
 get : String -> Maybe (List String)
 get name =
     Dict.get name (Dict.fromList continuous)
+
+
+levels : List Int
+levels =
+    [ 3, 5, 6 ]
 
 
 continuous : Palettes

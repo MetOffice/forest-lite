@@ -188,6 +188,7 @@ type alias Model =
     , coastlines_width : Int
     , limits : Limits
     , palette : Palettes.Name
+    , palette_level : Int
     , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
@@ -254,6 +255,7 @@ type Msg
     | UpperBound String
     | SetLimitOrigin Bool
     | SetPalette Palettes.Name
+    | SetPaletteLevels Int
     | CopyDataLimits Bound
     | ExpandCollapse SubMenu
     | NaturalEarthFeature NaturalEarthFeature.Msg
@@ -312,6 +314,7 @@ init flags =
                 , origin = DataSource
                 }
             , palette = Palettes.fromString "Reds"
+            , palette_level = 3
             , palettes = Palettes.names
             , opacity = Opacity.opaque
             , collapsed =
@@ -803,6 +806,9 @@ update msg model =
 
         SetPalette palette ->
             ( { model | palette = palette }, Cmd.none )
+
+        SetPaletteLevels n ->
+            ( { model | palette_level = n }, Cmd.none )
 
 
 setLimits : Limits -> Model -> Model
@@ -1410,21 +1416,32 @@ type alias ColorbarSettings r =
         | limits : Limits
         , palettes : List String
         , palette : Palettes.Name
+        , palette_level : Int
     }
 
 
 viewColorbarMenu : ColorbarSettings r -> Html Msg
-viewColorbarMenu { limits, palettes, palette } =
+viewColorbarMenu { limits, palettes, palette, palette_level } =
+    let
+        levelToMsg =
+            SetPaletteLevels << Maybe.withDefault 1 << String.toInt
+
+        levels =
+            Palettes.levels
+    in
     div []
         [ Colorbar.view
             { title = "Title (placeholder)"
             , low = -10
             , high = 10
-            , palette = Palettes.toColors palette
+            , palette = Palettes.toColors palette_level palette
             }
 
         -- CONTROLS
-        , viewControls palettes (Palettes.toString palette) (SetPalette << Palettes.fromString)
+        , div []
+            [ viewLevels levels palette_level levelToMsg
+            , viewNames palettes (Palettes.toString palette) (SetPalette << Palettes.fromString)
+            ]
         , viewLimits limits
         ]
 
@@ -1433,9 +1450,38 @@ viewColorbarMenu { limits, palettes, palette } =
 -- COLORBAR CONTROLS
 
 
-viewControls : List String -> String -> (String -> Msg) -> Html Msg
-viewControls names name toMsg =
-    div []
+viewLevels : List Int -> Int -> (String -> Msg) -> Html Msg
+viewLevels levels level toMsg =
+    div [ style "display" "inline-block" ]
+        [ label
+            [ style "display" "block"
+            , style "font-size" "0.9em"
+            ]
+            [ text "Data levels:"
+            ]
+        , select
+            [ style "width" "100%"
+            , onSelect toMsg
+            ]
+            (List.map
+                (\n ->
+                    option
+                        [ selected (n == level)
+                        , value (String.fromInt n)
+                        ]
+                        [ text (String.fromInt n) ]
+                )
+                levels
+            )
+        ]
+
+
+viewNames : List String -> String -> (String -> Msg) -> Html Msg
+viewNames names name toMsg =
+    div
+        [ style "display" "inline-block"
+        , style "margin-left" "1em"
+        ]
         [ label
             [ style "display" "block"
             , style "font-size" "0.9em"
@@ -1444,6 +1490,7 @@ viewControls names name toMsg =
             ]
         , select
             [ onSelect toMsg
+            , style "width" "100%"
             ]
             (List.map
                 (\n ->
