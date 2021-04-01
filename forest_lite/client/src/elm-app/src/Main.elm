@@ -20,7 +20,8 @@ import Geometry
 import Helpers exposing (onSelect)
 import Html
     exposing
-        ( Html
+        ( Attribute
+        , Html
         , button
         , div
         , fieldset
@@ -30,6 +31,7 @@ import Html
         , input
         , label
         , li
+        , node
         , select
         , span
         , text
@@ -1155,16 +1157,6 @@ viewHome model =
     viewLayerMenu model
 
 
-viewLimits : Limits -> Html Msg
-viewLimits limits =
-    case limits.origin of
-        UserInput ->
-            viewUserLimits limits.user_input
-
-        DataSource ->
-            viewSourceLimits limits.data_source
-
-
 viewFollowCheckbox : LimitOrigin -> Html Msg
 viewFollowCheckbox origin =
     let
@@ -1317,7 +1309,7 @@ viewLayerMenu model =
                 , viewCollapse
                     { active = getCollapsed ColorbarMenu model.collapsed
                     , head = text "Colorbar settings"
-                    , body = viewLimits model.limits
+                    , body = viewColorbarMenu model.limits
                     , onClick = ExpandCollapse ColorbarMenu
                     }
                 ]
@@ -1397,6 +1389,80 @@ viewCollapse collapse =
             [ collapse.body
             ]
         ]
+
+
+viewColorbarMenu : Limits -> Html Msg
+viewColorbarMenu limits =
+    div []
+        [ bokehColorbar
+            [ attribute "title" "Title"
+            , attribute "low"
+                (Json.Encode.encode 0
+                    (Json.Encode.float -30)
+                )
+            , attribute "high"
+                (Json.Encode.encode 0
+                    (Json.Encode.float 30)
+                )
+            , attribute "palette"
+                (Json.Encode.encode 0
+                    (Json.Encode.list Json.Encode.string
+                        (List.reverse
+                            [ "#FF0000"
+                            , "#FF1111"
+                            , "#FF2222"
+                            , "#FF3333"
+                            , "#FF4444"
+                            , "#FF5555"
+                            , "#FF6666"
+                            , "#FF7777"
+                            , "#FF8888"
+                            , "#FF9999"
+                            , "#FFAAAA"
+                            , "#FFBBBB"
+                            , "#FFCCCC"
+                            , "#FFDDDD"
+                            , "#FFEEEE"
+                            , "#FFFFFF"
+                            , "#FFFFFF"
+                            , "#EEEEFF"
+                            , "#DDDDFF"
+                            , "#CCCCFF"
+                            , "#BBBBFF"
+                            , "#AAAAFF"
+                            , "#9999FF"
+                            , "#8888FF"
+                            , "#7777FF"
+                            , "#6666FF"
+                            , "#5555FF"
+                            , "#4444FF"
+                            , "#3333FF"
+                            , "#2222FF"
+                            , "#1111FF"
+                            , "#0000FF"
+                            ]
+                        )
+                    )
+                )
+            ]
+            []
+        , viewLimits limits
+        ]
+
+
+bokehColorbar : List (Attribute a) -> List (Html a) -> Html a
+bokehColorbar =
+    node "bk-colorbar"
+
+
+viewLimits : Limits -> Html Msg
+viewLimits limits =
+    case limits.origin of
+        UserInput ->
+            viewUserLimits limits.user_input
+
+        DataSource ->
+            viewSourceLimits limits.data_source
 
 
 viewDatasets : List Dataset -> Model -> Html Msg
