@@ -187,7 +187,7 @@ type alias Model =
     , coastlines_color : String
     , coastlines_width : Int
     , limits : Limits
-    , palette : PaletteName
+    , palette : Palettes.Name
     , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
@@ -253,7 +253,7 @@ type Msg
     | LowerBound String
     | UpperBound String
     | SetLimitOrigin Bool
-    | SetPalette PaletteName
+    | SetPalette Palettes.Name
     | CopyDataLimits Bound
     | ExpandCollapse SubMenu
     | NaturalEarthFeature NaturalEarthFeature.Msg
@@ -311,7 +311,7 @@ init flags =
                 , data_source = Undefined
                 , origin = DataSource
                 }
-            , palette = PaletteName "Reds"
+            , palette = Palettes.fromString "Reds"
             , palettes = Palettes.names
             , opacity = Opacity.opaque
             , collapsed =
@@ -1405,25 +1405,11 @@ viewCollapse collapse =
 -- NAMED PALETTE
 
 
-type PaletteName
-    = PaletteName String
-
-
-toColors : PaletteName -> List String
-toColors (PaletteName str) =
-    Maybe.withDefault [ "#000000", "#FFFFFF" ] (Palettes.get str)
-
-
-toName : PaletteName -> String
-toName (PaletteName name) =
-    name
-
-
 type alias ColorbarSettings r =
     { r
         | limits : Limits
         , palettes : List String
-        , palette : PaletteName
+        , palette : Palettes.Name
     }
 
 
@@ -1434,11 +1420,11 @@ viewColorbarMenu { limits, palettes, palette } =
             { title = "Title (placeholder)"
             , low = -10
             , high = 10
-            , palette = toColors palette
+            , palette = Palettes.toColors palette
             }
 
         -- CONTROLS
-        , viewControls palettes (toName palette) (SetPalette << PaletteName)
+        , viewControls palettes (Palettes.toString palette) (SetPalette << Palettes.fromString)
         , viewLimits limits
         ]
 
