@@ -1,10 +1,12 @@
-port module Main exposing (..)
+module Main exposing (..)
 
-import Action
+import Action exposing (Action(..))
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
 import Colorbar
+import Colorbar.Limits exposing (DataLimits(..), LimitOrigin(..), Limits)
+import Colorbar.Menu exposing (Config)
 import DataVar.Label exposing (Label)
 import DataVar.Select exposing (Select)
 import Dataset exposing (Dataset)
@@ -31,6 +33,7 @@ import Html
         , input
         , label
         , li
+        , option
         , select
         , span
         , text
@@ -44,6 +47,7 @@ import Html.Attributes
         , classList
         , for
         , id
+        , selected
         , style
         , value
         )
@@ -70,7 +74,9 @@ import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import NaturalEarthFeature.Action exposing (Action(..))
 import Opacity exposing (Opacity)
+import Palettes exposing (Palettes)
 import Point exposing (Point)
+import Ports exposing (receiveData, sendAction)
 import Quadkey exposing (Quadkey)
 import Request exposing (Request(..))
 import Scale exposing (Scale)
@@ -102,7 +108,7 @@ type alias User =
 
 type PortMessage
     = PortHash String
-    | PortAction Action
+    | PortAction Action.Action
 
 
 portDecoder : Decoder PortMessage
@@ -120,50 +126,7 @@ portPayloadDecoder label =
 
         _ ->
             Json.Decode.map PortAction
-                (Json.Decode.field "payload" actionDecoder)
-
-
-actionDecoder : Decoder Action
-actionDecoder =
-    Json.Decode.field "type" Json.Decode.string
-        |> Json.Decode.andThen actionPayloadDecoder
-
-
-actionPayloadDecoder : String -> Decoder Action
-actionPayloadDecoder label =
-    case label of
-        "SET_FIGURE" ->
-            Json.Decode.field "payload"
-                (Json.Decode.map4 SetFigure
-                    (Json.Decode.field "x_range"
-                        (Json.Decode.field "start" Json.Decode.float)
-                    )
-                    (Json.Decode.field "x_range"
-                        (Json.Decode.field "end" Json.Decode.float)
-                    )
-                    (Json.Decode.field "y_range"
-                        (Json.Decode.field "start" Json.Decode.float)
-                    )
-                    (Json.Decode.field "y_range"
-                        (Json.Decode.field "end" Json.Decode.float)
-                    )
-                )
-
-        "GET_HTTP_NATURAL_EARTH_FEATURE" ->
-            Json.Decode.field "payload"
-                (Json.Decode.map2 GetHttpNaturalEarthFeature
-                    (Json.Decode.field "feature" NaturalEarthFeature.decoder)
-                    (Json.Decode.field "quadkey" Quadkey.decoder)
-                )
-
-        _ ->
-            Json.Decode.field "payload"
-                (Json.Decode.map4 SetLimits
-                    (Json.Decode.field "low" Json.Decode.float)
-                    (Json.Decode.field "high" Json.Decode.float)
-                    (Json.Decode.field "path" (Json.Decode.index 0 Dataset.ID.decoder))
-                    (Json.Decode.field "path" (Json.Decode.index 1 DataVar.Label.decoder))
-                )
+                (Json.Decode.field "payload" Action.decoder)
 
 
 
@@ -183,31 +146,13 @@ type alias Model =
     , coastlines : Bool
     , coastlines_color : String
     , coastlines_width : Int
-    , limits : Limits
+    , limits : Colorbar.Limits.Limits
+    , palette : Palettes.Name
+    , palette_level : Int
+    , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
     }
-
-
-type alias Limits =
-    { user_input : TextLimits
-    , data_source : DataLimits
-    , origin : LimitOrigin
-    }
-
-
-type LimitOrigin
-    = UserInput
-    | DataSource
-
-
-type TextLimits
-    = TextLimits String String
-
-
-type DataLimits
-    = DataLimits Float Float
-    | Undefined
 
 
 type alias Axis =
@@ -245,12 +190,9 @@ type Msg
     | PointSelected String
     | HideShowLayer Bool
     | HideShowCoastlines Bool
-    | LowerBound String
-    | UpperBound String
-    | SetLimitOrigin Bool
-    | CopyDataLimits Bound
     | ExpandCollapse SubMenu
     | NaturalEarthFeature NaturalEarthFeature.Msg
+    | ColorbarMenuMsg Colorbar.Menu.Msg
     | SetOpacityMsg Opacity
 
 
@@ -259,11 +201,6 @@ type SubMenu
     | DimensionMenu
     | DisplayMenu
     | ColorbarMenu
-
-
-type Bound
-    = Upper
-    | Lower
 
 
 
@@ -300,11 +237,10 @@ init flags =
             , coastlines = True
             , coastlines_color = "black"
             , coastlines_width = 1
-            , limits =
-                { user_input = TextLimits "0" "1"
-                , data_source = Undefined
-                , origin = DataSource
-                }
+            , limits = Colorbar.Limits.init
+            , palette = Palettes.fromString "Reds"
+            , palette_level = 3
+            , palettes = Palettes.names
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
@@ -364,16 +300,6 @@ selectPointDecoder =
         SelectPoint
         (field "dim_name" Dimension.Label.decoder)
         (field "point" Datum.decoder)
-
-
-
--- PORTS
-
-
-port receiveData : (Json.Decode.Value -> msg) -> Sub msg
-
-
-port sendAction : String -> Cmd msg
 
 
 
@@ -476,7 +402,7 @@ update msg model =
 
                         cmd =
                             SetHttpNaturalEarthFeature feature box quadkey data
-                                |> encodeAction
+                                |> Action.encode
                                 |> sendAction
                     in
                     ( model, cmd )
@@ -491,7 +417,7 @@ update msg model =
 
                 cmd =
                     NaturalEarthFeatureAction subAction
-                        |> encodeAction
+                        |> Action.encode
                         |> sendAction
             in
             ( newModel, cmd )
@@ -530,7 +456,7 @@ update msg model =
                                                 ]
                                             , items = axis.data
                                             }
-                                            |> encodeAction
+                                            |> Action.encode
                                             |> sendAction
                                         ]
                                     )
@@ -551,7 +477,7 @@ update msg model =
                     let
                         actionCmd =
                             SetDatasets datasets
-                                |> encodeAction
+                                |> Action.encode
                                 |> sendAction
                     in
                     ( { model | datasets = Success datasets }
@@ -582,7 +508,7 @@ update msg model =
                     in
                     ( { model | datasetDescriptions = datasetDescriptions }
                     , SetDatasetDescription desc
-                        |> encodeAction
+                        |> Action.encode
                         |> sendAction
                     )
 
@@ -615,7 +541,7 @@ update msg model =
 
                                 actionCmd =
                                     SetOnlyActive only_active
-                                        |> encodeAction
+                                        |> Action.encode
                                         |> sendAction
                             in
                             ( { model | selected = Just selected }
@@ -662,7 +588,7 @@ update msg model =
 
                                 actionCmd =
                                     GoToItem { path = path, item = selectPoint.point }
-                                        |> encodeAction
+                                        |> Action.encode
                                         |> sendAction
                             in
                             ( updatePoint model selectPoint
@@ -680,98 +606,15 @@ update msg model =
         HideShowLayer visible ->
             ( { model | visible = visible }
             , SetVisible visible
-                |> encodeAction
+                |> Action.encode
                 |> sendAction
             )
 
         HideShowCoastlines check ->
             ( { model | coastlines = check }
             , SetFlag check
-                |> encodeAction
+                |> Action.encode
                 |> sendAction
-            )
-
-        LowerBound inputText ->
-            case model.limits.user_input of
-                TextLimits lower upper ->
-                    let
-                        origin =
-                            model.limits.origin
-
-                        user_input =
-                            TextLimits inputText upper
-
-                        cmds =
-                            limitsCmd origin user_input model.selected
-
-                        model_limits =
-                            model.limits
-                    in
-                    ( { model
-                        | limits =
-                            { model_limits
-                                | user_input =
-                                    user_input
-                            }
-                      }
-                    , cmds
-                    )
-
-        UpperBound inputText ->
-            case model.limits.user_input of
-                TextLimits lower upper ->
-                    let
-                        origin =
-                            model.limits.origin
-
-                        user_input =
-                            TextLimits lower inputText
-
-                        cmds =
-                            limitsCmd origin user_input model.selected
-
-                        model_limits =
-                            model.limits
-                    in
-                    ( { model
-                        | limits =
-                            { model_limits
-                                | user_input =
-                                    user_input
-                            }
-                      }
-                    , cmds
-                    )
-
-        SetLimitOrigin flag ->
-            let
-                model_limits =
-                    model.limits
-            in
-            if flag then
-                ( { model | limits = { model_limits | origin = DataSource } }
-                , setLimitOriginCmd DataSource model.limits model.selected
-                )
-
-            else
-                ( { model | limits = { model_limits | origin = UserInput } }
-                , setLimitOriginCmd UserInput model.limits model.selected
-                )
-
-        CopyDataLimits bound ->
-            let
-                user_input =
-                    setBound bound model.limits.data_source model.limits.user_input
-
-                cmds =
-                    limitsCmd UserInput user_input model.selected
-            in
-            ( model
-                |> setLimits
-                    (model.limits
-                        |> setUserInput user_input
-                    )
-            , cmds
             )
 
         ExpandCollapse menu ->
@@ -788,126 +631,24 @@ update msg model =
             let
                 cmd =
                     SetOpacityAction value
-                        |> encodeAction
+                        |> Action.encode
                         |> sendAction
             in
             ( { model | opacity = value }, cmd )
 
-
-setLimits : Limits -> Model -> Model
-setLimits limits model =
-    { model | limits = limits }
-
-
-setUserInput : TextLimits -> Limits -> Limits
-setUserInput user_input limits =
-    { limits | user_input = user_input }
-
-
-setBound : Bound -> DataLimits -> TextLimits -> TextLimits
-setBound bound data_limits (TextLimits user_low user_high) =
-    let
-        data_input =
-            toUserInput data_limits
-    in
-    case data_input of
-        TextLimits data_low data_high ->
-            case bound of
-                Upper ->
-                    TextLimits user_low data_high
-
-                Lower ->
-                    TextLimits data_low user_high
-
-
-setLimitOriginCmd : LimitOrigin -> Limits -> Maybe DataVar.Select.Select -> Cmd Msg
-setLimitOriginCmd origin limits maybe_select_data_var =
-    case origin of
-        DataSource ->
-            case limits.data_source of
-                Undefined ->
-                    Cmd.none
-
-                DataLimits lower upper ->
-                    case maybe_select_data_var of
-                        Nothing ->
-                            Cmd.none
-
-                        Just selected ->
-                            SetLimits lower upper selected.dataset_id selected.data_var
-                                |> encodeAction
-                                |> sendAction
-
-        UserInput ->
-            case toDataLimits limits.user_input of
-                Undefined ->
-                    Cmd.none
-
-                DataLimits lower upper ->
-                    case maybe_select_data_var of
-                        Nothing ->
-                            Cmd.none
-
-                        Just selected ->
-                            SetLimits lower upper selected.dataset_id selected.data_var
-                                |> encodeAction
-                                |> sendAction
-
-
-limitsCmd : LimitOrigin -> TextLimits -> Maybe DataVar.Select.Select -> Cmd Msg
-limitsCmd origin text_limits maybe_select_data_var =
-    case origin of
-        DataSource ->
-            Cmd.none
-
-        UserInput ->
-            case toDataLimits text_limits of
-                Undefined ->
-                    Cmd.none
-
-                DataLimits lower upper ->
-                    case maybe_select_data_var of
-                        Nothing ->
-                            Cmd.none
-
-                        Just selected ->
-                            SetLimits lower upper selected.dataset_id selected.data_var
-                                |> encodeAction
-                                |> sendAction
-
-
-toDataLimits : TextLimits -> DataLimits
-toDataLimits (TextLimits lowerText upperText) =
-    let
-        maybeLower =
-            String.toFloat lowerText
-
-        maybeUpper =
-            String.toFloat upperText
-    in
-    case ( maybeLower, maybeUpper ) of
-        ( Just lower, Just upper ) ->
-            DataLimits lower upper
-
-        _ ->
-            Undefined
-
-
-toUserInput : DataLimits -> TextLimits
-toUserInput data_source =
-    case data_source of
-        Undefined ->
-            TextLimits "0" "1"
-
-        DataLimits low high ->
-            TextLimits (String.fromFloat low) (String.fromFloat high)
+        ColorbarMenuMsg subMsg ->
+            let
+                ( newModel, newCmd ) =
+                    Colorbar.Menu.update subMsg model
+            in
+            ( newModel, Cmd.map ColorbarMenuMsg newCmd )
 
 
 
 -- Interpret Redux actions
 
 
-updateAction : Model -> Action -> ( Model, Cmd Msg )
+updateAction : Model -> Action.Action -> ( Model, Cmd Msg )
 updateAction model action =
     case action of
         SetFigure x_start x_end y_start y_end ->
@@ -937,7 +678,7 @@ updateAction model action =
 
                 cmd =
                     SetQuadkeys quadkeys
-                        |> encodeAction
+                        |> Action.encode
                         |> sendAction
             in
             ( model, cmd )
@@ -976,12 +717,12 @@ updateAction model action =
         _ ->
             ( model
             , action
-                |> encodeAction
+                |> Action.encode
                 |> sendAction
             )
 
 
-setLimitsCmds : LimitOrigin -> Action -> Cmd Msg
+setLimitsCmds : LimitOrigin -> Action.Action -> Cmd Msg
 setLimitsCmds origin action =
     case origin of
         UserInput ->
@@ -989,7 +730,7 @@ setLimitsCmds origin action =
 
         DataSource ->
             action
-                |> encodeAction
+                |> Action.encode
                 |> sendAction
 
 
@@ -1156,96 +897,6 @@ viewHome model =
     viewLayerMenu model
 
 
-viewFollowCheckbox : LimitOrigin -> Html Msg
-viewFollowCheckbox origin =
-    let
-        flag =
-            origin == DataSource
-    in
-    label [ style "display" "block" ]
-        [ input
-            [ attribute "type" "checkbox"
-            , checked flag
-            , onCheck SetLimitOrigin
-            ]
-            []
-        , text "Follow data limits"
-        ]
-
-
-viewSourceLimits : DataLimits -> Html Msg
-viewSourceLimits limits =
-    case limits of
-        DataLimits lower upper ->
-            div [ class "Limits__container" ]
-                [ div [ class "Limits__label" ] [ text "Lower limit:" ]
-                , div [] [ text (String.fromFloat lower) ]
-                , div [ class "Limits__section" ]
-                    [ div [ class "Limits__label" ]
-                        [ text "Upper limit:"
-                        ]
-                    , div [] [ text (String.fromFloat upper) ]
-                    ]
-                , viewFollowCheckbox DataSource
-                ]
-
-        Undefined ->
-            div [ class "Limits__container" ]
-                [ div [] [ text "Data extent not available" ]
-                ]
-
-
-viewUserLimits : TextLimits -> Html Msg
-viewUserLimits (TextLimits lower upper) =
-    div []
-        [ div [ class "Limits__input" ]
-            [ label [ class "Limits__label" ] [ text "Low:" ]
-            , input [ value lower, onInput LowerBound ] []
-            , viewCopyDataButton (CopyDataLimits Lower)
-            , viewBoundWarning lower
-            ]
-        , div [ class "Limits__input" ]
-            [ label [ class "Limits__label" ] [ text "High:" ]
-            , input [ value upper, onInput UpperBound ] []
-            , viewCopyDataButton (CopyDataLimits Upper)
-            , viewBoundWarning upper
-            ]
-        , viewLimitsWarning (TextLimits lower upper)
-        , viewFollowCheckbox UserInput
-        ]
-
-
-viewCopyDataButton : Msg -> Html Msg
-viewCopyDataButton tagger =
-    button [ onClick tagger ]
-        [ i [ class "far fa-chart-bar" ] []
-        ]
-
-
-viewLimitsWarning : TextLimits -> Html Msg
-viewLimitsWarning limits =
-    case toDataLimits limits of
-        DataLimits lower upper ->
-            if lower >= upper then
-                div [ class "Limits__warning" ] [ text "high must be greater than low" ]
-
-            else
-                text ""
-
-        Undefined ->
-            text ""
-
-
-viewBoundWarning : String -> Html Msg
-viewBoundWarning bound =
-    case String.toFloat bound of
-        Just value ->
-            text ""
-
-        Nothing ->
-            div [ class "Limits__warning" ] [ text "please enter a valid number" ]
-
-
 viewLayerMenu : Model -> Html Msg
 viewLayerMenu model =
     case model.datasets of
@@ -1308,7 +959,7 @@ viewLayerMenu model =
                 , viewCollapse
                     { active = getCollapsed ColorbarMenu model.collapsed
                     , head = text "Colorbar settings"
-                    , body = viewColorbarMenu model.limits
+                    , body = Html.map ColorbarMenuMsg (Colorbar.Menu.view model)
                     , onClick = ExpandCollapse ColorbarMenu
                     }
                 ]
@@ -1388,43 +1039,6 @@ viewCollapse collapse =
             [ collapse.body
             ]
         ]
-
-
-viewColorbarMenu : Limits -> Html Msg
-viewColorbarMenu limits =
-    div []
-        [ Colorbar.view
-            { title = "Title (placeholder)"
-            , low = -10
-            , high = 10
-            , palette =
-                List.reverse
-                    [ "#FF0000"
-                    , "#FF4444"
-                    , "#FF8888"
-                    , "#FFCCCC"
-                    , "#FFEEEE"
-                    , "#FFFFFF"
-                    , "#FFFFFF"
-                    , "#EEEEFF"
-                    , "#CCCCFF"
-                    , "#8888FF"
-                    , "#4444FF"
-                    , "#0000FF"
-                    ]
-            }
-        , viewLimits limits
-        ]
-
-
-viewLimits : Limits -> Html Msg
-viewLimits limits =
-    case limits.origin of
-        UserInput ->
-            viewUserLimits limits.user_input
-
-        DataSource ->
-            viewSourceLimits limits.data_source
 
 
 viewDatasets : List Dataset -> Model -> Html Msg
@@ -1634,180 +1248,6 @@ viewInputNumber toMsg n =
             , style "cursor" "pointer"
             ]
             [ text "Choose coastline width" ]
-        ]
-
-
-
--- ACTIONS (React-Redux JS interop)
--- JSON encoders to simulate action creators, only needed while migrating
-
-
-type Action
-    = SetDatasets (List Dataset)
-    | SetDatasetDescription Dataset.Description.Description
-    | SetOnlyActive OnlyActive
-    | SetItems Items
-    | GoToItem Item
-    | SetVisible Bool
-    | SetOpacityAction Opacity
-    | SetFlag Bool
-    | SetLimits Float Float Dataset.ID.ID DataVar.Label.Label
-    | SetQuadkeys (List Quadkey)
-    | SetFigure Float Float Float Float
-    | GetHttpNaturalEarthFeature NaturalEarthFeature Quadkey
-    | SetHttpNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey MultiLine
-    | NaturalEarthFeatureAction NaturalEarthFeature.Action.Action
-
-
-type alias OnlyActive =
-    { dataset : Dataset.Label.Label, data_var : String }
-
-
-type alias Items =
-    { path : List String, items : List Datum }
-
-
-type alias Item =
-    { path : List String, item : Datum }
-
-
-encodeAction : Action -> String
-encodeAction action =
-    case action of
-        SetFigure x_start x_end y_start y_end ->
-            Action.toString "SET_FIGURE"
-                (Json.Encode.object
-                    [ ( "x_range"
-                      , Json.Encode.object
-                            [ ( "start", Json.Encode.float x_start )
-                            , ( "end", Json.Encode.float x_end )
-                            ]
-                      )
-                    , ( "y_range"
-                      , Json.Encode.object
-                            [ ( "start", Json.Encode.float y_start )
-                            , ( "end", Json.Encode.float y_end )
-                            ]
-                      )
-                    ]
-                )
-
-        SetHttpNaturalEarthFeature feature box quadkey data ->
-            Action.toString "SET_HTTP_NATURAL_EARTH_FEATURE"
-                (Json.Encode.object
-                    [ ( "feature", NaturalEarthFeature.encode feature )
-                    , ( "data", MultiLine.encode data )
-                    , ( "bounding_box", BoundingBox.encode box )
-                    , ( "quadkey", Quadkey.encode quadkey )
-                    ]
-                )
-
-        GetHttpNaturalEarthFeature feature quadkey ->
-            Action.toString "GET_HTTP_NATURAL_EARTH_FEATURE"
-                (Json.Encode.object
-                    [ ( "feature", NaturalEarthFeature.encode feature )
-                    , ( "quadkey", Quadkey.encode quadkey )
-                    ]
-                )
-
-        SetQuadkeys quadkeys ->
-            Action.toString "SET_QUADKEYS"
-                (Json.Encode.list Quadkey.encode quadkeys)
-
-        SetDatasets datasets ->
-            Action.toString "SET_DATASETS"
-                (Json.Encode.list encodeDataset datasets)
-
-        SetDatasetDescription payload ->
-            Action.toString "SET_DATASET_DESCRIPTION"
-                (Dataset.Description.encode payload)
-
-        SetOnlyActive active ->
-            Action.toString "SET_ONLY_ACTIVE"
-                (encodeOnlyActive active)
-
-        SetItems items ->
-            Action.toString "SET_ITEMS"
-                (encodeItems items)
-
-        GoToItem item ->
-            Action.toString "GOTO_ITEM"
-                (encodeItem item)
-
-        SetVisible flag ->
-            Action.toString "SET_VISIBLE"
-                (Json.Encode.bool flag)
-
-        SetOpacityAction opacity ->
-            Action.toString "SET_OPACITY"
-                (Opacity.encode opacity)
-
-        SetFlag flag ->
-            Action.toString "SET_FLAG"
-                (Json.Encode.object
-                    [ ( "coastlines", Json.Encode.bool flag )
-                    ]
-                )
-
-        SetLimits lower upper dataset_id datavar ->
-            Action.toString "SET_LIMITS"
-                (Json.Encode.object
-                    [ ( "high", Json.Encode.float upper )
-                    , ( "low", Json.Encode.float lower )
-                    , ( "path", encodeLimitPath dataset_id datavar )
-                    ]
-                )
-
-        NaturalEarthFeatureAction subAction ->
-            let
-                payload =
-                    NaturalEarthFeature.Action.payload subAction
-
-                key =
-                    NaturalEarthFeature.Action.key subAction
-            in
-            Action.toString key payload
-
-
-encodeLimitPath : Dataset.ID.ID -> DataVar.Label.Label -> Json.Encode.Value
-encodeLimitPath dataset_id data_var =
-    Json.Encode.list identity
-        [ Dataset.ID.encode dataset_id
-        , DataVar.Label.encode data_var
-        ]
-
-
-encodeDataset : Dataset -> Json.Encode.Value
-encodeDataset dataset =
-    Json.Encode.object
-        [ ( "id", Dataset.ID.encode dataset.id )
-        , ( "driver", Json.Encode.string dataset.driver )
-        , ( "label", Dataset.Label.encode dataset.label )
-        , ( "view", Json.Encode.string dataset.view )
-        ]
-
-
-encodeOnlyActive : OnlyActive -> Json.Encode.Value
-encodeOnlyActive only_active =
-    Json.Encode.object
-        [ ( "dataset", Dataset.Label.encode only_active.dataset )
-        , ( "data_var", Json.Encode.string only_active.data_var )
-        ]
-
-
-encodeItems : Items -> Json.Encode.Value
-encodeItems items =
-    Json.Encode.object
-        [ ( "path", Json.Encode.list Json.Encode.string items.path )
-        , ( "items", Json.Encode.list Datum.encode items.items )
-        ]
-
-
-encodeItem : Item -> Json.Encode.Value
-encodeItem item =
-    Json.Encode.object
-        [ ( "path", Json.Encode.list Json.Encode.string item.path )
-        , ( "item", Datum.encode item.item )
         ]
 
 
