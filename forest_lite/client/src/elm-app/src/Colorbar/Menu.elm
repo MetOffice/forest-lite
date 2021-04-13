@@ -1,48 +1,51 @@
-module Colorbar.Menu exposing (Config, Msg, update, view)
+module Colorbar.Menu exposing (Model, Msg, update, view)
 
 import Colorbar
 import Colorbar.Limits exposing (Limits)
+import DataVar.Select exposing (Select)
 import Helpers exposing (onSelect)
-import Html exposing (Html, div, label, option, select, text)
+import Html exposing (Html, div, h1, label, option, select, text)
 import Html.Attributes exposing (selected, style, value)
-import Palettes exposing (Palettes)
+import Palettes exposing (Level, Palettes)
 
 
-type alias Config a =
+
+-- MODEL
+
+
+type alias Model a =
     { a
-        | limits : Limits
-        , palettes : List String
+        | palette_level : Palettes.Level
+        , palette_kind : Palettes.Kind
         , palette : Palettes.Name
-        , palette_level : Int
+        , palettes : List String
+        , limits : Colorbar.Limits.Limits
+        , selected : Maybe DataVar.Select.Select
     }
+
+
+type Msg
+    = SetPalette Palettes.Name
+    | SetPaletteLevels Palettes.Level
+    | SetKind Palettes.Kind
+    | ColorbarLimitsMsg Colorbar.Limits.Msg
 
 
 
 -- UPDATE
 
 
-type alias Model a =
-    Colorbar.Limits.Model
-        { a
-            | palette_level : Int
-            , palette : Palettes.Name
-        }
-
-
-type Msg
-    = SetPalette Palettes.Name
-    | SetPaletteLevels Int
-    | ColorbarLimitsMsg Colorbar.Limits.Msg
-
-
 update : Msg -> Model a -> ( Model a, Cmd Msg )
 update msg model =
     case msg of
+        SetKind kind ->
+            ( model, Cmd.none )
+
         SetPalette palette ->
             ( { model | palette = palette }, Cmd.none )
 
-        SetPaletteLevels n ->
-            ( { model | palette_level = n }, Cmd.none )
+        SetPaletteLevels palette_level ->
+            ( { model | palette_level = palette_level }, Cmd.none )
 
         ColorbarLimitsMsg subMsg ->
             let
@@ -56,23 +59,29 @@ update msg model =
 -- VIEW
 
 
-view : Config a -> Html Msg
-view { limits, palettes, palette, palette_level } =
+view : Model a -> Html Msg
+view model =
     let
+        kind =
+            model.palette_kind
+
         level =
-            palette_level
+            model.palette_level
 
         levels =
             Palettes.levels
 
         levelToMsg =
-            SetPaletteLevels << Maybe.withDefault 1 << String.toInt
+            SetPaletteLevels
+                << Palettes.levelFromInt
+                << Maybe.withDefault 1
+                << String.toInt
 
         name =
-            Palettes.toString palette
+            Palettes.toString model.palette
 
         names =
-            palettes
+            model.palettes
 
         nameToMsg =
             SetPalette << Palettes.fromString
@@ -82,24 +91,73 @@ view { limits, palettes, palette, palette_level } =
             { title = "Title (placeholder)"
             , low = -10
             , high = 10
-            , palette = Palettes.toColors palette_level palette
+            , palette = Palettes.toColors model.palette_level model.palette
             }
 
         -- CONTROLS
-        , div []
+        , div
+            [ style "display" "grid"
+            ]
             [ viewLevels levels level levelToMsg
+            , viewKinds kind
             , viewNames names name nameToMsg
             ]
-        , Html.map ColorbarLimitsMsg (Colorbar.Limits.view limits)
+        , Html.map ColorbarLimitsMsg (Colorbar.Limits.view model.limits)
+        ]
+
+
+type alias SelectConfig =
+    { labelText : String
+    , name : String
+    , names : List String
+    , toMsg : String -> Msg
+    }
+
+
+viewKinds : Palettes.Kind -> Html Msg
+viewKinds kind =
+    viewSelect
+        { labelText = "Kind:"
+        , name = "Diverging"
+        , names = [ "Sequential", "Diverging", "Categorical" ]
+        , toMsg =
+            SetKind
+                << Maybe.withDefault Palettes.sequential
+                << Palettes.kindFromString
+        }
+
+
+viewSelect : SelectConfig -> Html Msg
+viewSelect { labelText, name, names, toMsg } =
+    div
+        []
+        [ label
+            [ style "display" "block"
+            , style "font-size" "0.9em"
+            ]
+            [ text labelText
+            ]
+        , select
+            [ onSelect toMsg
+            , style "width" "100%"
+            ]
+            (List.map
+                (\n ->
+                    option
+                        [ selected (n == name)
+                        ]
+                        [ text n
+                        ]
+                )
+                names
+            )
         ]
 
 
 viewNames : List String -> String -> (String -> Msg) -> Html Msg
 viewNames names name toMsg =
     div
-        [ style "display" "inline-block"
-        , style "margin-left" "1em"
-        ]
+        []
         [ label
             [ style "display" "block"
             , style "font-size" "0.9em"
@@ -122,9 +180,9 @@ viewNames names name toMsg =
         ]
 
 
-viewLevels : List Int -> Int -> (String -> Msg) -> Html Msg
+viewLevels : List Level -> Level -> (String -> Msg) -> Html Msg
 viewLevels levels level toMsg =
-    div [ style "display" "inline-block" ]
+    div []
         [ label
             [ style "display" "block"
             , style "font-size" "0.9em"
@@ -139,9 +197,9 @@ viewLevels levels level toMsg =
                 (\n ->
                     option
                         [ selected (n == level)
-                        , value (String.fromInt n)
+                        , value (Palettes.levelToString n)
                         ]
-                        [ text (String.fromInt n) ]
+                        [ text (Palettes.levelToString n) ]
                 )
                 levels
             )

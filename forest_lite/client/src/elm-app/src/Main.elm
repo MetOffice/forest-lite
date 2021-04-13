@@ -6,7 +6,7 @@ import BoundingBox exposing (BoundingBox)
 import Browser
 import Colorbar
 import Colorbar.Limits exposing (DataLimits(..), LimitOrigin(..), Limits)
-import Colorbar.Menu exposing (Config)
+import Colorbar.Menu
 import DataVar.Label exposing (Label)
 import DataVar.Select exposing (Select)
 import Dataset exposing (Dataset)
@@ -148,7 +148,8 @@ type alias Model =
     , coastlines_width : Int
     , limits : Colorbar.Limits.Limits
     , palette : Palettes.Name
-    , palette_level : Int
+    , palette_level : Palettes.Level
+    , palette_kind : Palettes.Kind
     , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
@@ -239,7 +240,8 @@ init flags =
             , coastlines_width = 1
             , limits = Colorbar.Limits.init
             , palette = Palettes.fromString "Reds"
-            , palette_level = 3
+            , palette_level = Palettes.levelFromInt 3
+            , palette_kind = Palettes.sequential
             , palettes = Palettes.names
             , opacity = Opacity.opaque
             , collapsed =
