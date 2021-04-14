@@ -11,3 +11,4 @@ typer
 proj>=7.1.0
 pyproj>=2.6
 nodejs>=14.11.0
+graphene
