@@ -19,11 +19,11 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
-rank : SelectionSet (Maybe Int) Api.Object.Palette
+rank : SelectionSet Int Api.Object.Palette
 rank =
-    Object.selectionForField "(Maybe Int)" "rank" [] (Decode.int |> Decode.nullable)
+    Object.selectionForField "Int" "rank" [] Decode.int
 
 
-rgbs : SelectionSet (Maybe (List (Maybe String))) Api.Object.Palette
+rgbs : SelectionSet (List String) Api.Object.Palette
 rgbs =
-    Object.selectionForField "(Maybe (List (Maybe String)))" "rgbs" [] (Decode.string |> Decode.nullable |> Decode.list |> Decode.nullable)
+    Object.selectionForField "(List String)" "rgbs" [] (Decode.string |> Decode.list)

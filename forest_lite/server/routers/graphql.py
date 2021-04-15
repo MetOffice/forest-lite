@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 from starlette.graphql import GraphQLApp
 import graphene
-from graphene import Field, List, String, Int
+from graphene import Field, List, String, Int, NonNull
 import pkg_resources
 from functools import lru_cache
 import json
@@ -21,8 +21,8 @@ def load(file_name):
 
 class Palette(graphene.ObjectType):
     """A fixed number of colors related to a scheme"""
-    rank = Int()
-    rgbs = List(String)
+    rank = NonNull(Int)
+    rgbs = NonNull(List(NonNull(String)))
 
 
 class Kind(graphene.Enum):
