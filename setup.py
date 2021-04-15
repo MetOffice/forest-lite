@@ -82,6 +82,9 @@ setuptools.setup(
     package_data={
         "forest_lite.client": [
             "static/*",
+        ],
+        "forest_lite.server.routers": [
+            "data/*"
         ]
     },
 )
