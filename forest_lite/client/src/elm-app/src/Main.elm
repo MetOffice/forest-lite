@@ -1,6 +1,9 @@
 module Main exposing (..)
 
 import Action exposing (Action(..))
+import Api.Object exposing (ColorScheme)
+import Api.Object.ColorScheme
+import Api.Query as Query
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
@@ -20,6 +23,9 @@ import Dimension.Kind exposing (Kind(..))
 import Dimension.Label exposing (Label)
 import Endpoint
 import Geometry
+import Graphql.Http
+import Graphql.Operation exposing (RootQuery)
+import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Helpers exposing (onSelect)
 import Html
     exposing
@@ -130,6 +136,42 @@ portPayloadDecoder label =
 
 
 
+-- GRAPHQL API
+
+
+type alias Scheme =
+    { name : String
+    }
+
+
+type alias Response =
+    List Scheme
+
+
+responseToString : Response -> String
+responseToString response =
+    String.join "  " (List.map .name response)
+
+
+query : SelectionSet Response RootQuery
+query =
+    Query.colorSchemes identity colorSchemeSelection
+
+
+colorSchemeSelection : SelectionSet Scheme Api.Object.ColorScheme
+colorSchemeSelection =
+    SelectionSet.map Scheme
+        Api.Object.ColorScheme.name
+
+
+graphqlRequest : String -> Cmd Msg
+graphqlRequest baseURL =
+    query
+        |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
+        |> Graphql.Http.send GotResponse
+
+
+
 -- MODEL
 
 
@@ -152,6 +194,7 @@ type alias Model =
     , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
+    , schemes : List Scheme
     }
 
 
@@ -186,6 +229,7 @@ type Msg
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription Dataset.ID.ID (Result Http.Error Dataset.Description.Description)
     | GotAxis Dataset.ID.ID (Result Http.Error Axis)
+    | GotResponse (Result (Graphql.Http.Error Response) Response)
     | DataVarSelected String
     | PointSelected String
     | HideShowLayer Bool
@@ -244,6 +288,7 @@ init flags =
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
+            , schemes = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -255,6 +300,7 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
+                        , graphqlRequest baseURL
                         ]
             in
             case settings.claim of
@@ -643,6 +689,14 @@ update msg model =
             in
             ( newModel, Cmd.map ColorbarMenuMsg newCmd )
 
+        GotResponse result ->
+            case result of
+                Ok schemes ->
+                    ( { model | schemes = schemes }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 
 -- Interpret Redux actions
@@ -902,8 +956,10 @@ viewLayerMenu model =
     case model.datasets of
         Success datasets ->
             div []
+                [ div [] (List.map (\s -> div [] [ text s.name ]) model.schemes)
+
                 -- Select collection
-                [ viewCollapse
+                , viewCollapse
                     { active = getCollapsed DatasetMenu model.collapsed
                     , head = text "Forecast/Observations"
                     , body = viewDatasets datasets model
