@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Action exposing (Action(..))
+import Api.Enum.Kind
 import Api.Object exposing (ColorScheme)
 import Api.Object.ColorScheme
 import Api.Query as Query
@@ -141,16 +142,12 @@ portPayloadDecoder label =
 
 type alias Scheme =
     { name : String
+    , kind : Maybe Api.Enum.Kind.Kind
     }
 
 
 type alias Response =
     List Scheme
-
-
-responseToString : Response -> String
-responseToString response =
-    String.join "  " (List.map .name response)
 
 
 query : SelectionSet Response RootQuery
@@ -160,8 +157,9 @@ query =
 
 colorSchemeSelection : SelectionSet Scheme Api.Object.ColorScheme
 colorSchemeSelection =
-    SelectionSet.map Scheme
+    SelectionSet.map2 Scheme
         Api.Object.ColorScheme.name
+        Api.Object.ColorScheme.kind
 
 
 graphqlRequest : String -> Cmd Msg
@@ -951,12 +949,23 @@ viewHome model =
     viewLayerMenu model
 
 
+viewScheme : Scheme -> Html Msg
+viewScheme scheme =
+    let
+        kind =
+            scheme.kind
+                |> Maybe.map Api.Enum.Kind.toString
+                |> Maybe.withDefault "???"
+    in
+    div [] [ text (scheme.name ++ "  --  " ++ kind) ]
+
+
 viewLayerMenu : Model -> Html Msg
 viewLayerMenu model =
     case model.datasets of
         Success datasets ->
             div []
-                [ div [] (List.map (\s -> div [] [ text s.name ]) model.schemes)
+                [ div [] (List.map viewScheme model.schemes)
 
                 -- Select collection
                 , viewCollapse
