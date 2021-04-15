@@ -53,7 +53,10 @@ class ColorScheme(graphene.ObjectType):
 
 
 def parse_kind(key):
-    """Extract kind from colorbrewer.json"""
+    """Extract kind from colorbrewer.json
+
+    .. note:: This can be None if key is not seq, div or qual
+    """
     if key == "seq":
         return Kind.SEQUENTIAL
     elif key == "div":
@@ -71,7 +74,7 @@ def parse_palettes(data):
 class Query(graphene.ObjectType):
     """Root query for the /graphql endpoint"""
 
-    color_schemes = Field(List(ColorScheme),
+    color_schemes = Field(NonNull(List(NonNull(ColorScheme))),
                           kind=Kind(),
                           rank=Int(),
                           name=String())
