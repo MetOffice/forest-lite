@@ -20,9 +20,9 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
-name : SelectionSet (Maybe String) Api.Object.ColorScheme
+name : SelectionSet String Api.Object.ColorScheme
 name =
-    Object.selectionForField "(Maybe String)" "name" [] (Decode.string |> Decode.nullable)
+    Object.selectionForField "String" "name" [] Decode.string
 
 
 kind : SelectionSet (Maybe Api.Enum.Kind.Kind) Api.Object.ColorScheme
@@ -37,7 +37,7 @@ type alias PalettesOptionalArguments =
 palettes :
     (PalettesOptionalArguments -> PalettesOptionalArguments)
     -> SelectionSet decodesTo Api.Object.Palette
-    -> SelectionSet (Maybe (List (Maybe decodesTo))) Api.Object.ColorScheme
+    -> SelectionSet (List decodesTo) Api.Object.ColorScheme
 palettes fillInOptionals____ object____ =
     let
         filledInOptionals____ =
@@ -47,4 +47,4 @@ palettes fillInOptionals____ object____ =
             [ Argument.optional "rank" filledInOptionals____.rank Encode.int ]
                 |> List.filterMap identity
     in
-    Object.selectionForCompositeField "palettes" optionalArgs____ object____ (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
+    Object.selectionForCompositeField "palettes" optionalArgs____ object____ (identity >> Decode.list)

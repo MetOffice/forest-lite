@@ -40,9 +40,9 @@ class ColorScheme(graphene.ObjectType):
     color scheme contains palettes of various ranks that share a consistent
     look and feel.
     """
-    name = String()
+    name = NonNull(String)
     kind = Kind()
-    palettes = Field(List(Palette), rank=Int())
+    palettes = Field(NonNull(List(NonNull(Palette))), rank=Int())
 
     def resolve_palettes(root, info, rank=None):
         if rank is None:
