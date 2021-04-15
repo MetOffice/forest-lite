@@ -1,13 +1,10 @@
 module Colorbrewer exposing
     ( Color
-    , all
     , diverging
     , multihue
     , qualitative
     , rgb255
     , singlehue
-    , spectral
-    , toColors
     , toHex
     , toRGB
     )
@@ -99,34 +96,11 @@ toSymbol n =
             ""
 
 
-toColors : Palette -> List Color
-toColors palette =
-    case palette of
-        MultiHue tag ->
-            toMultihueColors tag
-
-        Diverging tag n ->
-            toDivergingColors tag n
-
-        _ ->
-            []
-
-
-spectral : Int -> Palette
-spectral n =
-    Diverging Spectral n
-
-
 type Palette
     = MultiHue MultiHue
     | SingleHue SingleHue
     | Qualitative Qualitative
     | Diverging Diverging Int
-
-
-all : List Palette
-all =
-    singlehue ++ multihue ++ diverging 3 ++ qualitative
 
 
 type MultiHue
@@ -162,19 +136,6 @@ multihue =
         , YlOrBu
         , YlOrBr
         ]
-
-
-toMultihueColors : MultiHue -> List Color
-toMultihueColors tag =
-    case tag of
-        YlGn ->
-            [ rgb255 247 252 185
-            , rgb255 173 221 142
-            , rgb255 49 163 84
-            ]
-
-        _ ->
-            []
 
 
 type SingleHue
@@ -223,48 +184,6 @@ diverging n =
         , RdGy
         , Spectral
         ]
-
-
-toDivergingColors : Diverging -> Int -> List Color
-toDivergingColors tag n =
-    case tag of
-        Spectral ->
-            case n of
-                6 ->
-                    [ rgb255 213 62 79
-                    , rgb255 252 141 89
-                    , rgb255 254 224 139
-                    , rgb255 230 245 152
-                    , rgb255 153 213 148
-                    , rgb255 50 136 189
-                    ]
-
-                5 ->
-                    [ rgb255 215 25 28
-                    , rgb255 253 174 97
-                    , rgb255 255 255 191
-                    , rgb255 171 217 233
-                    , rgb255 44 123 182
-                    ]
-
-                4 ->
-                    [ rgb255 215 25 28
-                    , rgb255 253 174 97
-                    , rgb255 171 221 164
-                    , rgb255 43 131 186
-                    ]
-
-                3 ->
-                    [ rgb255 252 141 89
-                    , rgb255 255 255 191
-                    , rgb255 153 213 148
-                    ]
-
-                _ ->
-                    []
-
-        _ ->
-            []
 
 
 type Qualitative
