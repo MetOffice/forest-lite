@@ -1,11 +1,17 @@
 module Palettes exposing
-    ( Name
+    ( Kind
+    , Level
+    , Name
     , Palettes
     , continuous
     , fromString
     , get
+    , kindFromString
+    , levelFromInt
+    , levelToString
     , levels
     , names
+    , sequential
     , toColors
     , toString
     )
@@ -21,17 +27,68 @@ type alias Palettes =
     List ( String, List String )
 
 
+type Palette
+    = Predefined Kind Level
+    | Bespoke (List String)
+
+
+type Kind
+    = Sequential Hue
+    | Diverging
+    | Qualitative
+
+
+sequential : Kind
+sequential =
+    Sequential Single
+
+
+kindFromString : String -> Maybe Kind
+kindFromString str =
+    case String.toLower str of
+        "sequential" ->
+            Just (Sequential Single)
+
+        "diverging" ->
+            Just Diverging
+
+        "qualitative" ->
+            Just Qualitative
+
+        _ ->
+            Nothing
+
+
+type Hue
+    = Multi
+    | Single
+
+
+type Level
+    = Level Int
+
+
+levelFromInt : Int -> Level
+levelFromInt =
+    Level
+
+
+levelToString : Level -> String
+levelToString (Level n) =
+    String.fromInt n
+
+
 
 -- TODO implement a full solution
 
 
-toColors : Int -> Name -> List String
-toColors level (Name str) =
+toColors : Level -> Name -> List String
+toColors (Level n) (Name str) =
     let
         colors =
             Maybe.withDefault [ "#000000", "#FFFFFF" ] (get str)
     in
-    if level == 5 then
+    if n == 5 then
         List.reverse colors
 
     else
@@ -60,9 +117,9 @@ get name =
     Dict.get name (Dict.fromList continuous)
 
 
-levels : List Int
+levels : List Level
 levels =
-    [ 3, 5, 6 ]
+    List.map Level [ 3, 5, 6 ]
 
 
 continuous : Palettes
