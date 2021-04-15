@@ -30,7 +30,7 @@ type alias ColorSchemesOptionalArguments =
 colorSchemes :
     (ColorSchemesOptionalArguments -> ColorSchemesOptionalArguments)
     -> SelectionSet decodesTo Api.Object.ColorScheme
-    -> SelectionSet (Maybe (List (Maybe decodesTo))) RootQuery
+    -> SelectionSet (List decodesTo) RootQuery
 colorSchemes fillInOptionals____ object____ =
     let
         filledInOptionals____ =
@@ -40,4 +40,4 @@ colorSchemes fillInOptionals____ object____ =
             [ Argument.optional "kind" filledInOptionals____.kind (Encode.enum Api.Enum.Kind.toString), Argument.optional "rank" filledInOptionals____.rank Encode.int, Argument.optional "name" filledInOptionals____.name Encode.string ]
                 |> List.filterMap identity
     in
-    Object.selectionForCompositeField "colorSchemes" optionalArgs____ object____ (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
+    Object.selectionForCompositeField "colorSchemes" optionalArgs____ object____ (identity >> Decode.list)

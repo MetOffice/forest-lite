@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 from starlette.graphql import GraphQLApp
 import graphene
-from graphene import Field, List, String, Int
+from graphene import Field, List, String, Int, NonNull
 import pkg_resources
 from functools import lru_cache
 import json
@@ -21,8 +21,8 @@ def load(file_name):
 
 class Palette(graphene.ObjectType):
     """A fixed number of colors related to a scheme"""
-    rank = Int()
-    rgbs = List(String)
+    rank = NonNull(Int)
+    rgbs = NonNull(List(NonNull(String)))
 
 
 class Kind(graphene.Enum):
@@ -40,9 +40,9 @@ class ColorScheme(graphene.ObjectType):
     color scheme contains palettes of various ranks that share a consistent
     look and feel.
     """
-    name = String()
+    name = NonNull(String)
     kind = Kind()
-    palettes = Field(List(Palette), rank=Int())
+    palettes = Field(NonNull(List(NonNull(Palette))), rank=Int())
 
     def resolve_palettes(root, info, rank=None):
         if rank is None:
@@ -53,7 +53,10 @@ class ColorScheme(graphene.ObjectType):
 
 
 def parse_kind(key):
-    """Extract kind from colorbrewer.json"""
+    """Extract kind from colorbrewer.json
+
+    .. note:: This can be None if key is not seq, div or qual
+    """
     if key == "seq":
         return Kind.SEQUENTIAL
     elif key == "div":
@@ -71,7 +74,7 @@ def parse_palettes(data):
 class Query(graphene.ObjectType):
     """Root query for the /graphql endpoint"""
 
-    color_schemes = Field(List(ColorScheme),
+    color_schemes = Field(NonNull(List(NonNull(ColorScheme))),
                           kind=Kind(),
                           rank=Int(),
                           name=String())

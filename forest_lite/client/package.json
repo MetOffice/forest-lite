@@ -4,6 +4,7 @@
   "description": "Minimal implementation of FOREST",
   "private": true,
   "scripts": {
+    "api": "elm-graphql http://localhost:8000/graphql --output src/elm-app/src",
     "test": "jest",
     "watch": "jest --watch",
     "build": "webpack --config webpack.prod.js",
