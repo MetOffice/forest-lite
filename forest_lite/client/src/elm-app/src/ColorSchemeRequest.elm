@@ -6,10 +6,11 @@ module ColorSchemeRequest exposing (..)
 import Api.Enum.Kind
 import Api.Object exposing (ColorScheme)
 import Api.Object.ColorScheme
-import Api.Query as Query
+import Api.Object.Palette
+import Api.Query
 import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
-import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
+import Graphql.SelectionSet exposing (SelectionSet)
 
 
 {-| Subset of ColorScheme GraphQL endpoint type
@@ -17,16 +18,33 @@ import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 type alias ColorScheme =
     { name : String
     , kind : Maybe Api.Enum.Kind.Kind
+    , palettes : List Palette
+    }
+
+
+{-| Subset of Palette GraphQL endpoint type
+-}
+type alias Palette =
+    { rank : Int
+    , rgbs : List String
     }
 
 
 query : SelectionSet (List ColorScheme) RootQuery
 query =
-    Query.colorSchemes identity colorSchemeSelection
+    Api.Query.colorSchemes identity colorSchemeSelection
 
 
 colorSchemeSelection : SelectionSet ColorScheme Api.Object.ColorScheme
 colorSchemeSelection =
-    SelectionSet.map2 ColorScheme
+    Graphql.SelectionSet.map3 ColorScheme
         Api.Object.ColorScheme.name
         Api.Object.ColorScheme.kind
+        (Api.Object.ColorScheme.palettes identity paletteSelection)
+
+
+paletteSelection : SelectionSet Palette Api.Object.Palette
+paletteSelection =
+    Graphql.SelectionSet.map2 Palette
+        Api.Object.Palette.rank
+        Api.Object.Palette.rgbs
