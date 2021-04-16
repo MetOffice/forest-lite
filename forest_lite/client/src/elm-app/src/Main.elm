@@ -1,9 +1,11 @@
 module Main exposing (..)
 
 import Action exposing (Action(..))
+import Api.Enum.Kind exposing (Kind(..))
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
+import ColorSchemeRequest exposing (ColorScheme)
 import Colorbar
 import Colorbar.Limits exposing (DataLimits(..), LimitOrigin(..), Limits)
 import Colorbar.Menu exposing (Config)
@@ -20,6 +22,7 @@ import Dimension.Kind exposing (Kind(..))
 import Dimension.Label exposing (Label)
 import Endpoint
 import Geometry
+import Graphql.Http
 import Helpers exposing (onSelect)
 import Html
     exposing
@@ -130,6 +133,17 @@ portPayloadDecoder label =
 
 
 
+-- GRAPHQL API
+
+
+graphqlRequest : String -> Cmd Msg
+graphqlRequest baseURL =
+    ColorSchemeRequest.queryByName "Spectral"
+        |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
+        |> Graphql.Http.send GotResponse
+
+
+
 -- MODEL
 
 
@@ -152,6 +166,7 @@ type alias Model =
     , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
+    , colorSchemes : List ColorScheme
     }
 
 
@@ -186,6 +201,7 @@ type Msg
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription Dataset.ID.ID (Result Http.Error Dataset.Description.Description)
     | GotAxis Dataset.ID.ID (Result Http.Error Axis)
+    | GotResponse (Result (Graphql.Http.Error (List ColorScheme)) (List ColorScheme))
     | DataVarSelected String
     | PointSelected String
     | HideShowLayer Bool
@@ -244,6 +260,7 @@ init flags =
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
+            , colorSchemes = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -255,6 +272,7 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
+                        , graphqlRequest baseURL
                         ]
             in
             case settings.claim of
@@ -643,6 +661,14 @@ update msg model =
             in
             ( newModel, Cmd.map ColorbarMenuMsg newCmd )
 
+        GotResponse result ->
+            case result of
+                Ok colorSchemes ->
+                    ( { model | colorSchemes = colorSchemes }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 
 -- Interpret Redux actions
@@ -897,13 +923,26 @@ viewHome model =
     viewLayerMenu model
 
 
+viewColorScheme : ColorScheme -> Html Msg
+viewColorScheme colorScheme =
+    let
+        kind =
+            colorScheme.kind
+                |> Maybe.map Api.Enum.Kind.toString
+                |> Maybe.withDefault "???"
+    in
+    div [] [ text (colorScheme.name ++ "  --  " ++ kind) ]
+
+
 viewLayerMenu : Model -> Html Msg
 viewLayerMenu model =
     case model.datasets of
         Success datasets ->
             div []
+                [ div [] (List.map viewColorScheme model.colorSchemes)
+
                 -- Select collection
-                [ viewCollapse
+                , viewCollapse
                     { active = getCollapsed DatasetMenu model.collapsed
                     , head = text "Forecast/Observations"
                     , body = viewDatasets datasets model
