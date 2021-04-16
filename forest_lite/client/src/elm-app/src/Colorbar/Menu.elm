@@ -5,6 +5,8 @@ import ColorSchemeRequest exposing (ColorScheme, ColorSchemeName)
 import Colorbar
 import DataVar.Select exposing (Select)
 import Graphql.Http
+import Graphql.Operation exposing (RootQuery)
+import Graphql.SelectionSet exposing (SelectionSet)
 import Helpers exposing (onSelect)
 import Html exposing (Html, div, input, label, option, select, text)
 import Html.Attributes exposing (attribute, for, id, selected, style, value)
@@ -15,18 +17,15 @@ import Set
 -- GRAPHQL API
 
 
-graphqlRequest : String -> Api.Enum.Kind.Kind -> Cmd Msg
-graphqlRequest baseURL kind =
-    ColorSchemeRequest.queryByKind kind
+graphqlRequest :
+    String
+    -> SelectionSet decodeTo RootQuery
+    -> (Result (Graphql.Http.Error decodeTo) decodeTo -> Msg)
+    -> Cmd Msg
+graphqlRequest baseURL query msg =
+    query
         |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
-        |> Graphql.Http.send GotResponse
-
-
-graphqlSmallRequest : String -> Api.Enum.Kind.Kind -> Cmd Msg
-graphqlSmallRequest baseURL kind =
-    ColorSchemeRequest.queryNameByKind kind
-        |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
-        |> Graphql.Http.send GotSmallResponse
+        |> Graphql.Http.send msg
 
 
 
@@ -43,11 +42,15 @@ type alias Model a =
     }
 
 
+type alias GraphqlResult a =
+    Result (Graphql.Http.Error a) a
+
+
 type Msg
     = GotKind (Maybe Api.Enum.Kind.Kind)
     | GotRank Int
-    | GotResponse (Result (Graphql.Http.Error (List ColorScheme)) (List ColorScheme))
-    | GotSmallResponse (Result (Graphql.Http.Error (List ColorSchemeName)) (List ColorSchemeName))
+    | GotResponse (GraphqlResult (List ColorScheme))
+    | GotColorSchemeNames (GraphqlResult (List ColorSchemeName))
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -57,8 +60,11 @@ update msg model =
             case maybeKind of
                 Just kind ->
                     let
+                        query =
+                            ColorSchemeRequest.queryByKind kind
+
                         cmd =
-                            graphqlRequest model.baseURL kind
+                            graphqlRequest model.baseURL query GotResponse
                     in
                     ( { model | colorSchemeKind = Just kind }, cmd )
 
@@ -72,8 +78,11 @@ update msg model =
 
                 Just kind ->
                     let
+                        query =
+                            ColorSchemeRequest.queryNameByKind kind
+
                         cmd =
-                            graphqlSmallRequest model.baseURL kind
+                            graphqlRequest model.baseURL query GotColorSchemeNames
                     in
                     ( { model | colorSchemeRank = Just rank }, cmd )
 
@@ -90,7 +99,7 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        GotSmallResponse _ ->
+        GotColorSchemeNames _ ->
             ( model, Cmd.none )
 
 
