@@ -8,7 +8,7 @@ import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
 import Helpers exposing (onSelect)
-import Html exposing (Html, div, input, label, option, select, text)
+import Html exposing (Html, div, input, label, option, select, span, text)
 import Html.Attributes exposing (attribute, for, id, selected, style, value)
 import Set
 
@@ -171,7 +171,11 @@ viewColorSchemeRank maybeRank =
 
 viewColorSchemes : Maybe Int -> List ColorScheme -> Html Msg
 viewColorSchemes maybeRank schemes =
-    div [] (List.map (viewColorScheme maybeRank) schemes)
+    div
+        [ style "display" "grid"
+        , style "grid-row-gap" "0.5em"
+        ]
+        (List.map (viewColorScheme maybeRank) schemes)
 
 
 viewColorScheme : Maybe Int -> ColorScheme -> Html Msg
@@ -182,17 +186,32 @@ viewColorScheme maybeRank scheme =
 
         Just rank ->
             let
-                content =
+                colors =
                     scheme.palettes
                         |> List.filter (\p -> p.rank == rank)
                         |> List.map .rgbs
                         |> List.foldr (++) []
-                        |> String.join ", "
             in
-            div []
-                [ text scheme.name
-                , div [] [ text content ]
-                ]
+            div [] [ viewColors colors ]
+
+
+viewColors : List String -> Html Msg
+viewColors colors =
+    div
+        [ style "display" "flex"
+        ]
+        (List.map
+            (\color ->
+                span
+                    [ style "background-color" color
+                    , style "height" "1em"
+                    , style "flex-grow" "1"
+                    , style "display" "inline-block"
+                    ]
+                    []
+            )
+            colors
+        )
 
 
 
