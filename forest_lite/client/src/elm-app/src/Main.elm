@@ -2,12 +2,10 @@ module Main exposing (..)
 
 import Action exposing (Action(..))
 import Api.Enum.Kind
-import Api.Object exposing (ColorScheme)
-import Api.Object.ColorScheme
-import Api.Query as Query
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
+import ColorSchemeRequest exposing (ColorScheme)
 import Colorbar
 import Colorbar.Limits exposing (DataLimits(..), LimitOrigin(..), Limits)
 import Colorbar.Menu exposing (Config)
@@ -25,8 +23,6 @@ import Dimension.Label exposing (Label)
 import Endpoint
 import Geometry
 import Graphql.Http
-import Graphql.Operation exposing (RootQuery)
-import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import Helpers exposing (onSelect)
 import Html
     exposing
@@ -140,31 +136,9 @@ portPayloadDecoder label =
 -- GRAPHQL API
 
 
-type alias Scheme =
-    { name : String
-    , kind : Maybe Api.Enum.Kind.Kind
-    }
-
-
-type alias Response =
-    List Scheme
-
-
-query : SelectionSet Response RootQuery
-query =
-    Query.colorSchemes identity colorSchemeSelection
-
-
-colorSchemeSelection : SelectionSet Scheme Api.Object.ColorScheme
-colorSchemeSelection =
-    SelectionSet.map2 Scheme
-        Api.Object.ColorScheme.name
-        Api.Object.ColorScheme.kind
-
-
 graphqlRequest : String -> Cmd Msg
 graphqlRequest baseURL =
-    query
+    ColorSchemeRequest.query
         |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
         |> Graphql.Http.send GotResponse
 
@@ -192,7 +166,7 @@ type alias Model =
     , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
-    , schemes : List Scheme
+    , colorSchemes : List ColorScheme
     }
 
 
@@ -227,7 +201,7 @@ type Msg
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription Dataset.ID.ID (Result Http.Error Dataset.Description.Description)
     | GotAxis Dataset.ID.ID (Result Http.Error Axis)
-    | GotResponse (Result (Graphql.Http.Error Response) Response)
+    | GotResponse (Result (Graphql.Http.Error (List ColorScheme)) (List ColorScheme))
     | DataVarSelected String
     | PointSelected String
     | HideShowLayer Bool
@@ -286,7 +260,7 @@ init flags =
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
-            , schemes = []
+            , colorSchemes = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -689,8 +663,8 @@ update msg model =
 
         GotResponse result ->
             case result of
-                Ok schemes ->
-                    ( { model | schemes = schemes }, Cmd.none )
+                Ok colorSchemes ->
+                    ( { model | colorSchemes = colorSchemes }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -949,15 +923,15 @@ viewHome model =
     viewLayerMenu model
 
 
-viewScheme : Scheme -> Html Msg
-viewScheme scheme =
+viewColorScheme : ColorScheme -> Html Msg
+viewColorScheme colorScheme =
     let
         kind =
-            scheme.kind
+            colorScheme.kind
                 |> Maybe.map Api.Enum.Kind.toString
                 |> Maybe.withDefault "???"
     in
-    div [] [ text (scheme.name ++ "  --  " ++ kind) ]
+    div [] [ text (colorScheme.name ++ "  --  " ++ kind) ]
 
 
 viewLayerMenu : Model -> Html Msg
@@ -965,7 +939,7 @@ viewLayerMenu model =
     case model.datasets of
         Success datasets ->
             div []
-                [ div [] (List.map viewScheme model.schemes)
+                [ div [] (List.map viewColorScheme model.colorSchemes)
 
                 -- Select collection
                 , viewCollapse
