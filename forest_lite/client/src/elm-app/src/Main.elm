@@ -138,7 +138,7 @@ portPayloadDecoder label =
 
 graphqlRequest : String -> Cmd Msg
 graphqlRequest baseURL =
-    ColorSchemeRequest.query
+    ColorSchemeRequest.queryByRank 3
         |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
         |> Graphql.Http.send GotResponse
 

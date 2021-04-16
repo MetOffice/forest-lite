@@ -10,6 +10,7 @@ import Api.Object.Palette
 import Api.Query
 import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
+import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 
 
@@ -33,6 +34,18 @@ type alias Palette =
 query : SelectionSet (List ColorScheme) RootQuery
 query =
     Api.Query.colorSchemes identity colorSchemeSelection
+
+
+queryByRank : Int -> SelectionSet (List ColorScheme) RootQuery
+queryByRank rank =
+    let
+        arguments =
+            \optionals ->
+                { optionals
+                    | rank = Present rank
+                }
+    in
+    Api.Query.colorSchemes arguments colorSchemeSelection
 
 
 colorSchemeSelection : SelectionSet ColorScheme Api.Object.ColorScheme
