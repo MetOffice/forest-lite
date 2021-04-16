@@ -152,6 +152,7 @@ type alias Model =
     , collapsed : Dict String Bool
     , colorSchemes : List ColorScheme
     , colorSchemeKind : Maybe Api.Enum.Kind.Kind
+    , colorSchemeRank : Maybe Int
     , colorSchemeRanks : List Int
     }
 
@@ -245,6 +246,7 @@ init flags =
                 Dict.empty
             , colorSchemes = []
             , colorSchemeKind = Nothing
+            , colorSchemeRank = Nothing
             , colorSchemeRanks = []
             }
     in

@@ -32,6 +32,7 @@ type alias Model a =
         , colorSchemes : List ColorScheme
         , colorSchemeKind : Maybe Api.Enum.Kind.Kind
         , colorSchemeRanks : List Int
+        , colorSchemeRank : Maybe Int
     }
 
 
@@ -57,7 +58,7 @@ update msg model =
                     ( model, Cmd.none )
 
         GotRank rank ->
-            ( model, Cmd.none )
+            ( { model | colorSchemeRank = Just rank }, Cmd.none )
 
         GotResponse result ->
             case result of
@@ -119,7 +120,8 @@ view model =
             , label = "Select data levels"
             , name = "4"
             }
-        , viewColorSchemeNames model.colorSchemes
+        , viewColorSchemeRank model.colorSchemeRank
+        , viewColorSchemes model.colorSchemeRank model.colorSchemes
         ]
 
 
@@ -128,13 +130,40 @@ view model =
     Helper view function to debug radio buttons
 
 -}
-viewColorSchemeNames : List ColorScheme -> Html Msg
-viewColorSchemeNames schemes =
-    let
-        names =
-            List.map .name schemes
-    in
-    div [] (List.map (\name -> div [] [ text name ]) names)
+viewColorSchemeRank : Maybe Int -> Html Msg
+viewColorSchemeRank maybeRank =
+    case maybeRank of
+        Nothing ->
+            div [] [ text "???" ]
+
+        Just rank ->
+            div [] [ text ("Rank: " ++ String.fromInt rank) ]
+
+
+viewColorSchemes : Maybe Int -> List ColorScheme -> Html Msg
+viewColorSchemes maybeRank schemes =
+    div [] (List.map (viewColorScheme maybeRank) schemes)
+
+
+viewColorScheme : Maybe Int -> ColorScheme -> Html Msg
+viewColorScheme maybeRank scheme =
+    case maybeRank of
+        Nothing ->
+            div [] [ text scheme.name ]
+
+        Just rank ->
+            let
+                content =
+                    scheme.palettes
+                        |> List.filter (\p -> p.rank == rank)
+                        |> List.map .rgbs
+                        |> List.foldr (++) []
+                        |> String.join ", "
+            in
+            div []
+                [ text scheme.name
+                , div [] [ text content ]
+                ]
 
 
 
