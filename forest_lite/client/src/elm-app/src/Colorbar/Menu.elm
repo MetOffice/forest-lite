@@ -1,7 +1,7 @@
 module Colorbar.Menu exposing (Msg, update, view)
 
 import Api.Enum.Kind exposing (Kind(..))
-import ColorSchemeRequest exposing (ColorScheme)
+import ColorSchemeRequest exposing (ColorScheme, ColorSchemeName)
 import Colorbar
 import DataVar.Select exposing (Select)
 import Graphql.Http
@@ -22,6 +22,13 @@ graphqlRequest baseURL kind =
         |> Graphql.Http.send GotResponse
 
 
+graphqlSmallRequest : String -> Api.Enum.Kind.Kind -> Cmd Msg
+graphqlSmallRequest baseURL kind =
+    ColorSchemeRequest.queryNameByKind kind
+        |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
+        |> Graphql.Http.send GotSmallResponse
+
+
 
 -- UPDATE
 
@@ -40,6 +47,7 @@ type Msg
     = GotKind (Maybe Api.Enum.Kind.Kind)
     | GotRank Int
     | GotResponse (Result (Graphql.Http.Error (List ColorScheme)) (List ColorScheme))
+    | GotSmallResponse (Result (Graphql.Http.Error (List ColorSchemeName)) (List ColorSchemeName))
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -58,7 +66,16 @@ update msg model =
                     ( model, Cmd.none )
 
         GotRank rank ->
-            ( { model | colorSchemeRank = Just rank }, Cmd.none )
+            case model.colorSchemeKind of
+                Nothing ->
+                    ( { model | colorSchemeRank = Just rank }, Cmd.none )
+
+                Just kind ->
+                    let
+                        cmd =
+                            graphqlSmallRequest model.baseURL kind
+                    in
+                    ( { model | colorSchemeRank = Just rank }, cmd )
 
         GotResponse result ->
             case result of
@@ -72,6 +89,9 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
+
+        GotSmallResponse _ ->
+            ( model, Cmd.none )
 
 
 toRanks : List ColorScheme -> List Int

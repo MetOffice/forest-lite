@@ -85,3 +85,24 @@ paletteSelection =
     Graphql.SelectionSet.map2 Palette
         Api.Object.Palette.rank
         Api.Object.Palette.rgbs
+
+
+
+-- NAME
+
+
+type alias ColorSchemeName =
+    { name : String }
+
+
+colorSchemeNameSelection : SelectionSet ColorSchemeName Api.Object.ColorScheme
+colorSchemeNameSelection =
+    Graphql.SelectionSet.map ColorSchemeName
+        Api.Object.ColorScheme.name
+
+
+queryNameByKind : Api.Enum.Kind.Kind -> SelectionSet (List ColorSchemeName) RootQuery
+queryNameByKind kind =
+    Api.Query.colorSchemes
+        (\optionals -> { optionals | kind = Present kind })
+        colorSchemeNameSelection
