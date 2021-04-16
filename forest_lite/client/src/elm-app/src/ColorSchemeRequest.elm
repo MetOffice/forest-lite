@@ -48,6 +48,30 @@ queryByRank rank =
     Api.Query.colorSchemes arguments colorSchemeSelection
 
 
+queryByKind : Api.Enum.Kind.Kind -> SelectionSet (List ColorScheme) RootQuery
+queryByKind kind =
+    let
+        arguments =
+            \optionals ->
+                { optionals
+                    | kind = Present kind
+                }
+    in
+    Api.Query.colorSchemes arguments colorSchemeSelection
+
+
+queryByName : String -> SelectionSet (List ColorScheme) RootQuery
+queryByName name =
+    let
+        arguments =
+            \optionals ->
+                { optionals
+                    | name = Present name
+                }
+    in
+    Api.Query.colorSchemes arguments colorSchemeSelection
+
+
 colorSchemeSelection : SelectionSet ColorScheme Api.Object.ColorScheme
 colorSchemeSelection =
     Graphql.SelectionSet.map3 ColorScheme

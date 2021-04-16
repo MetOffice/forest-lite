@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Action exposing (Action(..))
-import Api.Enum.Kind
+import Api.Enum.Kind exposing (Kind(..))
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
@@ -138,7 +138,7 @@ portPayloadDecoder label =
 
 graphqlRequest : String -> Cmd Msg
 graphqlRequest baseURL =
-    ColorSchemeRequest.queryByRank 3
+    ColorSchemeRequest.queryByName "Spectral"
         |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
         |> Graphql.Http.send GotResponse
 
