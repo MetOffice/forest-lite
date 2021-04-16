@@ -8,7 +8,7 @@ import Browser
 import ColorSchemeRequest exposing (ColorScheme)
 import Colorbar
 import Colorbar.Limits exposing (DataLimits(..), LimitOrigin(..), Limits)
-import Colorbar.Menu exposing (Config)
+import Colorbar.Menu
 import DataVar.Label exposing (Label)
 import DataVar.Select exposing (Select)
 import Dataset exposing (Dataset)
@@ -205,6 +205,7 @@ type Msg
     | ExpandCollapse SubMenu
     | NaturalEarthFeature NaturalEarthFeature.Msg
     | ColorbarMenuMsg Colorbar.Menu.Msg
+    | ColorbarLimitsMsg Colorbar.Limits.Msg
     | SetOpacityMsg Opacity
 
 
@@ -654,6 +655,13 @@ update msg model =
             in
             ( newModel, Cmd.map ColorbarMenuMsg newCmd )
 
+        ColorbarLimitsMsg subMsg ->
+            let
+                ( subModel, subCmd ) =
+                    Colorbar.Limits.update subMsg model
+            in
+            ( subModel, Cmd.map ColorbarLimitsMsg subCmd )
+
         GotResponse result ->
             case result of
                 Ok colorSchemes ->
@@ -978,7 +986,11 @@ viewLayerMenu model =
                 , viewCollapse
                     { active = getCollapsed ColorbarMenu model.collapsed
                     , head = text "Colorbar settings"
-                    , body = Html.map ColorbarMenuMsg (Colorbar.Menu.view model)
+                    , body =
+                        div []
+                            [ Html.map ColorbarMenuMsg (Colorbar.Menu.view model)
+                            , Html.map ColorbarLimitsMsg (Colorbar.Limits.view model.limits)
+                            ]
                     , onClick = ExpandCollapse ColorbarMenu
                     }
                 ]

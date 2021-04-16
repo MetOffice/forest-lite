@@ -1,18 +1,11 @@
-module Colorbar.Menu exposing (Config, Msg, update, view)
+module Colorbar.Menu exposing (Msg, update, view)
 
 import ColorSchemeRequest exposing (ColorScheme)
 import Colorbar
-import Colorbar.Limits exposing (Limits)
 import DataVar.Select exposing (Select)
 import Helpers exposing (onSelect)
 import Html exposing (Html, div, label, option, select, text)
 import Html.Attributes exposing (selected, style, value)
-
-
-type alias Config a =
-    { a
-        | limits : Limits
-    }
 
 
 
@@ -22,32 +15,26 @@ type alias Config a =
 type alias Model a =
     { a
         | colorSchemes : List ColorScheme
-        , limits : Limits
-        , selected : Maybe DataVar.Select.Select
     }
 
 
 type Msg
-    = ColorbarLimitsMsg Colorbar.Limits.Msg
+    = NOOP
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
 update msg model =
     case msg of
-        ColorbarLimitsMsg subMsg ->
-            let
-                ( subModel, subCmd ) =
-                    Colorbar.Limits.update subMsg model
-            in
-            ( subModel, Cmd.map ColorbarLimitsMsg subCmd )
+        NOOP ->
+            ( model, Cmd.none )
 
 
 
 -- VIEW
 
 
-view : Config a -> Html Msg
-view config =
+view : Model a -> Html Msg
+view _ =
     div []
         [ Colorbar.view
             { title = "Title (placeholder)"
@@ -55,9 +42,6 @@ view config =
             , high = 10
             , palette = [ "#FFFFFF", "#000000" ]
             }
-
-        -- CONTROLS
-        , Html.map ColorbarLimitsMsg (Colorbar.Limits.view config.limits)
         ]
 
 
