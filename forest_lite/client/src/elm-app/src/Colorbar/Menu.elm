@@ -1,19 +1,17 @@
 module Colorbar.Menu exposing (Config, Msg, update, view)
 
+import ColorSchemeRequest exposing (ColorScheme)
 import Colorbar
 import Colorbar.Limits exposing (Limits)
+import DataVar.Select exposing (Select)
 import Helpers exposing (onSelect)
 import Html exposing (Html, div, label, option, select, text)
 import Html.Attributes exposing (selected, style, value)
-import Palettes exposing (Palettes)
 
 
 type alias Config a =
     { a
         | limits : Limits
-        , palettes : List String
-        , palette : Palettes.Name
-        , palette_level : Int
     }
 
 
@@ -22,28 +20,20 @@ type alias Config a =
 
 
 type alias Model a =
-    Colorbar.Limits.Model
-        { a
-            | palette_level : Int
-            , palette : Palettes.Name
-        }
+    { a
+        | colorSchemes : List ColorScheme
+        , limits : Limits
+        , selected : Maybe DataVar.Select.Select
+    }
 
 
 type Msg
-    = SetPalette Palettes.Name
-    | SetPaletteLevels Int
-    | ColorbarLimitsMsg Colorbar.Limits.Msg
+    = ColorbarLimitsMsg Colorbar.Limits.Msg
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
 update msg model =
     case msg of
-        SetPalette palette ->
-            ( { model | palette = palette }, Cmd.none )
-
-        SetPaletteLevels n ->
-            ( { model | palette_level = n }, Cmd.none )
-
         ColorbarLimitsMsg subMsg ->
             let
                 ( subModel, subCmd ) =
@@ -57,40 +47,17 @@ update msg model =
 
 
 view : Config a -> Html Msg
-view { limits, palettes, palette, palette_level } =
-    let
-        level =
-            palette_level
-
-        levels =
-            Palettes.levels
-
-        levelToMsg =
-            SetPaletteLevels << Maybe.withDefault 1 << String.toInt
-
-        name =
-            Palettes.toString palette
-
-        names =
-            palettes
-
-        nameToMsg =
-            SetPalette << Palettes.fromString
-    in
+view config =
     div []
         [ Colorbar.view
             { title = "Title (placeholder)"
             , low = -10
             , high = 10
-            , palette = Palettes.toColors palette_level palette
+            , palette = [ "#FFFFFF", "#000000" ]
             }
 
         -- CONTROLS
-        , div []
-            [ viewLevels levels level levelToMsg
-            , viewNames names name nameToMsg
-            ]
-        , Html.map ColorbarLimitsMsg (Colorbar.Limits.view limits)
+        , Html.map ColorbarLimitsMsg (Colorbar.Limits.view config.limits)
         ]
 
 

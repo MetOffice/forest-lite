@@ -77,7 +77,6 @@ import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import NaturalEarthFeature.Action exposing (Action(..))
 import Opacity exposing (Opacity)
-import Palettes exposing (Palettes)
 import Point exposing (Point)
 import Ports exposing (receiveData, sendAction)
 import Quadkey exposing (Quadkey)
@@ -161,9 +160,6 @@ type alias Model =
     , coastlines_color : String
     , coastlines_width : Int
     , limits : Colorbar.Limits.Limits
-    , palette : Palettes.Name
-    , palette_level : Int
-    , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
     , colorSchemes : List ColorScheme
@@ -254,9 +250,6 @@ init flags =
             , coastlines_color = "black"
             , coastlines_width = 1
             , limits = Colorbar.Limits.init
-            , palette = Palettes.fromString "Reds"
-            , palette_level = 3
-            , palettes = Palettes.names
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
@@ -923,26 +916,13 @@ viewHome model =
     viewLayerMenu model
 
 
-viewColorScheme : ColorScheme -> Html Msg
-viewColorScheme colorScheme =
-    let
-        kind =
-            colorScheme.kind
-                |> Maybe.map Api.Enum.Kind.toString
-                |> Maybe.withDefault "???"
-    in
-    div [] [ text (colorScheme.name ++ "  --  " ++ kind) ]
-
-
 viewLayerMenu : Model -> Html Msg
 viewLayerMenu model =
     case model.datasets of
         Success datasets ->
             div []
-                [ div [] (List.map viewColorScheme model.colorSchemes)
-
                 -- Select collection
-                , viewCollapse
+                [ viewCollapse
                     { active = getCollapsed DatasetMenu model.collapsed
                     , head = text "Forecast/Observations"
                     , body = viewDatasets datasets model
