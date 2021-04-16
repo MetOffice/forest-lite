@@ -22,7 +22,6 @@ import Dimension.Kind exposing (Kind(..))
 import Dimension.Label exposing (Label)
 import Endpoint
 import Geometry
-import Graphql.Http
 import Helpers exposing (onSelect)
 import Html
     exposing
@@ -132,17 +131,6 @@ portPayloadDecoder label =
 
 
 
--- GRAPHQL API
-
-
-graphqlRequest : String -> Cmd Msg
-graphqlRequest baseURL =
-    ColorSchemeRequest.queryByName "Spectral"
-        |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
-        |> Graphql.Http.send GotResponse
-
-
-
 -- MODEL
 
 
@@ -163,6 +151,7 @@ type alias Model =
     , opacity : Opacity
     , collapsed : Dict String Bool
     , colorSchemes : List ColorScheme
+    , colorSchemeKind : Maybe Api.Enum.Kind.Kind
     }
 
 
@@ -197,7 +186,6 @@ type Msg
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription Dataset.ID.ID (Result Http.Error Dataset.Description.Description)
     | GotAxis Dataset.ID.ID (Result Http.Error Axis)
-    | GotResponse (Result (Graphql.Http.Error (List ColorScheme)) (List ColorScheme))
     | DataVarSelected String
     | PointSelected String
     | HideShowLayer Bool
@@ -255,6 +243,7 @@ init flags =
             , collapsed =
                 Dict.empty
             , colorSchemes = []
+            , colorSchemeKind = Nothing
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -266,7 +255,6 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
-                        , graphqlRequest baseURL
                         ]
             in
             case settings.claim of
@@ -661,14 +649,6 @@ update msg model =
                     Colorbar.Limits.update subMsg model
             in
             ( subModel, Cmd.map ColorbarLimitsMsg subCmd )
-
-        GotResponse result ->
-            case result of
-                Ok colorSchemes ->
-                    ( { model | colorSchemes = colorSchemes }, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
 
 
 
