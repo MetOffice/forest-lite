@@ -8,15 +8,16 @@ import Graphql.Http
 import Helpers exposing (onSelect)
 import Html exposing (Html, div, input, label, option, select, text)
 import Html.Attributes exposing (attribute, for, id, selected, style, value)
+import Set
 
 
 
 -- GRAPHQL API
 
 
-graphqlRequest : String -> Cmd Msg
-graphqlRequest baseURL =
-    ColorSchemeRequest.queryByName "Spectral"
+graphqlRequest : String -> Api.Enum.Kind.Kind -> Cmd Msg
+graphqlRequest baseURL kind =
+    ColorSchemeRequest.queryByKind kind
         |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
         |> Graphql.Http.send GotResponse
 
@@ -30,31 +31,56 @@ type alias Model a =
         | baseURL : String
         , colorSchemes : List ColorScheme
         , colorSchemeKind : Maybe Api.Enum.Kind.Kind
+        , colorSchemeRanks : List Int
     }
 
 
 type Msg
     = GotKind (Maybe Api.Enum.Kind.Kind)
+    | GotRank Int
     | GotResponse (Result (Graphql.Http.Error (List ColorScheme)) (List ColorScheme))
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
 update msg model =
     case msg of
-        GotKind kind ->
-            let
-                cmd =
-                    graphqlRequest model.baseURL
-            in
-            ( { model | colorSchemeKind = kind }, cmd )
+        GotKind maybeKind ->
+            case maybeKind of
+                Just kind ->
+                    let
+                        cmd =
+                            graphqlRequest model.baseURL kind
+                    in
+                    ( { model | colorSchemeKind = Just kind }, cmd )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        GotRank rank ->
+            ( model, Cmd.none )
 
         GotResponse result ->
             case result of
                 Ok colorSchemes ->
-                    ( { model | colorSchemes = colorSchemes }, Cmd.none )
+                    ( { model
+                        | colorSchemes = colorSchemes
+                        , colorSchemeRanks = toRanks colorSchemes
+                      }
+                    , Cmd.none
+                    )
 
                 _ ->
                     ( model, Cmd.none )
+
+
+toRanks : List ColorScheme -> List Int
+toRanks colorSchemes =
+    colorSchemes
+        |> List.map .palettes
+        |> List.foldr (++) []
+        |> List.map .rank
+        |> Set.fromList
+        |> Set.toList
 
 
 
@@ -87,7 +113,13 @@ view model =
               , value = Api.Enum.Kind.toString Qualitative
               }
             ]
-        , viewKind model.colorSchemeKind
+        , dropdown []
+            { names = List.map String.fromInt model.colorSchemeRanks
+            , toMsg = GotRank << Maybe.withDefault 3 << String.toInt
+            , label = "Select data levels"
+            , name = "4"
+            }
+        , viewColorSchemeNames model.colorSchemes
         ]
 
 
@@ -96,15 +128,17 @@ view model =
     Helper view function to debug radio buttons
 
 -}
-viewKind : Maybe Api.Enum.Kind.Kind -> Html Msg
-viewKind kind =
+viewColorSchemeNames : List ColorScheme -> Html Msg
+viewColorSchemeNames schemes =
     let
-        content =
-            kind
-                |> Maybe.map Api.Enum.Kind.toString
-                |> Maybe.withDefault "???"
+        names =
+            List.map .name schemes
     in
-    div [] [ text content ]
+    div [] (List.map (\name -> div [] [ text name ]) names)
+
+
+
+-- RADIO BUTTON
 
 
 type alias RadioAttrs =
@@ -149,55 +183,38 @@ radioButton name toMsg config =
         ]
 
 
-viewNames : List String -> String -> (String -> Msg) -> Html Msg
-viewNames names name toMsg =
-    div
-        [ style "display" "inline-block"
-        , style "margin-left" "1em"
-        ]
+
+-- DROPDOWN
+
+
+type alias DropdownConfig =
+    { names : List String
+    , name : String
+    , toMsg : String -> Msg
+    , label : String
+    }
+
+
+dropdown : List (Html.Attribute Msg) -> DropdownConfig -> Html Msg
+dropdown attrs config =
+    div attrs
         [ label
             [ style "display" "block"
             , style "font-size" "0.9em"
             ]
-            [ text "Named palette:"
+            [ text config.label
             ]
         , select
-            [ onSelect toMsg
+            [ onSelect config.toMsg
             , style "width" "100%"
             ]
             (List.map
                 (\n ->
                     option
-                        [ selected (n == name)
+                        [ selected (n == config.name)
                         ]
                         [ text n ]
                 )
-                names
-            )
-        ]
-
-
-viewLevels : List Int -> Int -> (String -> Msg) -> Html Msg
-viewLevels levels level toMsg =
-    div [ style "display" "inline-block" ]
-        [ label
-            [ style "display" "block"
-            , style "font-size" "0.9em"
-            ]
-            [ text "Data levels:"
-            ]
-        , select
-            [ style "width" "100%"
-            , onSelect toMsg
-            ]
-            (List.map
-                (\n ->
-                    option
-                        [ selected (n == level)
-                        , value (String.fromInt n)
-                        ]
-                        [ text (String.fromInt n) ]
-                )
-                levels
+                config.names
             )
         ]

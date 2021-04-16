@@ -152,6 +152,7 @@ type alias Model =
     , collapsed : Dict String Bool
     , colorSchemes : List ColorScheme
     , colorSchemeKind : Maybe Api.Enum.Kind.Kind
+    , colorSchemeRanks : List Int
     }
 
 
@@ -244,6 +245,7 @@ init flags =
                 Dict.empty
             , colorSchemes = []
             , colorSchemeKind = Nothing
+            , colorSchemeRanks = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
