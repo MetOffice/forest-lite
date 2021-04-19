@@ -149,7 +149,6 @@ view model =
             , label = "Select data levels"
             , name = "4"
             }
-        , viewColorSchemeRank model.colorSchemeRank
         , viewColorSchemes model.colorSchemeRank model.colorSchemes
         ]
 
@@ -159,40 +158,30 @@ view model =
     Helper view function to debug radio buttons
 
 -}
-viewColorSchemeRank : Maybe Int -> Html Msg
-viewColorSchemeRank maybeRank =
+viewColorSchemes : Maybe Int -> List ColorScheme -> Html Msg
+viewColorSchemes maybeRank schemes =
     case maybeRank of
         Nothing ->
             div [] [ text "Please choose data levels" ]
 
         Just rank ->
-            div [] [ text "" ]
+            div
+                [ style "display" "grid"
+                , style "grid-row-gap" "0.5em"
+                ]
+                (List.map (viewColorScheme rank) schemes)
 
 
-viewColorSchemes : Maybe Int -> List ColorScheme -> Html Msg
-viewColorSchemes maybeRank schemes =
-    div
-        [ style "display" "grid"
-        , style "grid-row-gap" "0.5em"
-        ]
-        (List.map (viewColorScheme maybeRank) schemes)
-
-
-viewColorScheme : Maybe Int -> ColorScheme -> Html Msg
-viewColorScheme maybeRank scheme =
-    case maybeRank of
-        Nothing ->
-            div [] [ text scheme.name ]
-
-        Just rank ->
-            let
-                colors =
-                    scheme.palettes
-                        |> List.filter (\p -> p.rank == rank)
-                        |> List.map .rgbs
-                        |> List.foldr (++) []
-            in
-            div [] [ viewColors colors ]
+viewColorScheme : Int -> ColorScheme -> Html Msg
+viewColorScheme rank scheme =
+    let
+        colors =
+            scheme.palettes
+                |> List.filter (\p -> p.rank == rank)
+                |> List.map .rgbs
+                |> List.foldr (++) []
+    in
+    div [] [ viewColors colors ]
 
 
 viewColors : List String -> Html Msg
