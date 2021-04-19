@@ -163,10 +163,10 @@ viewColorSchemeRank : Maybe Int -> Html Msg
 viewColorSchemeRank maybeRank =
     case maybeRank of
         Nothing ->
-            div [] [ text "???" ]
+            div [] [ text "Please choose data levels" ]
 
         Just rank ->
-            div [] [ text ("Rank: " ++ String.fromInt rank) ]
+            div [] [ text "" ]
 
 
 viewColorSchemes : Maybe Int -> List ColorScheme -> Html Msg
@@ -199,6 +199,7 @@ viewColors : List String -> Html Msg
 viewColors colors =
     div
         [ style "display" "flex"
+        , style "border" "1px solid #333"
         ]
         (List.map
             (\color ->
