@@ -172,14 +172,16 @@ viewColorSchemes maybeRank schemes =
 
         Just rank ->
             let
-                validSchemes =
-                    List.filter (hasRank rank) schemes
+                swatches =
+                    schemes
+                        |> List.filter (hasRank rank)
+                        |> List.map (extractSwatch rank)
             in
             div
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                (List.map (viewColorScheme rank) validSchemes)
+                (List.map viewSwatch swatches)
 
 
 hasRank : Int -> ColorScheme -> Bool
@@ -190,20 +192,16 @@ hasRank rank scheme =
         |> not
 
 
-viewColorScheme : Int -> ColorScheme -> Html Msg
-viewColorScheme rank scheme =
-    let
-        colors =
-            scheme.palettes
-                |> List.filter (\p -> p.rank == rank)
-                |> List.map .rgbs
-                |> List.foldr (++) []
-    in
-    div [] [ viewColors colors ]
+extractSwatch : Int -> ColorScheme -> List String
+extractSwatch rank scheme =
+    scheme.palettes
+        |> List.filter (\p -> p.rank == rank)
+        |> List.map .rgbs
+        |> List.foldr (++) []
 
 
-viewColors : List String -> Html Msg
-viewColors colors =
+viewSwatch : List String -> Html Msg
+viewSwatch colors =
     div
         [ style "display" "flex"
         , style "border" "1px solid #333"
