@@ -128,7 +128,10 @@ view model =
                 |> Maybe.map Api.Enum.Kind.toString
                 |> Maybe.withDefault "???"
     in
-    div [ style "display" "grid" ]
+    div
+        [ style "display" "grid"
+        , style "grid-row-gap" "0.5em"
+        ]
         [ radioButtons { name = "kind", toMsg = toMsg }
             [ { id = "seq"
               , label = "Sequential"
@@ -147,7 +150,10 @@ view model =
             { names = List.map String.fromInt model.colorSchemeRanks
             , toMsg = GotRank << Maybe.withDefault 3 << String.toInt
             , label = "Select data levels"
-            , name = "4"
+            , name =
+                model.colorSchemeRank
+                    |> Maybe.withDefault 3
+                    |> String.fromInt
             }
         , viewColorSchemes model.colorSchemeRank model.colorSchemes
         ]
@@ -165,11 +171,23 @@ viewColorSchemes maybeRank schemes =
             div [] [ text "Please choose data levels" ]
 
         Just rank ->
+            let
+                validSchemes =
+                    List.filter (hasRank rank) schemes
+            in
             div
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                (List.map (viewColorScheme rank) schemes)
+                (List.map (viewColorScheme rank) validSchemes)
+
+
+hasRank : Int -> ColorScheme -> Bool
+hasRank rank scheme =
+    scheme.palettes
+        |> List.filter (\p -> p.rank == rank)
+        |> List.isEmpty
+        |> not
 
 
 viewColorScheme : Int -> ColorScheme -> Html Msg
