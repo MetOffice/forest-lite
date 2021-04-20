@@ -10,6 +10,7 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Helpers exposing (onSelect)
 import Html exposing (Html, div, input, label, option, select, span, text)
 import Html.Attributes exposing (attribute, for, id, selected, style, value)
+import Json.Decode
 import Set
 
 
@@ -51,6 +52,7 @@ type Msg
     | GotRank Int
     | GotResponse (GraphqlResult (List ColorScheme))
     | GotColorSchemeNames (GraphqlResult (List ColorSchemeName))
+    | GotColors (Result Json.Decode.Error (List String))
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -99,7 +101,12 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        -- TODO implement update
         GotColorSchemeNames _ ->
+            ( model, Cmd.none )
+
+        -- TODO implement update
+        GotColors _ ->
             ( model, Cmd.none )
 
 
@@ -132,24 +139,26 @@ view model =
         [ style "display" "grid"
         , style "grid-row-gap" "0.5em"
         ]
-        [ radioButtons { name = "kind", toMsg = toMsg }
+        [ div [ style "font-size" "0.9em" ] [ text "Select nature of data" ]
+        , radioButtons "kind"
+            toMsg
             [ { id = "seq"
-              , label = "Sequential"
+              , label = text "Sequential"
               , value = Api.Enum.Kind.toString Sequential
               }
             , { id = "div"
-              , label = "Diverging"
+              , label = text "Diverging"
               , value = Api.Enum.Kind.toString Diverging
               }
             , { id = "qual"
-              , label = "Qualitative"
+              , label = text "Qualitative"
               , value = Api.Enum.Kind.toString Qualitative
               }
             ]
         , dropdown []
             { names = List.map String.fromInt model.colorSchemeRanks
             , toMsg = GotRank << Maybe.withDefault 3 << String.toInt
-            , label = "Select data levels"
+            , label = "Select number of colors"
             , name =
                 model.colorSchemeRank
                     |> Maybe.withDefault 3
@@ -176,12 +185,54 @@ viewColorSchemes maybeRank schemes =
                     schemes
                         |> List.filter (hasRank rank)
                         |> List.map (extractSwatch rank)
+
+                toMsg =
+                    GotColors << Json.Decode.decodeString colorsDecoder
             in
             div
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                (List.map viewSwatch swatches)
+                (div
+                    [ style "font-size" "0.9em"
+                    ]
+                    [ text "Select color scheme" ]
+                    :: List.map (viewSwatchButton toMsg) swatches
+                )
+
+
+viewSwatchButton : (String -> Msg) -> List String -> Html Msg
+viewSwatchButton toMsg colors =
+    let
+        name =
+            "colors"
+
+        swatchId =
+            String.join "" colors
+
+        swatchValue =
+            ""
+    in
+    div [ style "display" "flex" ]
+        [ input
+            [ attribute "type" "radio"
+            , attribute "name" name
+            , id swatchId
+            , value swatchValue
+            , onSelect toMsg
+            ]
+            []
+        , label
+            [ for swatchId
+            , style "flex-grow" "1"
+            ]
+            [ viewSwatch colors ]
+        ]
+
+
+colorsDecoder : Json.Decode.Decoder (List String)
+colorsDecoder =
+    Json.Decode.list Json.Decode.string
 
 
 hasRank : Int -> ColorScheme -> Bool
@@ -202,9 +253,9 @@ extractSwatch rank scheme =
 
 viewSwatch : List String -> Html Msg
 viewSwatch colors =
-    div
+    span
         [ style "display" "flex"
-        , style "border" "1px solid #333"
+        , style "border" "1px solid #CCC"
         ]
         (List.map
             (\color ->
@@ -224,25 +275,19 @@ viewSwatch colors =
 -- RADIO BUTTON
 
 
-type alias RadioAttrs =
-    { toMsg : String -> Msg
-    , name : String
-    }
-
-
 type alias RadioConfig =
     { id : String
-    , label : String
+    , label : Html Msg
     , value : String
     }
 
 
-radioButtons : RadioAttrs -> List RadioConfig -> Html Msg
-radioButtons attrs configs =
+radioButtons : String -> (String -> Msg) -> List RadioConfig -> Html Msg
+radioButtons name toMsg configs =
     div []
         (List.map
             (\config ->
-                radioButton attrs.name attrs.toMsg config
+                radioButton name toMsg config
             )
             configs
         )
@@ -262,7 +307,7 @@ radioButton name toMsg config =
         , label
             [ for config.id
             ]
-            [ text config.label ]
+            [ config.label ]
         ]
 
 
