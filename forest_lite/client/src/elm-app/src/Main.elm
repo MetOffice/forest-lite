@@ -154,6 +154,7 @@ type alias Model =
     , colorSchemeKind : Maybe Api.Enum.Kind.Kind
     , colorSchemeRank : Maybe Int
     , colorSchemeRanks : List Int
+    , colorSchemeName : Maybe String
     }
 
 
@@ -247,6 +248,7 @@ init flags =
             , colorSchemes = []
             , colorSchemeKind = Nothing
             , colorSchemeRank = Nothing
+            , colorSchemeName = Nothing
             , colorSchemeRanks = []
             }
     in

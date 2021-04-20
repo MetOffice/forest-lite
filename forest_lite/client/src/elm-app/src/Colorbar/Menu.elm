@@ -9,8 +9,7 @@ import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
 import Helpers exposing (onSelect)
 import Html exposing (Html, div, input, label, option, select, span, text)
-import Html.Attributes exposing (attribute, for, id, selected, style, value)
-import Json.Decode
+import Html.Attributes exposing (attribute, checked, for, id, selected, style, value)
 import Set
 
 
@@ -40,7 +39,12 @@ type alias Model a =
         , colorSchemeKind : Maybe Api.Enum.Kind.Kind
         , colorSchemeRanks : List Int
         , colorSchemeRank : Maybe Int
+        , colorSchemeName : Maybe String
     }
+
+
+type Name
+    = Name String
 
 
 type alias GraphqlResult a =
@@ -52,7 +56,7 @@ type Msg
     | GotRank Int
     | GotResponse (GraphqlResult (List ColorScheme))
     | GotColorSchemeNames (GraphqlResult (List ColorSchemeName))
-    | GotColors (Result Json.Decode.Error (List String))
+    | GotColorScheme Name
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -106,8 +110,10 @@ update msg model =
             ( model, Cmd.none )
 
         -- TODO implement update
-        GotColors _ ->
-            ( model, Cmd.none )
+        GotColorScheme name ->
+            case name of
+                Name str ->
+                    ( { model | colorSchemeName = Just str }, Cmd.none )
 
 
 toRanks : List ColorScheme -> List Int
@@ -139,7 +145,9 @@ view model =
         [ style "display" "grid"
         , style "grid-row-gap" "0.5em"
         ]
-        [ div [ style "font-size" "0.9em" ] [ text "Select nature of data" ]
+        [ div [ style "font-size" "0.9em" ]
+            [ text "Select nature of data"
+            ]
         , radioButtons "kind"
             toMsg
             [ { id = "seq"
@@ -164,7 +172,7 @@ view model =
                     |> Maybe.withDefault 3
                     |> String.fromInt
             }
-        , viewColorSchemes model.colorSchemeRank model.colorSchemes
+        , viewColorSchemes model.colorSchemeName model.colorSchemeRank model.colorSchemes
         ]
 
 
@@ -173,11 +181,21 @@ view model =
     Helper view function to debug radio buttons
 
 -}
-viewColorSchemes : Maybe Int -> List ColorScheme -> Html Msg
-viewColorSchemes maybeRank schemes =
+viewSelectColorSchemeName : Maybe String -> Html Msg
+viewSelectColorSchemeName maybeName =
+    case maybeName of
+        Nothing ->
+            div [] [ text "Select color scheme" ]
+
+        Just str ->
+            div [] [ text ("Selected scheme: " ++ str) ]
+
+
+viewColorSchemes : Maybe String -> Maybe Int -> List ColorScheme -> Html Msg
+viewColorSchemes maybeName maybeRank schemes =
     case maybeRank of
         Nothing ->
-            div [] [ text "Please choose data levels" ]
+            text ""
 
         Just rank ->
             let
@@ -185,9 +203,10 @@ viewColorSchemes maybeRank schemes =
                     schemes
                         |> List.filter (hasRank rank)
                         |> List.map (extractSwatch rank)
+                        |> List.filterMap identity
 
                 toMsg =
-                    GotColors << Json.Decode.decodeString colorsDecoder
+                    GotColorScheme << Name
             in
             div
                 [ style "display" "grid"
@@ -196,22 +215,33 @@ viewColorSchemes maybeRank schemes =
                 (div
                     [ style "font-size" "0.9em"
                     ]
-                    [ text "Select color scheme" ]
-                    :: List.map (viewSwatchButton toMsg) swatches
+                    [ viewSelectColorSchemeName maybeName ]
+                    :: List.map (viewSwatchButton maybeName toMsg) swatches
                 )
 
 
-viewSwatchButton : (String -> Msg) -> List String -> Html Msg
-viewSwatchButton toMsg colors =
+type alias Swatch =
+    { name : String
+    , colors : List String
+    }
+
+
+viewSwatchButton : Maybe String -> (String -> Msg) -> Swatch -> Html Msg
+viewSwatchButton maybeName toMsg swatch =
     let
         name =
             "colors"
 
         swatchId =
-            String.join "" colors
+            swatch.name
 
         swatchValue =
-            ""
+            swatch.name
+
+        isChecked =
+            maybeName
+                |> Maybe.map (\n -> n == swatch.name)
+                |> Maybe.withDefault False
     in
     div [ style "display" "flex" ]
         [ input
@@ -220,19 +250,15 @@ viewSwatchButton toMsg colors =
             , id swatchId
             , value swatchValue
             , onSelect toMsg
+            , checked isChecked
             ]
             []
         , label
             [ for swatchId
             , style "flex-grow" "1"
             ]
-            [ viewSwatch colors ]
+            [ viewSwatchColors swatch.colors ]
         ]
-
-
-colorsDecoder : Json.Decode.Decoder (List String)
-colorsDecoder =
-    Json.Decode.list Json.Decode.string
 
 
 hasRank : Int -> ColorScheme -> Bool
@@ -243,16 +269,24 @@ hasRank rank scheme =
         |> not
 
 
-extractSwatch : Int -> ColorScheme -> List String
+extractSwatch : Int -> ColorScheme -> Maybe Swatch
 extractSwatch rank scheme =
-    scheme.palettes
-        |> List.filter (\p -> p.rank == rank)
-        |> List.map .rgbs
-        |> List.foldr (++) []
+    let
+        maybePalette =
+            scheme.palettes
+                |> List.filter (\p -> p.rank == rank)
+                |> List.head
+    in
+    case maybePalette of
+        Nothing ->
+            Nothing
+
+        Just palette ->
+            Just { name = scheme.name, colors = palette.rgbs }
 
 
-viewSwatch : List String -> Html Msg
-viewSwatch colors =
+viewSwatchColors : List String -> Html Msg
+viewSwatchColors colors =
     span
         [ style "display" "flex"
         , style "border" "1px solid #CCC"
