@@ -9,7 +9,8 @@ import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
 import Helpers exposing (onSelect)
 import Html exposing (Html, div, input, label, option, select, span, text)
-import Html.Attributes exposing (attribute, checked, for, id, selected, style, value)
+import Html.Attributes exposing (attribute, checked, class, classList, for, id, selected, style, title, value)
+import Request exposing (Request(..))
 import Set
 
 
@@ -28,6 +29,10 @@ graphqlRequest baseURL query msg =
         |> Graphql.Http.send msg
 
 
+type alias GraphqlResult a =
+    Result (Graphql.Http.Error a) a
+
+
 
 -- UPDATE
 
@@ -35,7 +40,7 @@ graphqlRequest baseURL query msg =
 type alias Model a =
     { a
         | baseURL : String
-        , colorSchemes : List ColorScheme
+        , colorSchemes : Request (List ColorScheme)
         , colorSchemeKind : Maybe Api.Enum.Kind.Kind
         , colorSchemeRanks : List Int
         , colorSchemeRank : Maybe Int
@@ -45,10 +50,6 @@ type alias Model a =
 
 type Name
     = Name String
-
-
-type alias GraphqlResult a =
-    Result (Graphql.Http.Error a) a
 
 
 type Msg
@@ -72,7 +73,12 @@ update msg model =
                         cmd =
                             graphqlRequest model.baseURL query GotResponse
                     in
-                    ( { model | colorSchemeKind = Just kind }, cmd )
+                    ( { model
+                        | colorSchemeKind = Just kind
+                        , colorSchemes = Loading
+                      }
+                    , cmd
+                    )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -96,14 +102,14 @@ update msg model =
             case result of
                 Ok colorSchemes ->
                     ( { model
-                        | colorSchemes = colorSchemes
+                        | colorSchemes = Success colorSchemes
                         , colorSchemeRanks = toRanks colorSchemes
                       }
                     , Cmd.none
                     )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( { model | colorSchemes = Failure }, Cmd.none )
 
         -- TODO implement update
         GotColorSchemeNames _ ->
@@ -132,6 +138,48 @@ toRanks colorSchemes =
 
 view : Model a -> Html Msg
 view model =
+    case model.colorSchemes of
+        Success colorSchemes ->
+            div
+                [ style "display" "grid"
+                , style "grid-row-gap" "0.5em"
+                ]
+                [ viewKindRadioButtons model
+                , viewRankDropdown model
+                , viewColorSchemes model.colorSchemeName
+                    model.colorSchemeRank
+                    colorSchemes
+                ]
+
+        NotStarted ->
+            div
+                [ style "display" "grid"
+                , style "grid-row-gap" "0.5em"
+                ]
+                [ viewKindRadioButtons model
+                ]
+
+        Loading ->
+            div
+                [ style "display" "grid"
+                , style "grid-row-gap" "0.5em"
+                ]
+                [ viewKindRadioButtons model
+                , div [] [ div [ class "spinner" ] [] ]
+                ]
+
+        Failure ->
+            div
+                [ style "display" "grid"
+                , style "grid-row-gap" "0.5em"
+                ]
+                [ viewKindRadioButtons model
+                , div [] [ text "Could not load color schemes" ]
+                ]
+
+
+viewKindRadioButtons : Model a -> Html Msg
+viewKindRadioButtons model =
     let
         toMsg =
             GotKind << Api.Enum.Kind.fromString
@@ -141,10 +189,7 @@ view model =
                 |> Maybe.map Api.Enum.Kind.toString
                 |> Maybe.withDefault "???"
     in
-    div
-        [ style "display" "grid"
-        , style "grid-row-gap" "0.5em"
-        ]
+    div []
         [ div [ style "font-size" "0.9em" ]
             [ text "Select nature of data"
             ]
@@ -163,17 +208,20 @@ view model =
               , value = Api.Enum.Kind.toString Qualitative
               }
             ]
-        , dropdown []
-            { names = List.map String.fromInt model.colorSchemeRanks
-            , toMsg = GotRank << Maybe.withDefault 3 << String.toInt
-            , label = "Select number of colors"
-            , name =
-                model.colorSchemeRank
-                    |> Maybe.withDefault 3
-                    |> String.fromInt
-            }
-        , viewColorSchemes model.colorSchemeName model.colorSchemeRank model.colorSchemes
         ]
+
+
+viewRankDropdown : Model a -> Html Msg
+viewRankDropdown model =
+    dropdown []
+        { names = List.map String.fromInt model.colorSchemeRanks
+        , toMsg = GotRank << Maybe.withDefault 3 << String.toInt
+        , label = "Select number of colors"
+        , name =
+            model.colorSchemeRank
+                |> Maybe.withDefault 3
+                |> String.fromInt
+        }
 
 
 {-|
@@ -208,16 +256,16 @@ viewColorSchemes maybeName maybeRank schemes =
                 toMsg =
                     GotColorScheme << Name
             in
-            div
-                [ style "display" "grid"
-                , style "grid-row-gap" "0.5em"
-                ]
-                (div
-                    [ style "font-size" "0.9em"
-                    ]
+            div []
+                [ div [ style "font-size" "0.9em" ]
                     [ viewSelectColorSchemeName maybeName ]
-                    :: List.map (viewSwatchButton maybeName toMsg) swatches
-                )
+                , div
+                    [ style "display" "grid"
+                    , style "grid-row-gap" "0.5em"
+                    , style "grid-template-columns" "1fr 1fr"
+                    ]
+                    (List.map (viewSwatchButton maybeName toMsg) swatches)
+                ]
 
 
 type alias Swatch =
@@ -243,7 +291,10 @@ viewSwatchButton maybeName toMsg swatch =
                 |> Maybe.map (\n -> n == swatch.name)
                 |> Maybe.withDefault False
     in
-    div [ style "display" "flex" ]
+    div
+        [ style "display" "flex"
+        , style "align-items" "center"
+        ]
         [ input
             [ attribute "type" "radio"
             , attribute "name" name
@@ -257,7 +308,7 @@ viewSwatchButton maybeName toMsg swatch =
             [ for swatchId
             , style "flex-grow" "1"
             ]
-            [ viewSwatchColors swatch.colors ]
+            [ viewSwatchColors swatch.name isChecked swatch.colors ]
         ]
 
 
@@ -285,11 +336,14 @@ extractSwatch rank scheme =
             Just { name = scheme.name, colors = palette.rgbs }
 
 
-viewSwatchColors : List String -> Html Msg
-viewSwatchColors colors =
+viewSwatchColors : String -> Bool -> List String -> Html Msg
+viewSwatchColors hoverText isChecked colors =
     span
         [ style "display" "flex"
-        , style "border" "1px solid #CCC"
+        , title hoverText
+        , class "highlight"
+        , class "pointer"
+        , classList [ ( "checked", isChecked ) ]
         ]
         (List.map
             (\color ->

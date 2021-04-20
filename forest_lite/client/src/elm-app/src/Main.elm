@@ -150,7 +150,7 @@ type alias Model =
     , limits : Colorbar.Limits.Limits
     , opacity : Opacity
     , collapsed : Dict String Bool
-    , colorSchemes : List ColorScheme
+    , colorSchemes : Request (List ColorScheme)
     , colorSchemeKind : Maybe Api.Enum.Kind.Kind
     , colorSchemeRank : Maybe Int
     , colorSchemeRanks : List Int
@@ -245,7 +245,7 @@ init flags =
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
-            , colorSchemes = []
+            , colorSchemes = NotStarted
             , colorSchemeKind = Nothing
             , colorSchemeRank = Nothing
             , colorSchemeName = Nothing

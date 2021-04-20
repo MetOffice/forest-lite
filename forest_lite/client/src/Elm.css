@@ -137,3 +137,29 @@ fieldset {
     max-height: 0 !important;
     opacity: 0;
 }
+
+/** Utility **/
+.pointer {
+    cursor: pointer;
+}
+.highlight {
+    border: 1px solid #CCC;
+}
+.highlight:hover {
+    border: 1px solid #333;
+}
+.checked {
+    border: 1px solid #333;
+}
+.spinner {
+    border: 3px solid #F3F3F3;
+    border-top: 3px solid #333;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
