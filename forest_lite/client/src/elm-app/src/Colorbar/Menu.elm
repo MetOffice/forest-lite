@@ -1,4 +1,4 @@
-module Colorbar.Menu exposing (Msg, Order, leftToRight, update, view)
+module Colorbar.Menu exposing (Msg(..), Order(..), leftToRight, update, view)
 
 import Api.Enum.Kind exposing (Kind(..))
 import ColorSchemeRequest exposing (ColorScheme, ColorSchemeName)
@@ -32,6 +32,10 @@ graphqlRequest baseURL query msg =
 
 type alias GraphqlResult a =
     Result (Graphql.Http.Error a) a
+
+
+
+-- COLOR ORDER
 
 
 type Order
