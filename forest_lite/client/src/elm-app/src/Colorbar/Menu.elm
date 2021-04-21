@@ -1,4 +1,4 @@
-module Colorbar.Menu exposing (Msg, update, view)
+module Colorbar.Menu exposing (Msg, Order, leftToRight, update, view)
 
 import Api.Enum.Kind exposing (Kind(..))
 import ColorSchemeRequest exposing (ColorScheme, ColorSchemeName)
@@ -10,6 +10,7 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Helpers exposing (onSelect)
 import Html exposing (Html, div, input, label, option, select, span, text)
 import Html.Attributes exposing (attribute, checked, class, classList, for, id, selected, style, title, value)
+import Html.Events exposing (onCheck)
 import Request exposing (Request(..))
 import Set
 
@@ -33,6 +34,35 @@ type alias GraphqlResult a =
     Result (Graphql.Http.Error a) a
 
 
+type Order
+    = LeftToRight
+    | RightToLeft
+
+
+leftToRight : Order
+leftToRight =
+    LeftToRight
+
+
+orderFromBool : Bool -> Order
+orderFromBool flag =
+    if flag then
+        RightToLeft
+
+    else
+        LeftToRight
+
+
+orderIsFlipped : Order -> Bool
+orderIsFlipped order =
+    case order of
+        LeftToRight ->
+            False
+
+        RightToLeft ->
+            True
+
+
 
 -- UPDATE
 
@@ -45,6 +75,7 @@ type alias Model a =
         , colorSchemeRanks : List Int
         , colorSchemeRank : Maybe Int
         , colorSchemeName : Maybe String
+        , colorSchemeOrder : Order
     }
 
 
@@ -58,6 +89,7 @@ type Msg
     | GotResponse (GraphqlResult (List ColorScheme))
     | GotColorSchemeNames (GraphqlResult (List ColorSchemeName))
     | GotColorScheme Name
+    | SetOrder Order
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -121,6 +153,9 @@ update msg model =
                 Name str ->
                     ( { model | colorSchemeName = Just str }, Cmd.none )
 
+        SetOrder order ->
+            ( { model | colorSchemeOrder = order }, Cmd.none )
+
 
 toRanks : List ColorScheme -> List Int
 toRanks colorSchemes =
@@ -146,8 +181,10 @@ view model =
                 ]
                 [ viewKindRadioButtons model
                 , viewRankDropdown model
+                , viewOrderButton model.colorSchemeOrder
                 , viewColorSchemes model.colorSchemeName
                     model.colorSchemeRank
+                    model.colorSchemeOrder
                     colorSchemes
                 ]
 
@@ -176,6 +213,32 @@ view model =
                 [ viewKindRadioButtons model
                 , div [] [ text "Could not load color schemes" ]
                 ]
+
+
+viewOrderButton : Order -> Html Msg
+viewOrderButton order =
+    let
+        buttonId =
+            "reverse-btn"
+
+        toMsg =
+            SetOrder << orderFromBool
+    in
+    div []
+        [ input
+            [ attribute "type" "checkbox"
+            , class "toggle"
+            , id buttonId
+            , onCheck toMsg
+            , checked (orderIsFlipped order)
+            ]
+            []
+        , label
+            [ style "font-weight" "0.9em"
+            , for buttonId
+            ]
+            [ text "Reverse color ordering" ]
+        ]
 
 
 viewKindRadioButtons : Model a -> Html Msg
@@ -239,8 +302,8 @@ viewSelectColorSchemeName maybeName =
             div [] [ text ("Selected scheme: " ++ str) ]
 
 
-viewColorSchemes : Maybe String -> Maybe Int -> List ColorScheme -> Html Msg
-viewColorSchemes maybeName maybeRank schemes =
+viewColorSchemes : Maybe String -> Maybe Int -> Order -> List ColorScheme -> Html Msg
+viewColorSchemes maybeName maybeRank order schemes =
     case maybeRank of
         Nothing ->
             text ""
@@ -252,6 +315,7 @@ viewColorSchemes maybeName maybeRank schemes =
                         |> List.filter (hasRank rank)
                         |> List.map (extractSwatch rank)
                         |> List.filterMap identity
+                        |> List.map (flipSwatch order)
 
                 toMsg =
                     GotColorScheme << Name
@@ -272,6 +336,16 @@ type alias Swatch =
     { name : String
     , colors : List String
     }
+
+
+flipSwatch : Order -> Swatch -> Swatch
+flipSwatch order swatch =
+    case order of
+        LeftToRight ->
+            swatch
+
+        RightToLeft ->
+            { swatch | colors = List.reverse swatch.colors }
 
 
 viewSwatchButton : Maybe String -> (String -> Msg) -> Swatch -> Html Msg

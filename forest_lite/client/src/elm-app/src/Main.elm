@@ -155,6 +155,7 @@ type alias Model =
     , colorSchemeRank : Maybe Int
     , colorSchemeRanks : List Int
     , colorSchemeName : Maybe String
+    , colorSchemeOrder : Colorbar.Menu.Order
     }
 
 
@@ -249,6 +250,7 @@ init flags =
             , colorSchemeKind = Nothing
             , colorSchemeRank = Nothing
             , colorSchemeName = Nothing
+            , colorSchemeOrder = Colorbar.Menu.leftToRight
             , colorSchemeRanks = []
             }
     in
