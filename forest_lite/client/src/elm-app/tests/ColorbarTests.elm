@@ -1,5 +1,6 @@
 module ColorbarTests exposing (..)
 
+import Api.Enum.Kind exposing (Kind(..))
 import Colorbar.Menu exposing (Msg(..), Order(..))
 import Expect exposing (Expectation)
 import Request exposing (Request(..))
@@ -54,4 +55,24 @@ colorbarTests =
                         { model
                             | colorScheme = Just scheme
                         }
+        , test "parseScheme" <|
+            \_ ->
+                Colorbar.Menu.parseScheme
+                    [ { name = "Name"
+                      , kind = Just Diverging
+                      , palettes =
+                            [ { rank = 1, rgbs = [ "rgb(0,0,0)" ] }
+                            , { rank = 2, rgbs = [ "rgb(1,1,1)" ] }
+                            ]
+                      }
+                    ]
+                    "Name"
+                    1
+                    |> Expect.equal
+                        (Just
+                            { name = "Name"
+                            , colors =
+                                [ "rgb(0,0,0)" ]
+                            }
+                        )
         ]

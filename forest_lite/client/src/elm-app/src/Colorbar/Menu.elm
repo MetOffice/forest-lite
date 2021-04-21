@@ -3,6 +3,7 @@ module Colorbar.Menu exposing
     , Order(..)
     , Scheme
     , leftToRight
+    , parseScheme
     , update
     , view
     )
@@ -155,10 +156,30 @@ update msg model =
                     ( model, Cmd.none )
 
         GotRank rank ->
-            -- TODO Parse correct colors given rank
-            ( { model | colorSchemeRank = Just rank }
-            , setColorsCmd model.colorScheme
-            )
+            case model.colorSchemes of
+                Success colorSchemes ->
+                    case model.colorScheme of
+                        Nothing ->
+                            ( { model | colorSchemeRank = Just rank }
+                            , Cmd.none
+                            )
+
+                        Just scheme ->
+                            let
+                                maybeScheme =
+                                    parseScheme colorSchemes scheme.name rank
+                            in
+                            ( { model
+                                | colorSchemeRank = Just rank
+                                , colorScheme = maybeScheme
+                              }
+                            , setColorsCmd maybeScheme
+                            )
+
+                _ ->
+                    ( { model | colorSchemeRank = Just rank }
+                    , Cmd.none
+                    )
 
         GotResponse result ->
             case result of
@@ -191,9 +212,51 @@ update msg model =
                     ( model, Cmd.none )
 
         SetOrder order ->
-            ( { model | colorSchemeOrder = order }
-            , setColorsCmd model.colorScheme
-            )
+            case model.colorScheme of
+                Nothing ->
+                    ( { model | colorSchemeOrder = order }
+                    , Cmd.none
+                    )
+
+                Just scheme ->
+                    ( { model | colorSchemeOrder = order }
+                    , setColorsCmd (Just (applyOrder order scheme))
+                    )
+
+
+applyOrder : Order -> Scheme -> Scheme
+applyOrder order scheme =
+    case order of
+        LeftToRight ->
+            scheme
+
+        RightToLeft ->
+            { scheme | colors = List.reverse scheme.colors }
+
+
+parseScheme : List ColorScheme -> String -> Int -> Maybe Scheme
+parseScheme schemes name rank =
+    schemes
+        |> List.filter (\s -> s.name == name)
+        |> List.head
+        |> Maybe.andThen (pluckRank rank)
+
+
+pluckRank : Int -> ColorScheme -> Maybe Scheme
+pluckRank rank colorScheme =
+    let
+        maybeColors =
+            colorScheme.palettes
+                |> List.filter (\p -> p.rank == rank)
+                |> List.map .rgbs
+                |> List.head
+    in
+    case maybeColors of
+        Nothing ->
+            Nothing
+
+        Just colors ->
+            Just { name = colorScheme.name, colors = colors }
 
 
 setColorsCmd : Maybe Scheme -> Cmd Msg
@@ -410,7 +473,7 @@ viewSwatchButton maybeName toMsg swatch =
             "colors"
 
         swatchId =
-            swatch.name
+            encodeScheme { name = swatch.name, colors = swatch.colors }
 
         swatchValue =
             encodeScheme { name = swatch.name, colors = swatch.colors }
