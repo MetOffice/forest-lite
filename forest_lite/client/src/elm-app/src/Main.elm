@@ -8,7 +8,7 @@ import Browser
 import ColorSchemeRequest exposing (ColorScheme)
 import Colorbar
 import Colorbar.Limits exposing (DataLimits(..), LimitOrigin(..), Limits)
-import Colorbar.Menu exposing (Config)
+import Colorbar.Menu
 import DataVar.Label exposing (Label)
 import DataVar.Select exposing (Select)
 import Dataset exposing (Dataset)
@@ -22,7 +22,6 @@ import Dimension.Kind exposing (Kind(..))
 import Dimension.Label exposing (Label)
 import Endpoint
 import Geometry
-import Graphql.Http
 import Helpers exposing (onSelect)
 import Html
     exposing
@@ -77,7 +76,6 @@ import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import NaturalEarthFeature.Action exposing (Action(..))
 import Opacity exposing (Opacity)
-import Palettes exposing (Palettes)
 import Point exposing (Point)
 import Ports exposing (receiveData, sendAction)
 import Quadkey exposing (Quadkey)
@@ -133,17 +131,6 @@ portPayloadDecoder label =
 
 
 
--- GRAPHQL API
-
-
-graphqlRequest : String -> Cmd Msg
-graphqlRequest baseURL =
-    ColorSchemeRequest.queryByName "Spectral"
-        |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
-        |> Graphql.Http.send GotResponse
-
-
-
 -- MODEL
 
 
@@ -161,12 +148,13 @@ type alias Model =
     , coastlines_color : String
     , coastlines_width : Int
     , limits : Colorbar.Limits.Limits
-    , palette : Palettes.Name
-    , palette_level : Int
-    , palettes : List String
     , opacity : Opacity
     , collapsed : Dict String Bool
-    , colorSchemes : List ColorScheme
+    , colorSchemes : Request (List ColorScheme)
+    , colorSchemeKind : Maybe Api.Enum.Kind.Kind
+    , colorSchemeRank : Maybe Int
+    , colorSchemeRanks : List Int
+    , colorSchemeName : Maybe String
     }
 
 
@@ -201,7 +189,6 @@ type Msg
     | GotDatasets (Result Http.Error (List Dataset))
     | GotDatasetDescription Dataset.ID.ID (Result Http.Error Dataset.Description.Description)
     | GotAxis Dataset.ID.ID (Result Http.Error Axis)
-    | GotResponse (Result (Graphql.Http.Error (List ColorScheme)) (List ColorScheme))
     | DataVarSelected String
     | PointSelected String
     | HideShowLayer Bool
@@ -209,6 +196,7 @@ type Msg
     | ExpandCollapse SubMenu
     | NaturalEarthFeature NaturalEarthFeature.Msg
     | ColorbarMenuMsg Colorbar.Menu.Msg
+    | ColorbarLimitsMsg Colorbar.Limits.Msg
     | SetOpacityMsg Opacity
 
 
@@ -254,13 +242,14 @@ init flags =
             , coastlines_color = "black"
             , coastlines_width = 1
             , limits = Colorbar.Limits.init
-            , palette = Palettes.fromString "Reds"
-            , palette_level = 3
-            , palettes = Palettes.names
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
-            , colorSchemes = []
+            , colorSchemes = NotStarted
+            , colorSchemeKind = Nothing
+            , colorSchemeRank = Nothing
+            , colorSchemeName = Nothing
+            , colorSchemeRanks = []
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of
@@ -272,7 +261,6 @@ init flags =
                 cmd =
                     Cmd.batch
                         [ getDatasets baseURL
-                        , graphqlRequest baseURL
                         ]
             in
             case settings.claim of
@@ -661,13 +649,12 @@ update msg model =
             in
             ( newModel, Cmd.map ColorbarMenuMsg newCmd )
 
-        GotResponse result ->
-            case result of
-                Ok colorSchemes ->
-                    ( { model | colorSchemes = colorSchemes }, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
+        ColorbarLimitsMsg subMsg ->
+            let
+                ( subModel, subCmd ) =
+                    Colorbar.Limits.update subMsg model
+            in
+            ( subModel, Cmd.map ColorbarLimitsMsg subCmd )
 
 
 
@@ -923,26 +910,13 @@ viewHome model =
     viewLayerMenu model
 
 
-viewColorScheme : ColorScheme -> Html Msg
-viewColorScheme colorScheme =
-    let
-        kind =
-            colorScheme.kind
-                |> Maybe.map Api.Enum.Kind.toString
-                |> Maybe.withDefault "???"
-    in
-    div [] [ text (colorScheme.name ++ "  --  " ++ kind) ]
-
-
 viewLayerMenu : Model -> Html Msg
 viewLayerMenu model =
     case model.datasets of
         Success datasets ->
             div []
-                [ div [] (List.map viewColorScheme model.colorSchemes)
-
                 -- Select collection
-                , viewCollapse
+                [ viewCollapse
                     { active = getCollapsed DatasetMenu model.collapsed
                     , head = text "Forecast/Observations"
                     , body = viewDatasets datasets model
@@ -998,7 +972,11 @@ viewLayerMenu model =
                 , viewCollapse
                     { active = getCollapsed ColorbarMenu model.collapsed
                     , head = text "Colorbar settings"
-                    , body = Html.map ColorbarMenuMsg (Colorbar.Menu.view model)
+                    , body =
+                        div []
+                            [ Html.map ColorbarMenuMsg (Colorbar.Menu.view model)
+                            , Html.map ColorbarLimitsMsg (Colorbar.Limits.view model.limits)
+                            ]
                     , onClick = ExpandCollapse ColorbarMenu
                     }
                 ]

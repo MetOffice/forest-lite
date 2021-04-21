@@ -1,20 +1,36 @@
-module Colorbar.Menu exposing (Config, Msg, update, view)
+module Colorbar.Menu exposing (Msg, update, view)
 
+import Api.Enum.Kind exposing (Kind(..))
+import ColorSchemeRequest exposing (ColorScheme, ColorSchemeName)
 import Colorbar
-import Colorbar.Limits exposing (Limits)
+import DataVar.Select exposing (Select)
+import Graphql.Http
+import Graphql.Operation exposing (RootQuery)
+import Graphql.SelectionSet exposing (SelectionSet)
 import Helpers exposing (onSelect)
-import Html exposing (Html, div, label, option, select, text)
-import Html.Attributes exposing (selected, style, value)
-import Palettes exposing (Palettes)
+import Html exposing (Html, div, input, label, option, select, span, text)
+import Html.Attributes exposing (attribute, checked, class, classList, for, id, selected, style, title, value)
+import Request exposing (Request(..))
+import Set
 
 
-type alias Config a =
-    { a
-        | limits : Limits
-        , palettes : List String
-        , palette : Palettes.Name
-        , palette_level : Int
-    }
+
+-- GRAPHQL API
+
+
+graphqlRequest :
+    String
+    -> SelectionSet decodeTo RootQuery
+    -> (Result (Graphql.Http.Error decodeTo) decodeTo -> Msg)
+    -> Cmd Msg
+graphqlRequest baseURL query msg =
+    query
+        |> Graphql.Http.queryRequest (baseURL ++ "/graphql")
+        |> Graphql.Http.send msg
+
+
+type alias GraphqlResult a =
+    Result (Graphql.Http.Error a) a
 
 
 
@@ -22,127 +38,399 @@ type alias Config a =
 
 
 type alias Model a =
-    Colorbar.Limits.Model
-        { a
-            | palette_level : Int
-            , palette : Palettes.Name
-        }
+    { a
+        | baseURL : String
+        , colorSchemes : Request (List ColorScheme)
+        , colorSchemeKind : Maybe Api.Enum.Kind.Kind
+        , colorSchemeRanks : List Int
+        , colorSchemeRank : Maybe Int
+        , colorSchemeName : Maybe String
+    }
+
+
+type Name
+    = Name String
 
 
 type Msg
-    = SetPalette Palettes.Name
-    | SetPaletteLevels Int
-    | ColorbarLimitsMsg Colorbar.Limits.Msg
+    = GotKind (Maybe Api.Enum.Kind.Kind)
+    | GotRank Int
+    | GotResponse (GraphqlResult (List ColorScheme))
+    | GotColorSchemeNames (GraphqlResult (List ColorSchemeName))
+    | GotColorScheme Name
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
 update msg model =
     case msg of
-        SetPalette palette ->
-            ( { model | palette = palette }, Cmd.none )
+        GotKind maybeKind ->
+            case maybeKind of
+                Just kind ->
+                    let
+                        query =
+                            ColorSchemeRequest.queryByKind kind
 
-        SetPaletteLevels n ->
-            ( { model | palette_level = n }, Cmd.none )
+                        cmd =
+                            graphqlRequest model.baseURL query GotResponse
+                    in
+                    ( { model
+                        | colorSchemeKind = Just kind
+                        , colorSchemes = Loading
+                      }
+                    , cmd
+                    )
 
-        ColorbarLimitsMsg subMsg ->
-            let
-                ( subModel, subCmd ) =
-                    Colorbar.Limits.update subMsg model
-            in
-            ( subModel, Cmd.map ColorbarLimitsMsg subCmd )
+                Nothing ->
+                    ( model, Cmd.none )
+
+        GotRank rank ->
+            case model.colorSchemeKind of
+                Nothing ->
+                    ( { model | colorSchemeRank = Just rank }, Cmd.none )
+
+                Just kind ->
+                    let
+                        query =
+                            ColorSchemeRequest.queryNameByKind kind
+
+                        cmd =
+                            graphqlRequest model.baseURL query GotColorSchemeNames
+                    in
+                    ( { model | colorSchemeRank = Just rank }, cmd )
+
+        GotResponse result ->
+            case result of
+                Ok colorSchemes ->
+                    ( { model
+                        | colorSchemes = Success colorSchemes
+                        , colorSchemeRanks = toRanks colorSchemes
+                      }
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( { model | colorSchemes = Failure }, Cmd.none )
+
+        -- TODO implement update
+        GotColorSchemeNames _ ->
+            ( model, Cmd.none )
+
+        -- TODO implement update
+        GotColorScheme name ->
+            case name of
+                Name str ->
+                    ( { model | colorSchemeName = Just str }, Cmd.none )
+
+
+toRanks : List ColorScheme -> List Int
+toRanks colorSchemes =
+    colorSchemes
+        |> List.map .palettes
+        |> List.foldr (++) []
+        |> List.map .rank
+        |> Set.fromList
+        |> Set.toList
 
 
 
 -- VIEW
 
 
-view : Config a -> Html Msg
-view { limits, palettes, palette, palette_level } =
+view : Model a -> Html Msg
+view model =
+    case model.colorSchemes of
+        Success colorSchemes ->
+            div
+                [ style "display" "grid"
+                , style "grid-row-gap" "0.5em"
+                ]
+                [ viewKindRadioButtons model
+                , viewRankDropdown model
+                , viewColorSchemes model.colorSchemeName
+                    model.colorSchemeRank
+                    colorSchemes
+                ]
+
+        NotStarted ->
+            div
+                [ style "display" "grid"
+                , style "grid-row-gap" "0.5em"
+                ]
+                [ viewKindRadioButtons model
+                ]
+
+        Loading ->
+            div
+                [ style "display" "grid"
+                , style "grid-row-gap" "0.5em"
+                ]
+                [ viewKindRadioButtons model
+                , div [] [ div [ class "spinner" ] [] ]
+                ]
+
+        Failure ->
+            div
+                [ style "display" "grid"
+                , style "grid-row-gap" "0.5em"
+                ]
+                [ viewKindRadioButtons model
+                , div [] [ text "Could not load color schemes" ]
+                ]
+
+
+viewKindRadioButtons : Model a -> Html Msg
+viewKindRadioButtons model =
     let
-        level =
-            palette_level
+        toMsg =
+            GotKind << Api.Enum.Kind.fromString
 
-        levels =
-            Palettes.levels
-
-        levelToMsg =
-            SetPaletteLevels << Maybe.withDefault 1 << String.toInt
-
-        name =
-            Palettes.toString palette
-
-        names =
-            palettes
-
-        nameToMsg =
-            SetPalette << Palettes.fromString
+        kind =
+            model.colorSchemeKind
+                |> Maybe.map Api.Enum.Kind.toString
+                |> Maybe.withDefault "???"
     in
     div []
-        [ Colorbar.view
-            { title = "Title (placeholder)"
-            , low = -10
-            , high = 10
-            , palette = Palettes.toColors palette_level palette
-            }
-
-        -- CONTROLS
-        , div []
-            [ viewLevels levels level levelToMsg
-            , viewNames names name nameToMsg
+        [ div [ style "font-size" "0.9em" ]
+            [ text "Select nature of data"
             ]
-        , Html.map ColorbarLimitsMsg (Colorbar.Limits.view limits)
+        , radioButtons "kind"
+            toMsg
+            [ { id = "seq"
+              , label = text "Sequential"
+              , value = Api.Enum.Kind.toString Sequential
+              }
+            , { id = "div"
+              , label = text "Diverging"
+              , value = Api.Enum.Kind.toString Diverging
+              }
+            , { id = "qual"
+              , label = text "Qualitative"
+              , value = Api.Enum.Kind.toString Qualitative
+              }
+            ]
         ]
 
 
-viewNames : List String -> String -> (String -> Msg) -> Html Msg
-viewNames names name toMsg =
+viewRankDropdown : Model a -> Html Msg
+viewRankDropdown model =
+    dropdown []
+        { names = List.map String.fromInt model.colorSchemeRanks
+        , toMsg = GotRank << Maybe.withDefault 3 << String.toInt
+        , label = "Select number of colors"
+        , name =
+            model.colorSchemeRank
+                |> Maybe.withDefault 3
+                |> String.fromInt
+        }
+
+
+{-|
+
+    Helper view function to debug radio buttons
+
+-}
+viewSelectColorSchemeName : Maybe String -> Html Msg
+viewSelectColorSchemeName maybeName =
+    case maybeName of
+        Nothing ->
+            div [] [ text "Select color scheme" ]
+
+        Just str ->
+            div [] [ text ("Selected scheme: " ++ str) ]
+
+
+viewColorSchemes : Maybe String -> Maybe Int -> List ColorScheme -> Html Msg
+viewColorSchemes maybeName maybeRank schemes =
+    case maybeRank of
+        Nothing ->
+            text ""
+
+        Just rank ->
+            let
+                swatches =
+                    schemes
+                        |> List.filter (hasRank rank)
+                        |> List.map (extractSwatch rank)
+                        |> List.filterMap identity
+
+                toMsg =
+                    GotColorScheme << Name
+            in
+            div []
+                [ div [ style "font-size" "0.9em" ]
+                    [ viewSelectColorSchemeName maybeName ]
+                , div
+                    [ style "display" "grid"
+                    , style "grid-row-gap" "0.5em"
+                    , style "grid-template-columns" "1fr 1fr"
+                    ]
+                    (List.map (viewSwatchButton maybeName toMsg) swatches)
+                ]
+
+
+type alias Swatch =
+    { name : String
+    , colors : List String
+    }
+
+
+viewSwatchButton : Maybe String -> (String -> Msg) -> Swatch -> Html Msg
+viewSwatchButton maybeName toMsg swatch =
+    let
+        name =
+            "colors"
+
+        swatchId =
+            swatch.name
+
+        swatchValue =
+            swatch.name
+
+        isChecked =
+            maybeName
+                |> Maybe.map (\n -> n == swatch.name)
+                |> Maybe.withDefault False
+    in
     div
-        [ style "display" "inline-block"
-        , style "margin-left" "1em"
+        [ style "display" "flex"
+        , style "align-items" "center"
         ]
+        [ input
+            [ attribute "type" "radio"
+            , attribute "name" name
+            , id swatchId
+            , value swatchValue
+            , onSelect toMsg
+            , checked isChecked
+            ]
+            []
+        , label
+            [ for swatchId
+            , style "flex-grow" "1"
+            ]
+            [ viewSwatchColors swatch.name isChecked swatch.colors ]
+        ]
+
+
+hasRank : Int -> ColorScheme -> Bool
+hasRank rank scheme =
+    scheme.palettes
+        |> List.filter (\p -> p.rank == rank)
+        |> List.isEmpty
+        |> not
+
+
+extractSwatch : Int -> ColorScheme -> Maybe Swatch
+extractSwatch rank scheme =
+    let
+        maybePalette =
+            scheme.palettes
+                |> List.filter (\p -> p.rank == rank)
+                |> List.head
+    in
+    case maybePalette of
+        Nothing ->
+            Nothing
+
+        Just palette ->
+            Just { name = scheme.name, colors = palette.rgbs }
+
+
+viewSwatchColors : String -> Bool -> List String -> Html Msg
+viewSwatchColors hoverText isChecked colors =
+    span
+        [ style "display" "flex"
+        , title hoverText
+        , class "highlight"
+        , class "pointer"
+        , classList [ ( "checked", isChecked ) ]
+        ]
+        (List.map
+            (\color ->
+                span
+                    [ style "background-color" color
+                    , style "height" "1em"
+                    , style "flex-grow" "1"
+                    , style "display" "inline-block"
+                    ]
+                    []
+            )
+            colors
+        )
+
+
+
+-- RADIO BUTTON
+
+
+type alias RadioConfig =
+    { id : String
+    , label : Html Msg
+    , value : String
+    }
+
+
+radioButtons : String -> (String -> Msg) -> List RadioConfig -> Html Msg
+radioButtons name toMsg configs =
+    div []
+        (List.map
+            (\config ->
+                radioButton name toMsg config
+            )
+            configs
+        )
+
+
+radioButton : String -> (String -> Msg) -> RadioConfig -> Html Msg
+radioButton name toMsg config =
+    div []
+        [ input
+            [ attribute "type" "radio"
+            , attribute "name" name
+            , id config.id
+            , value config.value
+            , onSelect toMsg
+            ]
+            []
+        , label
+            [ for config.id
+            ]
+            [ config.label ]
+        ]
+
+
+
+-- DROPDOWN
+
+
+type alias DropdownConfig =
+    { names : List String
+    , name : String
+    , toMsg : String -> Msg
+    , label : String
+    }
+
+
+dropdown : List (Html.Attribute Msg) -> DropdownConfig -> Html Msg
+dropdown attrs config =
+    div attrs
         [ label
             [ style "display" "block"
             , style "font-size" "0.9em"
             ]
-            [ text "Named palette:"
+            [ text config.label
             ]
         , select
-            [ onSelect toMsg
+            [ onSelect config.toMsg
             , style "width" "100%"
             ]
             (List.map
                 (\n ->
                     option
-                        [ selected (n == name)
+                        [ selected (n == config.name)
                         ]
                         [ text n ]
                 )
-                names
-            )
-        ]
-
-
-viewLevels : List Int -> Int -> (String -> Msg) -> Html Msg
-viewLevels levels level toMsg =
-    div [ style "display" "inline-block" ]
-        [ label
-            [ style "display" "block"
-            , style "font-size" "0.9em"
-            ]
-            [ text "Data levels:"
-            ]
-        , select
-            [ style "width" "100%"
-            , onSelect toMsg
-            ]
-            (List.map
-                (\n ->
-                    option
-                        [ selected (n == level)
-                        , value (String.fromInt n)
-                        ]
-                        [ text (String.fromInt n) ]
-                )
-                levels
+                config.names
             )
         ]
