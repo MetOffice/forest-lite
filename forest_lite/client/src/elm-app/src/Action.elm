@@ -8,7 +8,7 @@ import Dataset.ID exposing (ID)
 import Dataset.Label exposing (Label)
 import Datum exposing (Datum)
 import Json.Decode exposing (Decoder)
-import Json.Encode
+import Json.Encode exposing (list, string)
 import MultiLine exposing (MultiLine)
 import NaturalEarthFeature exposing (NaturalEarthFeature)
 import NaturalEarthFeature.Action exposing (Action(..))
@@ -35,6 +35,7 @@ type Action
     | GetHttpNaturalEarthFeature NaturalEarthFeature Quadkey
     | SetHttpNaturalEarthFeature NaturalEarthFeature BoundingBox Quadkey MultiLine
     | NaturalEarthFeatureAction NaturalEarthFeature.Action.Action
+    | SetColors (List String)
 
 
 type alias OnlyActive =
@@ -206,6 +207,9 @@ encode action =
                     NaturalEarthFeature.Action.key subAction
             in
             toString key payload
+
+        SetColors colors ->
+            toString "SET_COLORS" (list string colors)
 
 
 encodeLimitPath : Dataset.ID.ID -> DataVar.Label.Label -> Json.Encode.Value

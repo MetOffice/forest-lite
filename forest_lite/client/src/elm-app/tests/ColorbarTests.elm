@@ -8,24 +8,50 @@ import Test exposing (..)
 
 colorbarTests : Test
 colorbarTests =
-    test "update" <|
-        \_ ->
-            let
-                model =
-                    { baseURL = ""
-                    , colorSchemes = Loading
-                    , colorSchemeKind = Nothing
-                    , colorSchemeRanks = []
-                    , colorSchemeRank = Nothing
-                    , colorSchemeName = Nothing
-                    , colorSchemeOrder = LeftToRight
-                    }
+    describe "Colorbar.Menu"
+        [ test "update model" <|
+            \_ ->
+                let
+                    model =
+                        { baseURL = ""
+                        , colorScheme = Nothing
+                        , colorSchemes = Loading
+                        , colorSchemeKind = Nothing
+                        , colorSchemeRanks = []
+                        , colorSchemeRank = Nothing
+                        , colorSchemeOrder = LeftToRight
+                        }
 
-                msg =
-                    SetOrder RightToLeft
-            in
-            Colorbar.Menu.update msg model
-                |> Expect.equal
-                    ( { model | colorSchemeOrder = RightToLeft }
-                    , Cmd.none
-                    )
+                    msg =
+                        SetOrder RightToLeft
+                in
+                Colorbar.Menu.update msg model
+                    |> Tuple.first
+                    |> Expect.equal
+                        { model | colorSchemeOrder = RightToLeft }
+        , test "update given SetColorScheme" <|
+            \_ ->
+                let
+                    model =
+                        { baseURL = ""
+                        , colorScheme = Nothing
+                        , colorSchemes = Loading
+                        , colorSchemeKind = Nothing
+                        , colorSchemeRanks = []
+                        , colorSchemeRank = Nothing
+                        , colorSchemeOrder = LeftToRight
+                        }
+
+                    scheme =
+                        { name = "Hello, World!", colors = [] }
+
+                    msg =
+                        SetColorScheme (Ok scheme)
+                in
+                Colorbar.Menu.update msg model
+                    |> Tuple.first
+                    |> Expect.equal
+                        { model
+                            | colorScheme = Just scheme
+                        }
+        ]

@@ -150,11 +150,11 @@ type alias Model =
     , limits : Colorbar.Limits.Limits
     , opacity : Opacity
     , collapsed : Dict String Bool
+    , colorScheme : Maybe Colorbar.Menu.Scheme
     , colorSchemes : Request (List ColorScheme)
     , colorSchemeKind : Maybe Api.Enum.Kind.Kind
     , colorSchemeRank : Maybe Int
     , colorSchemeRanks : List Int
-    , colorSchemeName : Maybe String
     , colorSchemeOrder : Colorbar.Menu.Order
     }
 
@@ -246,10 +246,10 @@ init flags =
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
+            , colorScheme = Nothing
             , colorSchemes = NotStarted
             , colorSchemeKind = Nothing
             , colorSchemeRank = Nothing
-            , colorSchemeName = Nothing
             , colorSchemeOrder = Colorbar.Menu.leftToRight
             , colorSchemeRanks = []
             }

@@ -1,5 +1,13 @@
-module Colorbar.Menu exposing (Msg(..), Order(..), leftToRight, update, view)
+module Colorbar.Menu exposing
+    ( Msg(..)
+    , Order(..)
+    , Scheme
+    , leftToRight
+    , update
+    , view
+    )
 
+import Action exposing (Action(..))
 import Api.Enum.Kind exposing (Kind(..))
 import ColorSchemeRequest exposing (ColorScheme, ColorSchemeName)
 import Colorbar
@@ -11,6 +19,9 @@ import Helpers exposing (onSelect)
 import Html exposing (Html, div, input, label, option, select, span, text)
 import Html.Attributes exposing (attribute, checked, class, classList, for, id, selected, style, title, value)
 import Html.Events exposing (onCheck)
+import Json.Decode exposing (Decoder)
+import Json.Encode
+import Ports exposing (sendAction)
 import Request exposing (Request(..))
 import Set
 
@@ -74,17 +85,41 @@ orderIsFlipped order =
 type alias Model a =
     { a
         | baseURL : String
+        , colorScheme : Maybe Scheme
         , colorSchemes : Request (List ColorScheme)
         , colorSchemeKind : Maybe Api.Enum.Kind.Kind
         , colorSchemeRanks : List Int
         , colorSchemeRank : Maybe Int
-        , colorSchemeName : Maybe String
         , colorSchemeOrder : Order
     }
 
 
-type Name
-    = Name String
+type alias Scheme =
+    { name : String
+    , colors : List String
+    }
+
+
+encodeScheme : Scheme -> String
+encodeScheme scheme =
+    Json.Encode.encode 0
+        (Json.Encode.object
+            [ ( "name", Json.Encode.string scheme.name )
+            , ( "colors", Json.Encode.list Json.Encode.string scheme.colors )
+            ]
+        )
+
+
+decodeScheme : String -> Result Json.Decode.Error Scheme
+decodeScheme =
+    Json.Decode.decodeString decoder
+
+
+decoder : Decoder Scheme
+decoder =
+    Json.Decode.map2 Scheme
+        (Json.Decode.field "name" Json.Decode.string)
+        (Json.Decode.field "colors" (Json.Decode.list Json.Decode.string))
 
 
 type Msg
@@ -92,7 +127,7 @@ type Msg
     | GotRank Int
     | GotResponse (GraphqlResult (List ColorScheme))
     | GotColorSchemeNames (GraphqlResult (List ColorSchemeName))
-    | GotColorScheme Name
+    | SetColorScheme (Result Json.Decode.Error Scheme)
     | SetOrder Order
 
 
@@ -120,19 +155,10 @@ update msg model =
                     ( model, Cmd.none )
 
         GotRank rank ->
-            case model.colorSchemeKind of
-                Nothing ->
-                    ( { model | colorSchemeRank = Just rank }, Cmd.none )
-
-                Just kind ->
-                    let
-                        query =
-                            ColorSchemeRequest.queryNameByKind kind
-
-                        cmd =
-                            graphqlRequest model.baseURL query GotColorSchemeNames
-                    in
-                    ( { model | colorSchemeRank = Just rank }, cmd )
+            -- TODO Parse correct colors given rank
+            ( { model | colorSchemeRank = Just rank }
+            , setColorsCmd model.colorScheme
+            )
 
         GotResponse result ->
             case result of
@@ -152,13 +178,34 @@ update msg model =
             ( model, Cmd.none )
 
         -- TODO implement update
-        GotColorScheme name ->
-            case name of
-                Name str ->
-                    ( { model | colorSchemeName = Just str }, Cmd.none )
+        SetColorScheme result ->
+            case result of
+                Ok scheme ->
+                    let
+                        cmd =
+                            setColorsCmd (Just scheme)
+                    in
+                    ( { model | colorScheme = Just scheme }, cmd )
+
+                Err _ ->
+                    ( model, Cmd.none )
 
         SetOrder order ->
-            ( { model | colorSchemeOrder = order }, Cmd.none )
+            ( { model | colorSchemeOrder = order }
+            , setColorsCmd model.colorScheme
+            )
+
+
+setColorsCmd : Maybe Scheme -> Cmd Msg
+setColorsCmd maybeScheme =
+    case maybeScheme of
+        Nothing ->
+            Cmd.none
+
+        Just scheme ->
+            SetColors scheme.colors
+                |> Action.encode
+                |> sendAction
 
 
 toRanks : List ColorScheme -> List Int
@@ -186,7 +233,7 @@ view model =
                 [ viewKindRadioButtons model
                 , viewRankDropdown model
                 , viewOrderButton model.colorSchemeOrder
-                , viewColorSchemes model.colorSchemeName
+                , viewColorSchemes model.colorScheme
                     model.colorSchemeRank
                     model.colorSchemeOrder
                     colorSchemes
@@ -306,8 +353,12 @@ viewSelectColorSchemeName maybeName =
             div [] [ text ("Selected scheme: " ++ str) ]
 
 
-viewColorSchemes : Maybe String -> Maybe Int -> Order -> List ColorScheme -> Html Msg
-viewColorSchemes maybeName maybeRank order schemes =
+viewColorSchemes : Maybe Scheme -> Maybe Int -> Order -> List ColorScheme -> Html Msg
+viewColorSchemes maybeScheme maybeRank order schemes =
+    let
+        maybeName =
+            Maybe.map .name maybeScheme
+    in
     case maybeRank of
         Nothing ->
             text ""
@@ -322,7 +373,7 @@ viewColorSchemes maybeName maybeRank order schemes =
                         |> List.map (flipSwatch order)
 
                 toMsg =
-                    GotColorScheme << Name
+                    SetColorScheme << decodeScheme
             in
             div []
                 [ div [ style "font-size" "0.9em" ]
@@ -362,7 +413,7 @@ viewSwatchButton maybeName toMsg swatch =
             swatch.name
 
         swatchValue =
-            swatch.name
+            encodeScheme { name = swatch.name, colors = swatch.colors }
 
         isChecked =
             maybeName
