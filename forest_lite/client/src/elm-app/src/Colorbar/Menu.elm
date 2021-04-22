@@ -10,9 +10,7 @@ module Colorbar.Menu exposing
 
 import Action exposing (Action(..))
 import Api.Enum.Kind exposing (Kind(..))
-import ColorScheme.Request exposing (ColorScheme, ColorSchemeName)
-import Colorbar
-import DataVar.Select exposing (Select)
+import ColorScheme.Request exposing (ColorScheme)
 import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
@@ -127,7 +125,6 @@ type Msg
     = GotKind (Maybe Api.Enum.Kind.Kind)
     | GotRank Int
     | GotResponse (GraphqlResult (List ColorScheme))
-    | GotColorSchemeNames (GraphqlResult (List ColorSchemeName))
     | SetColorScheme (Result Json.Decode.Error Scheme)
     | SetOrder Order
 
@@ -193,10 +190,6 @@ update msg model =
 
                 _ ->
                     ( { model | colorSchemes = Failure }, Cmd.none )
-
-        -- TODO implement update
-        GotColorSchemeNames _ ->
-            ( model, Cmd.none )
 
         -- TODO implement update
         SetColorScheme result ->
