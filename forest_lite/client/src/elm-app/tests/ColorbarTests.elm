@@ -1,7 +1,8 @@
 module ColorbarTests exposing (..)
 
 import Api.Enum.Kind exposing (Kind(..))
-import Colorbar.Menu exposing (Msg(..), Order(..))
+import ColorScheme.Order exposing (leftToRight, rightToLeft)
+import Colorbar.Menu exposing (Msg(..))
 import Expect exposing (Expectation)
 import Request exposing (Request(..))
 import Test exposing (..)
@@ -20,16 +21,16 @@ colorbarTests =
                         , colorSchemeKind = Nothing
                         , colorSchemeRanks = []
                         , colorSchemeRank = Nothing
-                        , colorSchemeOrder = LeftToRight
+                        , colorSchemeOrder = leftToRight
                         }
 
                     msg =
-                        SetOrder RightToLeft
+                        SetOrder rightToLeft
                 in
                 Colorbar.Menu.update msg model
                     |> Tuple.first
                     |> Expect.equal
-                        { model | colorSchemeOrder = RightToLeft }
+                        { model | colorSchemeOrder = rightToLeft }
         , test "update given SetColorScheme" <|
             \_ ->
                 let
@@ -40,7 +41,7 @@ colorbarTests =
                         , colorSchemeKind = Nothing
                         , colorSchemeRanks = []
                         , colorSchemeRank = Nothing
-                        , colorSchemeOrder = LeftToRight
+                        , colorSchemeOrder = leftToRight
                         }
 
                     scheme =

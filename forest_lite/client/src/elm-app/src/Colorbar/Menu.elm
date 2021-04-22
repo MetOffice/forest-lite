@@ -1,8 +1,6 @@
 module Colorbar.Menu exposing
     ( Msg(..)
-    , Order(..)
     , Scheme
-    , leftToRight
     , parseScheme
     , update
     , view
@@ -10,6 +8,7 @@ module Colorbar.Menu exposing
 
 import Action exposing (Action(..))
 import Api.Enum.Kind exposing (Kind(..))
+import ColorScheme.Order exposing (Order)
 import ColorScheme.Request exposing (ColorScheme)
 import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
@@ -42,39 +41,6 @@ graphqlRequest baseURL query msg =
 
 type alias GraphqlResult a =
     Result (Graphql.Http.Error a) a
-
-
-
--- COLOR ORDER
-
-
-type Order
-    = LeftToRight
-    | RightToLeft
-
-
-leftToRight : Order
-leftToRight =
-    LeftToRight
-
-
-orderFromBool : Bool -> Order
-orderFromBool flag =
-    if flag then
-        RightToLeft
-
-    else
-        LeftToRight
-
-
-orderIsFlipped : Order -> Bool
-orderIsFlipped order =
-    case order of
-        LeftToRight ->
-            False
-
-        RightToLeft ->
-            True
 
 
 
@@ -165,12 +131,18 @@ update msg model =
                             let
                                 maybeScheme =
                                     parseScheme colorSchemes scheme.name rank
+
+                                cmd =
+                                    maybeScheme
+                                        |> Maybe.map .colors
+                                        |> Maybe.map setColorsCmd
+                                        |> Maybe.withDefault Cmd.none
                             in
                             ( { model
                                 | colorSchemeRank = Just rank
                                 , colorScheme = maybeScheme
                               }
-                            , setColorsCmd maybeScheme
+                            , cmd
                             )
 
                 _ ->
@@ -197,7 +169,7 @@ update msg model =
                 Ok scheme ->
                     let
                         cmd =
-                            setColorsCmd (Just scheme)
+                            setColorsCmd scheme.colors
                     in
                     ( { model | colorScheme = Just scheme }, cmd )
 
@@ -213,18 +185,8 @@ update msg model =
 
                 Just scheme ->
                     ( { model | colorSchemeOrder = order }
-                    , setColorsCmd (Just (applyOrder order scheme))
+                    , setColorsCmd (ColorScheme.Order.arrange order scheme.colors)
                     )
-
-
-applyOrder : Order -> Scheme -> Scheme
-applyOrder order scheme =
-    case order of
-        LeftToRight ->
-            scheme
-
-        RightToLeft ->
-            { scheme | colors = List.reverse scheme.colors }
 
 
 parseScheme : List ColorScheme -> String -> Int -> Maybe Scheme
@@ -252,16 +214,11 @@ pluckRank rank colorScheme =
             Just { name = colorScheme.name, colors = colors }
 
 
-setColorsCmd : Maybe Scheme -> Cmd Msg
-setColorsCmd maybeScheme =
-    case maybeScheme of
-        Nothing ->
-            Cmd.none
-
-        Just scheme ->
-            SetColors scheme.colors
-                |> Action.encode
-                |> sendAction
+setColorsCmd : List String -> Cmd Msg
+setColorsCmd colors =
+    SetColors colors
+        |> Action.encode
+        |> sendAction
 
 
 toRanks : List ColorScheme -> List Int
@@ -329,7 +286,7 @@ viewOrderButton order =
             "reverse-btn"
 
         toMsg =
-            SetOrder << orderFromBool
+            SetOrder << ColorScheme.Order.fromBool
     in
     div []
         [ input
@@ -337,7 +294,7 @@ viewOrderButton order =
             , class "toggle"
             , id buttonId
             , onCheck toMsg
-            , checked (orderIsFlipped order)
+            , checked (ColorScheme.Order.isRightToLeft order)
             ]
             []
         , label
@@ -451,12 +408,7 @@ type alias Swatch =
 
 flipSwatch : Order -> Swatch -> Swatch
 flipSwatch order swatch =
-    case order of
-        LeftToRight ->
-            swatch
-
-        RightToLeft ->
-            { swatch | colors = List.reverse swatch.colors }
+    { swatch | colors = ColorScheme.Order.arrange order swatch.colors }
 
 
 viewSwatchButton : Maybe String -> (String -> Msg) -> Swatch -> Html Msg

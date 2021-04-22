@@ -5,6 +5,7 @@ import Api.Enum.Kind exposing (Kind(..))
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
+import ColorScheme.Order exposing (Order)
 import ColorScheme.Request exposing (ColorScheme)
 import Colorbar
 import Colorbar.Limits exposing (DataLimits(..), LimitOrigin(..), Limits)
@@ -155,7 +156,7 @@ type alias Model =
     , colorSchemeKind : Maybe Api.Enum.Kind.Kind
     , colorSchemeRank : Maybe Int
     , colorSchemeRanks : List Int
-    , colorSchemeOrder : Colorbar.Menu.Order
+    , colorSchemeOrder : ColorScheme.Order.Order
     }
 
 
@@ -250,7 +251,7 @@ init flags =
             , colorSchemes = NotStarted
             , colorSchemeKind = Nothing
             , colorSchemeRank = Nothing
-            , colorSchemeOrder = Colorbar.Menu.leftToRight
+            , colorSchemeOrder = ColorScheme.Order.leftToRight
             , colorSchemeRanks = []
             }
     in
