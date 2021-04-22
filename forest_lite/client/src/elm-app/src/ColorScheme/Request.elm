@@ -1,4 +1,4 @@
-module ColorSchemeRequest exposing (..)
+module ColorScheme.Request exposing (..)
 
 {-| Request color scheme information from GraphQL endpoint
 -}

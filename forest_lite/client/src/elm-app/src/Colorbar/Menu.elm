@@ -10,7 +10,7 @@ module Colorbar.Menu exposing
 
 import Action exposing (Action(..))
 import Api.Enum.Kind exposing (Kind(..))
-import ColorSchemeRequest exposing (ColorScheme, ColorSchemeName)
+import ColorScheme.Request exposing (ColorScheme, ColorSchemeName)
 import Colorbar
 import DataVar.Select exposing (Select)
 import Graphql.Http
@@ -140,7 +140,7 @@ update msg model =
                 Just kind ->
                     let
                         query =
-                            ColorSchemeRequest.queryByKind kind
+                            ColorScheme.Request.queryByKind kind
 
                         cmd =
                             graphqlRequest model.baseURL query GotResponse

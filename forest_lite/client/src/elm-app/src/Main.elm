@@ -5,7 +5,7 @@ import Api.Enum.Kind exposing (Kind(..))
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
-import ColorSchemeRequest exposing (ColorScheme)
+import ColorScheme.Request exposing (ColorScheme)
 import Colorbar
 import Colorbar.Limits exposing (DataLimits(..), LimitOrigin(..), Limits)
 import Colorbar.Menu
