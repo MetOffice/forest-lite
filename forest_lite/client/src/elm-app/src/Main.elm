@@ -5,6 +5,7 @@ import Api.Enum.Kind exposing (Kind(..))
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
+import ColorScheme.Name exposing (Name)
 import ColorScheme.Order exposing (Order)
 import ColorScheme.Request exposing (ColorScheme)
 import Colorbar
@@ -157,6 +158,7 @@ type alias Model =
     , colorSchemeRank : Maybe Int
     , colorSchemeRanks : List Int
     , colorSchemeOrder : ColorScheme.Order.Order
+    , colorSchemeName : Maybe Name
     }
 
 
@@ -250,9 +252,10 @@ init flags =
             , colorScheme = Nothing
             , colorSchemes = NotStarted
             , colorSchemeKind = Nothing
+            , colorSchemeRanks = []
             , colorSchemeRank = Nothing
             , colorSchemeOrder = ColorScheme.Order.leftToRight
-            , colorSchemeRanks = []
+            , colorSchemeName = Nothing
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of

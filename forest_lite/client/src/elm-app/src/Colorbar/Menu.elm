@@ -8,6 +8,7 @@ module Colorbar.Menu exposing
 
 import Action exposing (Action(..))
 import Api.Enum.Kind exposing (Kind(..))
+import ColorScheme.Name exposing (Name)
 import ColorScheme.Order exposing (Order)
 import ColorScheme.Request exposing (ColorScheme)
 import Colorbar
@@ -52,9 +53,16 @@ type alias Model a =
     { a
         | baseURL : String
         , colorScheme : Maybe Scheme
+
+        -- All ColorSchemes
         , colorSchemes : Request (List ColorScheme)
+
+        -- Intermediate choices
         , colorSchemeKind : Maybe Api.Enum.Kind.Kind
         , colorSchemeRanks : List Int
+
+        -- Selected scheme
+        , colorSchemeName : Maybe Name
         , colorSchemeRank : Maybe Int
         , colorSchemeOrder : Order
     }
@@ -94,6 +102,7 @@ type Msg
     | GotResponse (GraphqlResult (List ColorScheme))
     | SetColorScheme (Result Json.Decode.Error Scheme)
     | SetOrder Order
+    | SetName Name
 
 
 update : Msg -> Model a -> ( Model a, Cmd Msg )
@@ -176,6 +185,13 @@ update msg model =
 
                 Err _ ->
                     ( model, Cmd.none )
+
+        SetName name ->
+            let
+                newModel =
+                    { model | colorSchemeName = Just name }
+            in
+            ( newModel, Cmd.none )
 
         SetOrder order ->
             case model.colorScheme of
@@ -408,7 +424,7 @@ viewColorSchemes maybeScheme maybeRank order schemes =
                         |> List.map (flipSwatch order)
 
                 toMsg =
-                    SetColorScheme << decodeScheme
+                    SetName << ColorScheme.Name.fromString
             in
             div []
                 [ div [ style "font-size" "0.9em" ]
@@ -440,10 +456,10 @@ viewSwatchButton maybeName toMsg swatch =
             "colors"
 
         swatchId =
-            encodeScheme { name = swatch.name, colors = swatch.colors }
+            swatch.name
 
         swatchValue =
-            encodeScheme { name = swatch.name, colors = swatch.colors }
+            swatch.name
 
         isChecked =
             maybeName

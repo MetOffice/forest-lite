@@ -1,6 +1,7 @@
 module ColorbarTests exposing (..)
 
 import Api.Enum.Kind exposing (Kind(..))
+import ColorScheme.Name
 import ColorScheme.Order exposing (leftToRight, rightToLeft)
 import Colorbar.Menu exposing (Msg(..))
 import Expect exposing (Expectation)
@@ -20,6 +21,7 @@ colorbarTests =
                         , colorSchemes = Loading
                         , colorSchemeKind = Nothing
                         , colorSchemeRanks = []
+                        , colorSchemeName = Nothing
                         , colorSchemeRank = Nothing
                         , colorSchemeOrder = leftToRight
                         }
@@ -31,7 +33,7 @@ colorbarTests =
                     |> Tuple.first
                     |> Expect.equal
                         { model | colorSchemeOrder = rightToLeft }
-        , test "update given SetColorScheme" <|
+        , test "update given SetName" <|
             \_ ->
                 let
                     model =
@@ -40,21 +42,22 @@ colorbarTests =
                         , colorSchemes = Loading
                         , colorSchemeKind = Nothing
                         , colorSchemeRanks = []
+                        , colorSchemeName = Nothing
                         , colorSchemeRank = Nothing
                         , colorSchemeOrder = leftToRight
                         }
 
-                    scheme =
-                        { name = "Hello, World!", colors = [] }
+                    name =
+                        ColorScheme.Name.fromString "Name"
 
                     msg =
-                        SetColorScheme (Ok scheme)
+                        SetName name
                 in
                 Colorbar.Menu.update msg model
                     |> Tuple.first
                     |> Expect.equal
                         { model
-                            | colorScheme = Just scheme
+                            | colorSchemeName = Just name
                         }
         , test "parseScheme" <|
             \_ ->
