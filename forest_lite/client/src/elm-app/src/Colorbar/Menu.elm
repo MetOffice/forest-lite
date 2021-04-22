@@ -10,6 +10,7 @@ import Action exposing (Action(..))
 import Api.Enum.Kind exposing (Kind(..))
 import ColorScheme.Order exposing (Order)
 import ColorScheme.Request exposing (ColorScheme)
+import Colorbar
 import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
@@ -243,7 +244,8 @@ view model =
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                [ viewKindRadioButtons model
+                [ viewPreview model
+                , viewKindRadioButtons model
                 , viewRankDropdown model
                 , viewOrderButton model.colorSchemeOrder
                 , viewColorSchemes model.colorScheme
@@ -257,7 +259,8 @@ view model =
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                [ viewKindRadioButtons model
+                [ viewPreview model
+                , viewKindRadioButtons model
                 ]
 
         Loading ->
@@ -265,7 +268,8 @@ view model =
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                [ viewKindRadioButtons model
+                [ viewPreview model
+                , viewKindRadioButtons model
                 , div [] [ div [ class "spinner" ] [] ]
                 ]
 
@@ -274,9 +278,27 @@ view model =
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                [ viewKindRadioButtons model
+                [ viewPreview model
+                , viewKindRadioButtons model
                 , div [] [ text "Could not load color schemes" ]
                 ]
+
+
+viewPreview : Model a -> Html Msg
+viewPreview model =
+    let
+        palette =
+            model.colorScheme
+                |> Maybe.map .colors
+                |> Maybe.map (ColorScheme.Order.arrange model.colorSchemeOrder)
+                |> Maybe.withDefault [ "#FFFFFF", "#000000" ]
+    in
+    Colorbar.view
+        { high = 1
+        , low = 0
+        , palette = palette
+        , title = "Preview colorbar"
+        }
 
 
 viewOrderButton : Order -> Html Msg
