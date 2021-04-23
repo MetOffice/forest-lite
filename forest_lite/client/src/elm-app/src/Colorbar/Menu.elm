@@ -1,6 +1,6 @@
 module Colorbar.Menu exposing
     ( Msg(..)
-    , Scheme
+    , Swatch
     , parseScheme
     , update
     , view
@@ -52,7 +52,7 @@ type alias GraphqlResult a =
 type alias Model a =
     { a
         | baseURL : String
-        , colorScheme : Maybe Scheme
+        , colorScheme : Maybe Swatch
 
         -- All ColorSchemes
         , colorSchemes : Request (List ColorScheme)
@@ -68,39 +68,11 @@ type alias Model a =
     }
 
 
-type alias Scheme =
-    { name : String
-    , colors : List String
-    }
-
-
-encodeScheme : Scheme -> String
-encodeScheme scheme =
-    Json.Encode.encode 0
-        (Json.Encode.object
-            [ ( "name", Json.Encode.string scheme.name )
-            , ( "colors", Json.Encode.list Json.Encode.string scheme.colors )
-            ]
-        )
-
-
-decodeScheme : String -> Result Json.Decode.Error Scheme
-decodeScheme =
-    Json.Decode.decodeString decoder
-
-
-decoder : Decoder Scheme
-decoder =
-    Json.Decode.map2 Scheme
-        (Json.Decode.field "name" Json.Decode.string)
-        (Json.Decode.field "colors" (Json.Decode.list Json.Decode.string))
-
-
 type Msg
     = GotKind (Maybe Api.Enum.Kind.Kind)
     | GotRank Int
     | GotResponse (GraphqlResult (List ColorScheme))
-    | SetColorScheme (Result Json.Decode.Error Scheme)
+    | SetColorScheme (Result Json.Decode.Error Swatch)
     | SetOrder Order
     | SetName Name
 
@@ -206,7 +178,7 @@ update msg model =
                     )
 
 
-parseScheme : List ColorScheme -> String -> Int -> Maybe Scheme
+parseScheme : List ColorScheme -> String -> Int -> Maybe Swatch
 parseScheme schemes name rank =
     schemes
         |> List.filter (\s -> s.name == name)
@@ -214,7 +186,7 @@ parseScheme schemes name rank =
         |> Maybe.andThen (pluckRank rank)
 
 
-pluckRank : Int -> ColorScheme -> Maybe Scheme
+pluckRank : Int -> ColorScheme -> Maybe Swatch
 pluckRank rank colorScheme =
     let
         maybeColors =
@@ -404,7 +376,7 @@ viewSelectColorSchemeName maybeName =
             div [] [ text ("Selected scheme: " ++ str) ]
 
 
-viewColorSchemes : Maybe Scheme -> Maybe Int -> Order -> List ColorScheme -> Html Msg
+viewColorSchemes : Maybe Swatch -> Maybe Int -> Order -> List ColorScheme -> Html Msg
 viewColorSchemes maybeScheme maybeRank order schemes =
     let
         maybeName =

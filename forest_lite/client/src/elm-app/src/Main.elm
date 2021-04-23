@@ -152,7 +152,7 @@ type alias Model =
     , limits : Colorbar.Limits.Limits
     , opacity : Opacity
     , collapsed : Dict String Bool
-    , colorScheme : Maybe Colorbar.Menu.Scheme
+    , colorScheme : Maybe Colorbar.Menu.Swatch
     , colorSchemes : Request (List ColorScheme)
     , colorSchemeKind : Maybe Api.Enum.Kind.Kind
     , colorSchemeRank : Maybe Int
