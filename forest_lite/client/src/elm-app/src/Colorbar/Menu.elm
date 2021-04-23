@@ -55,7 +55,6 @@ type alias GraphqlResult a =
 type alias Model a =
     { a
         | baseURL : String
-        , colorSchemeSelected : Selected
 
         -- All ColorSchemes
         , colorSchemes : Request (List ColorScheme)
@@ -64,6 +63,7 @@ type alias Model a =
         , colorSchemeRanks : List Int
 
         -- Selected scheme
+        , colorSchemeSelected : Selected
         , colorSchemeOrder : Order
         , colorSchemeColors : Maybe Colors
     }

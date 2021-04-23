@@ -1,11 +1,9 @@
 module ColorScheme.Select exposing
     ( Selected
-    , getColors
     , getKind
     , getName
     , getRank
     , notSelected
-    , setColors
     , setKind
     , setName
     , setRank
@@ -13,7 +11,6 @@ module ColorScheme.Select exposing
     )
 
 import Api.Enum.Kind exposing (Kind)
-import ColorScheme.Colors exposing (Colors)
 import ColorScheme.Name exposing (Name)
 import ColorScheme.Rank exposing (Rank)
 
@@ -23,7 +20,6 @@ type Selected
     | HasKind Kind
     | HasKindRank Kind Rank
     | HasKindRankName Kind Rank Name
-    | HasKindRankNameColors Kind Rank Name Colors
 
 
 
@@ -54,9 +50,6 @@ toString selected =
         HasKindRankName kind rank name ->
             "Has kind + rank + name"
 
-        HasKindRankNameColors kind rank name colors ->
-            "Has kind + rank + name + colors"
-
 
 
 -- KIND
@@ -77,9 +70,6 @@ getKind selected =
         HasKindRankName kind _ _ ->
             Just kind
 
-        HasKindRankNameColors kind _ _ _ ->
-            Just kind
-
 
 setKind : Kind -> Selected -> Selected
 setKind kind selected =
@@ -95,9 +85,6 @@ setKind kind selected =
 
         HasKindRankName _ rank name ->
             HasKindRankName kind rank name
-
-        HasKindRankNameColors _ rank name colors ->
-            HasKindRankNameColors kind rank name colors
 
 
 
@@ -119,9 +106,6 @@ getRank selected =
         HasKindRankName _ rank _ ->
             Just rank
 
-        HasKindRankNameColors _ rank _ _ ->
-            Just rank
-
 
 setRank : Rank -> Selected -> Selected
 setRank rank selected =
@@ -137,9 +121,6 @@ setRank rank selected =
 
         HasKindRankName kind _ name ->
             HasKindRankName kind rank name
-
-        HasKindRankNameColors kind _ name colors ->
-            HasKindRankNameColors kind rank name colors
 
 
 
@@ -161,9 +142,6 @@ getName selected =
         HasKindRankName _ _ name ->
             Just name
 
-        HasKindRankNameColors _ _ name _ ->
-            Just name
-
 
 setName : Name -> Selected -> Selected
 setName name selected =
@@ -179,48 +157,3 @@ setName name selected =
 
         HasKindRankName kind rank _ ->
             HasKindRankName kind rank name
-
-        HasKindRankNameColors kind rank _ colors ->
-            HasKindRankNameColors kind rank name colors
-
-
-
--- COLORS
-
-
-getColors : Selected -> Maybe Colors
-getColors selected =
-    case selected of
-        Not ->
-            Nothing
-
-        HasKind _ ->
-            Nothing
-
-        HasKindRank _ _ ->
-            Nothing
-
-        HasKindRankName _ _ _ ->
-            Nothing
-
-        HasKindRankNameColors _ _ _ colors ->
-            Just colors
-
-
-setColors : Colors -> Selected -> Selected
-setColors colors selected =
-    case selected of
-        Not ->
-            Not
-
-        HasKind kind ->
-            HasKind kind
-
-        HasKindRank kind rank ->
-            HasKindRank kind rank
-
-        HasKindRankName kind rank name ->
-            HasKindRankNameColors kind rank name colors
-
-        HasKindRankNameColors kind rank name _ ->
-            HasKindRankNameColors kind rank name colors
