@@ -1,6 +1,7 @@
 module ColorbarTests exposing (..)
 
 import Api.Enum.Kind exposing (Kind(..))
+import ColorScheme.Colors
 import ColorScheme.Name
 import ColorScheme.Order exposing (leftToRight, rightToLeft)
 import ColorScheme.Rank
@@ -19,12 +20,10 @@ colorbarTests =
                 let
                     model =
                         { baseURL = ""
-                        , colorScheme = Nothing
+                        , colorSchemeColors = Nothing
                         , colorSchemeSelected = notSelected
                         , colorSchemes = Loading
-                        , colorSchemeKind = Nothing
                         , colorSchemeRanks = []
-                        , colorSchemeRank = Nothing
                         , colorSchemeOrder = leftToRight
                         }
 

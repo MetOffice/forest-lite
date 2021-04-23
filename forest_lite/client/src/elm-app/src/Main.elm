@@ -5,6 +5,7 @@ import Api.Enum.Kind exposing (Kind(..))
 import Attrs
 import BoundingBox exposing (BoundingBox)
 import Browser
+import ColorScheme.Colors exposing (Colors)
 import ColorScheme.Name exposing (Name)
 import ColorScheme.Order exposing (Order)
 import ColorScheme.Request exposing (ColorScheme)
@@ -153,14 +154,11 @@ type alias Model =
     , limits : Colorbar.Limits.Limits
     , opacity : Opacity
     , collapsed : Dict String Bool
-    , colorScheme : Maybe Colorbar.Menu.Swatch
     , colorSchemeSelected : ColorScheme.Select.Selected
     , colorSchemes : Request (List ColorScheme)
-    , colorSchemeKind : Maybe Api.Enum.Kind.Kind
-    , colorSchemeRank : Maybe Int
     , colorSchemeRanks : List Int
     , colorSchemeOrder : ColorScheme.Order.Order
-    , colorSchemeName : Maybe Name
+    , colorSchemeColors : Maybe ColorScheme.Colors.Colors
     }
 
 
@@ -251,14 +249,11 @@ init flags =
             , opacity = Opacity.opaque
             , collapsed =
                 Dict.empty
-            , colorScheme = Nothing
             , colorSchemeSelected = notSelected
             , colorSchemes = NotStarted
-            , colorSchemeKind = Nothing
             , colorSchemeRanks = []
-            , colorSchemeRank = Nothing
             , colorSchemeOrder = ColorScheme.Order.leftToRight
-            , colorSchemeName = Nothing
+            , colorSchemeColors = Nothing
             }
     in
     case Json.Decode.decodeValue flagsDecoder flags of

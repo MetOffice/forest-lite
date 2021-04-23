@@ -8,6 +8,7 @@ module Colorbar.Menu exposing
 
 import Action exposing (Action(..))
 import Api.Enum.Kind exposing (Kind(..))
+import ColorScheme.Colors exposing (Colors)
 import ColorScheme.Name exposing (Name)
 import ColorScheme.Order exposing (Order)
 import ColorScheme.Rank exposing (Rank)
@@ -64,6 +65,7 @@ type alias Model a =
 
         -- Selected scheme
         , colorSchemeOrder : Order
+        , colorSchemeColors : Maybe Colors
     }
 
 
@@ -108,36 +110,21 @@ update msg model =
                     model.colorSchemeSelected
                         |> ColorScheme.Select.setRank rank
 
+                maybeColors =
+                    getColors_ selected model.colorSchemes
+                        |> Maybe.map ColorScheme.Colors.fromList
+
                 newModel =
                     { model
                         | colorSchemeSelected = selected
                     }
             in
-            case model.colorSchemes of
-                Success colorSchemes ->
-                    let
-                        maybeName =
-                            getName model.colorSchemeSelected
-                    in
-                    case maybeName of
-                        Just name ->
-                            let
-                                maybeScheme =
-                                    parseScheme colorSchemes name rank
-
-                                cmd =
-                                    maybeScheme
-                                        |> Maybe.map .colors
-                                        |> Maybe.map setColorsCmd
-                                        |> Maybe.withDefault Cmd.none
-                            in
-                            ( newModel, cmd )
-
-                        Nothing ->
-                            ( newModel, Cmd.none )
-
-                _ ->
+            case maybeColors of
+                Nothing ->
                     ( newModel, Cmd.none )
+
+                Just colors ->
+                    ( { newModel | colorSchemeColors = Just colors }, Cmd.none )
 
         GotResponse result ->
             case result of
@@ -158,15 +145,49 @@ update msg model =
                     model.colorSchemeSelected
                         |> ColorScheme.Select.setName name
 
+                maybeColors =
+                    getColors_ selected model.colorSchemes
+                        |> Maybe.map ColorScheme.Colors.fromList
+
                 newModel =
                     { model
                         | colorSchemeSelected = selected
                     }
             in
-            ( newModel, Cmd.none )
+            case maybeColors of
+                Nothing ->
+                    ( newModel, Cmd.none )
+
+                Just colors ->
+                    ( { newModel | colorSchemeColors = Just colors }, Cmd.none )
 
         SetOrder order ->
-            ( { model | colorSchemeOrder = order }, Cmd.none )
+            let
+                selected =
+                    model.colorSchemeSelected
+
+                maybeColors =
+                    getColors_ selected model.colorSchemes
+                        |> Maybe.map ColorScheme.Colors.fromList
+
+                newModel =
+                    { model
+                        | colorSchemeOrder = order
+                    }
+            in
+            case maybeColors of
+                Nothing ->
+                    ( newModel, Cmd.none )
+
+                Just colors ->
+                    let
+                        newColors =
+                            ColorScheme.Order.arrange
+                                order
+                                (ColorScheme.Colors.toList colors)
+                                |> ColorScheme.Colors.fromList
+                    in
+                    ( { newModel | colorSchemeColors = Just newColors }, Cmd.none )
 
 
 parseScheme : List ColorScheme -> Name -> Rank -> Maybe Swatch
@@ -274,8 +295,8 @@ view model =
                 ]
 
 
-getColors : Selected -> Request (List ColorScheme) -> Maybe (List String)
-getColors selected request =
+getColors_ : Selected -> Request (List ColorScheme) -> Maybe (List String)
+getColors_ selected request =
     case request of
         Success colorschemes ->
             searchColors selected colorschemes
@@ -312,8 +333,8 @@ viewPreview : Model a -> Html Msg
 viewPreview model =
     let
         palette =
-            getColors model.colorSchemeSelected model.colorSchemes
-                |> Maybe.map (ColorScheme.Order.arrange model.colorSchemeOrder)
+            model.colorSchemeColors
+                |> Maybe.map ColorScheme.Colors.toList
                 |> Maybe.withDefault [ "#FFFFFF", "#000000" ]
     in
     Colorbar.view

@@ -1,6 +1,7 @@
 module ColorSchemeSelectTests exposing (..)
 
 import Api.Enum.Kind exposing (..)
+import ColorScheme.Colors exposing (..)
 import ColorScheme.Name exposing (..)
 import ColorScheme.Rank exposing (..)
 import ColorScheme.Select exposing (..)
@@ -52,4 +53,26 @@ colorSchemeSelectTests =
                     |> setName name
                     |> getName
                     |> Expect.equal (Just name)
+        , test "getColors" <|
+            \_ ->
+                let
+                    kind =
+                        Diverging
+
+                    rank =
+                        ColorScheme.Rank.fromInt 3
+
+                    name =
+                        ColorScheme.Name.fromString "Spectral"
+
+                    colors =
+                        ColorScheme.Colors.fromList []
+                in
+                notSelected
+                    |> setKind kind
+                    |> setRank rank
+                    |> setName name
+                    |> setColors colors
+                    |> getColors
+                    |> Expect.equal (Just colors)
         ]
