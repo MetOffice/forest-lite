@@ -54,7 +54,7 @@ type alias GraphqlResult a =
 type alias Model a =
     { a
         | baseURL : String
-        , colorSchemeSelected : ColorScheme.Select.Selected
+        , colorSchemeSelected : Selected
 
         -- All ColorSchemes
         , colorSchemes : Request (List ColorScheme)
@@ -275,8 +275,37 @@ view model =
 
 
 getColors : Selected -> Request (List ColorScheme) -> Maybe (List String)
-getColors selected colorschemes =
-    Nothing
+getColors selected request =
+    case request of
+        Success colorschemes ->
+            searchColors selected colorschemes
+
+        _ ->
+            Nothing
+
+
+searchColors : Selected -> List ColorScheme -> Maybe (List String)
+searchColors selected colorschemes =
+    case ( getRank selected, getName selected ) of
+        ( Just rank, Just name ) ->
+            let
+                n =
+                    ColorScheme.Rank.toInt rank
+            in
+            colorschemes
+                |> List.filter (hasName name)
+                |> List.filter (hasRank rank)
+                |> List.head
+                |> Maybe.map .palettes
+                |> Maybe.map
+                    (List.filter (\p -> p.rank == n))
+                |> Maybe.map
+                    (List.map .rgbs)
+                |> Maybe.andThen
+                    List.head
+
+        _ ->
+            Nothing
 
 
 viewPreview : Model a -> Html Msg
@@ -494,6 +523,11 @@ hasRank rank scheme =
         |> List.filter (\p -> p.rank == n)
         |> List.isEmpty
         |> not
+
+
+hasName : Name -> ColorScheme -> Bool
+hasName name scheme =
+    ColorScheme.Name.fromString scheme.name == name
 
 
 extractSwatch : Rank -> ColorScheme -> Maybe Swatch
