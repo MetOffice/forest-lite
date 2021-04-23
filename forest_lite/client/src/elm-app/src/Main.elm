@@ -8,6 +8,7 @@ import Browser
 import ColorScheme.Name exposing (Name)
 import ColorScheme.Order exposing (Order)
 import ColorScheme.Request exposing (ColorScheme)
+import ColorScheme.Select exposing (Selected, notSelected)
 import Colorbar
 import Colorbar.Limits exposing (DataLimits(..), LimitOrigin(..), Limits)
 import Colorbar.Menu
@@ -153,6 +154,7 @@ type alias Model =
     , opacity : Opacity
     , collapsed : Dict String Bool
     , colorScheme : Maybe Colorbar.Menu.Swatch
+    , colorSchemeSelected : ColorScheme.Select.Selected
     , colorSchemes : Request (List ColorScheme)
     , colorSchemeKind : Maybe Api.Enum.Kind.Kind
     , colorSchemeRank : Maybe Int
@@ -250,6 +252,7 @@ init flags =
             , collapsed =
                 Dict.empty
             , colorScheme = Nothing
+            , colorSchemeSelected = notSelected
             , colorSchemes = NotStarted
             , colorSchemeKind = Nothing
             , colorSchemeRanks = []

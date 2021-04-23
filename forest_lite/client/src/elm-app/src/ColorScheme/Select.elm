@@ -7,6 +7,7 @@ module ColorScheme.Select exposing
     , setKind
     , setName
     , setRank
+    , toString
     )
 
 import Api.Enum.Kind exposing (Kind)
@@ -28,6 +29,26 @@ type Selected
 notSelected : Selected
 notSelected =
     Not
+
+
+
+-- HELPERS
+
+
+toString : Selected -> String
+toString selected =
+    case selected of
+        Not ->
+            "Not"
+
+        HasKind kind ->
+            "Has kind"
+
+        HasKindRank kind rank ->
+            "Has kind + rank"
+
+        HasKindRankName kind rank name ->
+            "Has kind + rank + name"
 
 
 

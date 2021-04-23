@@ -3,6 +3,8 @@ module ColorbarTests exposing (..)
 import Api.Enum.Kind exposing (Kind(..))
 import ColorScheme.Name
 import ColorScheme.Order exposing (leftToRight, rightToLeft)
+import ColorScheme.Rank
+import ColorScheme.Select exposing (notSelected)
 import Colorbar.Menu exposing (Msg(..))
 import Expect exposing (Expectation)
 import Request exposing (Request(..))
@@ -18,10 +20,10 @@ colorbarTests =
                     model =
                         { baseURL = ""
                         , colorScheme = Nothing
+                        , colorSchemeSelected = notSelected
                         , colorSchemes = Loading
                         , colorSchemeKind = Nothing
                         , colorSchemeRanks = []
-                        , colorSchemeName = Nothing
                         , colorSchemeRank = Nothing
                         , colorSchemeOrder = leftToRight
                         }
@@ -33,32 +35,6 @@ colorbarTests =
                     |> Tuple.first
                     |> Expect.equal
                         { model | colorSchemeOrder = rightToLeft }
-        , test "update given SetName" <|
-            \_ ->
-                let
-                    model =
-                        { baseURL = ""
-                        , colorScheme = Nothing
-                        , colorSchemes = Loading
-                        , colorSchemeKind = Nothing
-                        , colorSchemeRanks = []
-                        , colorSchemeName = Nothing
-                        , colorSchemeRank = Nothing
-                        , colorSchemeOrder = leftToRight
-                        }
-
-                    name =
-                        ColorScheme.Name.fromString "Name"
-
-                    msg =
-                        SetName name
-                in
-                Colorbar.Menu.update msg model
-                    |> Tuple.first
-                    |> Expect.equal
-                        { model
-                            | colorSchemeName = Just name
-                        }
         , test "parseScheme" <|
             \_ ->
                 Colorbar.Menu.parseScheme
@@ -70,8 +46,8 @@ colorbarTests =
                             ]
                       }
                     ]
-                    "Name"
-                    1
+                    (ColorScheme.Name.fromString "Name")
+                    (ColorScheme.Rank.fromInt 1)
                     |> Expect.equal
                         (Just
                             { name = "Name"
