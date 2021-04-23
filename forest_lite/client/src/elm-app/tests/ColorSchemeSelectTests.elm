@@ -2,6 +2,7 @@ module ColorSchemeSelectTests exposing (..)
 
 import Api.Enum.Kind exposing (..)
 import ColorScheme.Name exposing (..)
+import ColorScheme.Rank exposing (..)
 import ColorScheme.Select exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -22,7 +23,7 @@ colorSchemeSelectTests =
                         Diverging
 
                     rank =
-                        Rank 3
+                        ColorScheme.Rank.fromInt 3
 
                     name =
                         ColorScheme.Name.fromString "Spectral"
@@ -40,7 +41,7 @@ colorSchemeSelectTests =
                         Diverging
 
                     rank =
-                        Rank 3
+                        ColorScheme.Rank.fromInt 3
 
                     name =
                         ColorScheme.Name.fromString "Spectral"

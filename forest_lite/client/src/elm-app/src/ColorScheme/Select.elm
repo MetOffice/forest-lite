@@ -1,6 +1,5 @@
 module ColorScheme.Select exposing
-    ( Rank(..)
-    , Selected
+    ( Selected
     , getKind
     , getName
     , getRank
@@ -12,6 +11,7 @@ module ColorScheme.Select exposing
 
 import Api.Enum.Kind exposing (Kind)
 import ColorScheme.Name exposing (Name)
+import ColorScheme.Rank exposing (Rank)
 
 
 type Selected
@@ -19,10 +19,6 @@ type Selected
     | HasKind Kind
     | HasKindRank Kind Rank
     | HasKindRankName Kind Rank Name
-
-
-type Rank
-    = Rank Int
 
 
 
