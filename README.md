@@ -11,6 +11,11 @@ a REST API. The client application uses [Redux](https://redux.js.org/) and [Reac
 state and components. For visualisation, [BokehJS](https://docs.bokeh.org/en/latest/docs/dev_guide/bokehjs.html)
 and [Turf.js](https://turfjs.org/) have been chosen for their composability and ease-of-use.
 
+## Prior art
+
+If you haven't already, please take a look at [FOREST](https://github.com/MetOffice/forest) which is the original solution
+that this implementation is attempting to optimize.
+
 ## Getting started
 
 To start the FastAPI server run a command similar to the following
