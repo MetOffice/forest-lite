@@ -6,10 +6,11 @@ aiofiles
 cartopy_offlinedata
 datashader
 graphene
+h5netcdf
+iris
 # python-multipart
 # xarray
 # forest
-# h5netcdf
 # proj>=7.1.0
 # pyproj>=2.6
 # nodejs>=14.11.0
