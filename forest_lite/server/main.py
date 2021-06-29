@@ -11,7 +11,7 @@ from starlette.responses import FileResponse
 from forest_lite.server.routers import (api,
                                         atlas,
                                         datasets,
-                                        graphql,
+                                        _graphql,
                                         palettes,
                                         viewport)
 
@@ -20,7 +20,7 @@ app = fastapi.FastAPI()
 app.include_router(api.router)
 app.include_router(atlas.router)
 app.include_router(datasets.router)
-app.include_router(graphql.router)
+app.include_router(_graphql.router)
 app.include_router(palettes.router)
 app.include_router(viewport.router)
 
