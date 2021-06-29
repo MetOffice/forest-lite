@@ -12,6 +12,7 @@ def find_driver(name: str):
         module = import_module(f"forest_lite.server.drivers.{name}")
         return module.driver
     except ModuleNotFoundError as e:
+        print(e)
         if name in e.msg:
             mod_name, obj_name = name.split(":")
             module = import_module(mod_name)
