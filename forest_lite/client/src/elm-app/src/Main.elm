@@ -1062,6 +1062,10 @@ viewCollapse collapse =
 
 viewDatasets : List Dataset -> Model -> Html Msg
 viewDatasets datasets model =
+    let
+        optgroups =
+            List.map (Dataset.view model.datasetDescriptions) datasets
+    in
     div []
         [ div [ class "select__container" ]
             [ viewDatasetLabel model
@@ -1070,7 +1074,7 @@ viewDatasets datasets model =
                 , class "select__select"
                 ]
                 -- TODO Support case with only 1 item
-                (List.map (Dataset.view model.datasetDescriptions) datasets)
+                (option [] [ text "Please select" ] :: optgroups)
             ]
         ]
 
