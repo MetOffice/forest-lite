@@ -1069,6 +1069,7 @@ viewDatasets datasets model =
                 [ onSelect DataVarSelected
                 , class "select__select"
                 ]
+                -- TODO Support case with only 1 item
                 (List.map (Dataset.view model.datasetDescriptions) datasets)
             ]
         ]
