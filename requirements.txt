@@ -1,14 +1,15 @@
 fastapi
+typer
+bokeh
 uvicorn
 aiofiles
-python-multipart
-xarray
-forest
-h5netcdf
-datashader
 cartopy_offlinedata
-typer
-proj>=7.1.0
-pyproj>=2.6
-nodejs>=14.11.0
+datashader
 graphene
+# python-multipart
+# xarray
+# forest
+# h5netcdf
+# proj>=7.1.0
+# pyproj>=2.6
+# nodejs>=14.11.0

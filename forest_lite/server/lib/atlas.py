@@ -1,7 +1,6 @@
 """Map features lakes, borders etc."""
-import forest.data
 import cartopy.feature
-from forest.data import xs_ys, cut, iterlines
+from forest_lite.server.lib.data import xs_ys, cut, iterlines
 
 
 def load_feature(category, name, scale, extent):
