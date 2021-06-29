@@ -4,7 +4,7 @@ Test GraphQL endpoint
 import pytest
 from graphene import Schema
 from graphene.test import Client
-from forest_lite.server.routers.graphql import Query
+from forest_lite.server.routers._graphql import Query
 
 
 @pytest.fixture
