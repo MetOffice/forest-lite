@@ -17,7 +17,13 @@ parse (Dimension.Label.Label dim_name) =
     else if String.contains "latitude" dim_name then
         Horizontal
 
+    else if dim_name == "lat" then
+        Horizontal
+
     else if String.contains "longitude" dim_name then
+        Horizontal
+
+    else if dim_name == "lon" then
         Horizontal
 
     else

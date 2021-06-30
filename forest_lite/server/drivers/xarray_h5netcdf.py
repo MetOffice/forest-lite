@@ -1,3 +1,4 @@
+import json
 import os
 import glob
 import xarray
@@ -62,6 +63,10 @@ def points(settings, data_var, dim_name, query=None):
         with xarray.open_dataset(path, engine=settings.engine) as nc:
             attrs = nc[dim_name].attrs
             data = nc[dim_name].values
+
+    # JSON serializable data
+    data = json.loads(json.dumps(data.tolist(), default=str))
+
     return {
         "data_var": data_var,
         "dim_name": dim_name,
@@ -78,6 +83,14 @@ def get_data_tile(pattern, engine, data_var, z, x, y, query=None):
     return _data_tile(path, engine, data_var, z, x, y, query)
 
 
+def is_longitude_dimension(key):
+    return key.startswith("longitude") or (key == "lon")
+
+
+def is_latitude_dimension(key):
+    return key.startswith("latitude") or (key == "lat")
+
+
 @lru_cache
 def _data_tile(path, engine, data_var, z, x, y, query):
     zxy = (z, x, y)
@@ -86,9 +99,9 @@ def _data_tile(path, engine, data_var, z, x, y, query):
         # Find lons/lats related to data_var
         var = nc[data_var]
         for key in var.dims:
-            if key.startswith("longitude"):
+            if is_longitude_dimension(key):
                 lons = var[key].values
-            if key.startswith("latitude"):
+            if is_latitude_dimension(key):
                 lats = var[key].values
 
         # Find 2D values array
@@ -106,7 +119,7 @@ def _data_tile(path, engine, data_var, z, x, y, query):
                 idx = { key: int(value) for key, value in idx.items() }
                 array = nc[data_var].isel(**idx)
 
-        units = nc[data_var].units
+        units = getattr(nc[data_var], "units", "")
 
     assert array.ndim == 2, f"dims: {var.dims}"
     values = array.values
@@ -115,7 +128,7 @@ def _data_tile(path, engine, data_var, z, x, y, query):
     if "moisture_content" in data_var:
         fill_value = values.max()
         values = np.ma.masked_equal(values, fill_value)
-    return _tile({
+    return core._tile({
         "longitude": lons,
         "latitude": lats,
         "values": values,
