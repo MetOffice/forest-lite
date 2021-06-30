@@ -95,7 +95,7 @@ def _data_tile(path, engine, data_var, z, x, y, query):
     zxy = (z, x, y)
     with xarray.open_dataset(path,
                              engine=engine,
-                             decode_times=False) as nc:
+                             decode_times=True) as nc:
 
         # Find lons/lats related to data_var
         var = nc[data_var]
@@ -116,7 +116,7 @@ def _data_tile(path, engine, data_var, z, x, y, query):
 
             try:
                 array = nc[data_var].sel(**idx, method="nearest")
-            except ValueError:
+            except ValueError as e:
                 idx = { key: int(value) for key, value in idx.items() }
                 array = nc[data_var].isel(**idx)
 
