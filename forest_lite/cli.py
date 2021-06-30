@@ -5,15 +5,10 @@ HELP = typer.style("HELP", fg=typer.colors.BLUE) + ":    "
 FAIL = typer.style("FAIL", fg=typer.colors.RED) + ":    "
 SUCCESS = typer.style("SUCCESS", fg=typer.colors.BLUE) + ": "
 
-typer.echo(f"{INFO} Importing modules, please wait")
 
 import click
-import bokeh.palettes
 import os
 import yaml
-import uvicorn
-import forest_lite.server.main as _main
-from forest_lite.server import config
 
 
 app = typer.Typer()
@@ -39,6 +34,7 @@ def in_use(port):
 
 def get_settings(file_name, driver_name, palette):
     def fn():
+        from forest_lite.server import config
         return config.Settings(datasets=[
             {
                 "label": file_name,
@@ -78,6 +74,12 @@ def open_cmd(file_name: str,
     """
     Explore a file.
     """
+
+    typer.echo(f"{INFO} Import modules")
+    import uvicorn
+    import forest_lite.server.main as _main
+    from forest_lite.server import config
+
     port = scan_port(port)
 
     if open_tab:
@@ -110,6 +112,12 @@ def run(config_file: str,
 
     port = scan_port(port)
 
+    # Launch FastAPI server
+    typer.echo(f"{INFO} Import modules")
+    import uvicorn
+    import forest_lite.server.main as _main
+    from forest_lite.server import config
+
     def get_settings():
         import yaml
         with open(config_file) as stream:
@@ -141,6 +149,8 @@ def init(config_file: str ="config.yaml"):
     """
     Create a config file.
     """
+    import bokeh.palettes
+
     data = {
         "datasets": [
         ],
