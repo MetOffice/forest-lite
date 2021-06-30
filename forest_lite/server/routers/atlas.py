@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Response, Query
 from forest_lite.server.lib.atlas import load_feature
 from bokeh.core.json_encoder import serialize_json
+import urllib.error
 
 
 router = APIRouter()
@@ -41,9 +42,14 @@ async def natural_earth_feature(category: str,
                         maxlat: float = 90,
                         maxlon: float = 180):
     extent = (minlon, maxlon, minlat, maxlat)
-    obj = load_feature(category, name, scale, extent)
-    content = serialize_json(obj)
-    response = Response(content=content,
-                        media_type="application/json")
-    #  response.headers["Cache-Control"] = "max-age=31536000"
-    return response
+    try:
+        obj = load_feature(category, name, scale, extent)
+        content = serialize_json(obj)
+        response = Response(content=content,
+                            media_type="application/json")
+        #  response.headers["Cache-Control"] = "max-age=31536000"
+        return response
+    except urllib.error.HTTPError:
+        return {
+            "error": "Could not load natural earth feature"
+        }
