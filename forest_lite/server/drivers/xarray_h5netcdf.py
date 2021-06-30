@@ -1,4 +1,3 @@
-import json
 import os
 import glob
 import xarray
@@ -37,7 +36,9 @@ def description(settings):
     paths = sorted(glob.glob(settings.pattern))
     if len(paths) > 0:
         path = paths[-1]
-        with xarray.open_dataset(path, engine=settings.engine) as nc:
+        with xarray.open_dataset(path,
+                                 engine=settings.engine,
+                                 decode_times=False) as nc:
             data = nc.to_dict(data=False)
         # Filter data_vars
         if settings.data_vars is not None:
@@ -60,13 +61,11 @@ def points(settings, data_var, dim_name, query=None):
     data = []
     if len(paths) > 0:
         path = paths[-1]
-        with xarray.open_dataset(path, engine=settings.engine) as nc:
+        with xarray.open_dataset(path,
+                                 engine=settings.engine,
+                                 decode_times=False) as nc:
             attrs = nc[dim_name].attrs
             data = nc[dim_name].values
-
-    # JSON serializable data
-    data = json.loads(json.dumps(data.tolist(), default=str))
-
     return {
         "data_var": data_var,
         "dim_name": dim_name,
@@ -94,7 +93,9 @@ def is_latitude_dimension(key):
 @lru_cache
 def _data_tile(path, engine, data_var, z, x, y, query):
     zxy = (z, x, y)
-    with xarray.open_dataset(path, engine=engine) as nc:
+    with xarray.open_dataset(path,
+                             engine=engine,
+                             decode_times=False) as nc:
 
         # Find lons/lats related to data_var
         var = nc[data_var]
