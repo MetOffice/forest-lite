@@ -136,6 +136,7 @@ def run(config_file: str,
 # INIT sub-command
 
 def palette_names(N=256):
+    import bokeh.palettes
     for key, palette in bokeh.palettes.all_palettes.items():
         if N in palette:
             yield key
@@ -149,7 +150,6 @@ def init(config_file: str ="config.yaml"):
     """
     Create a config file.
     """
-    import bokeh.palettes
 
     data = {
         "datasets": [
