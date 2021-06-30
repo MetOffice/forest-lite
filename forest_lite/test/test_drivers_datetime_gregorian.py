@@ -17,7 +17,3 @@ def test_json_serializable_numpy_array(gregorian):
 
 def test_json_serializable(gregorian):
     assert json.dumps(gregorian, default=str) == '"2021-01-01 00:00:00"'
-
-
-def test_datetime_gregorian_to_miliseconds(gregorian):
-    assert cftime.date2num(gregorian) == 0
