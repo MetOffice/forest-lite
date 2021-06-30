@@ -124,10 +124,12 @@ def test_get_dataset_data_vars(sample_file):
             "time": {
                 "attrs": {
                     "axis": "T",
+                    "calendar": "gregorian",
                     "standard_name": "time",
+                    "units": "hours since 1970-01-01 00:00:00"
                 },
                 "dims": ["time"],
-                "dtype": "datetime64[ns]",
+                "dtype": "float64",
                 "shape": [1]
             }
         },
@@ -186,7 +188,10 @@ def test_get_dataset_data_var_axis(sample_file):
 
     # Assertions
     expected = {
-        "attrs": {"axis": "T", "standard_name": "time"},
+        "attrs": {"axis": "T",
+                  "calendar": "gregorian",
+                  "standard_name": "time",
+                  "units": "hours since 1970-01-01 00:00:00"},
         "data": [0.0],
         "data_var": "data",
         "dim_name": "time"
