@@ -124,6 +124,7 @@ def _data_tile(path, engine, data_var, z, x, y, query):
 
     # Only allow 2D arrays for tile requests
     if array.ndim != 2:
+        assert False  # TODO support error response
         return {
             "errors": [
                 {"message": "incorrect number of dimensions",
