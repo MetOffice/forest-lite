@@ -122,7 +122,17 @@ def _data_tile(path, engine, data_var, z, x, y, query):
 
         units = getattr(nc[data_var], "units", "")
 
-    assert array.ndim == 2, f"dims: {var.dims}"
+    # Only allow 2D arrays for tile requests
+    if array.ndim != 2:
+        assert False  # TODO support error response
+        return {
+            "errors": [
+                {"message": "incorrect number of dimensions",
+                 "dims": f"{var.dims}"}
+            ]
+        }
+
+    # Use 2D array
     values = array.values
 
     # Mask moisture_content_of_soil_layer (TODO: Generalise)

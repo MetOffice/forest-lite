@@ -9,6 +9,7 @@ graphene
 h5netcdf
 iris
 click=7.1.2
+aiohttp
 # python-multipart
 # xarray
 # forest
