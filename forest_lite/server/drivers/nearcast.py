@@ -1,6 +1,7 @@
 """
 Nearcast driver
 """
+import json
 from enum import Enum
 import datetime as dt
 import numpy as np
@@ -125,8 +126,8 @@ def nearcast_points(settings: Settings, data_var: str, dim_name: str,
     if isinstance(settings, dict):
         settings = Settings(**settings)
 
-    if isinstance(query, dict):
-        query = Query(**query)
+    if isinstance(query, str):
+        query = Query(**json.loads(query))
 
     file_names = get_file_names(settings.pattern)
 
@@ -171,8 +172,8 @@ def nearcast_points(settings: Settings, data_var: str, dim_name: str,
 
 @driver.override("tilable")
 def nearcast_tilable(settings, data_var, query: TileQuery = None):
-    if isinstance(query, dict):
-        query = TileQuery(**query)
+    if isinstance(query, str):
+        query = TileQuery(**json.loads(query))
 
     file_names = get_file_names(settings["pattern"])
     timestamp_s = query.time.timestamp()

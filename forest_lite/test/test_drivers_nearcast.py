@@ -1,4 +1,5 @@
 import pygrib
+import json
 import os
 import pytz
 import datetime as dt
@@ -77,9 +78,10 @@ def test_driver_points(settings):
 
 
 def test_driver_points_given_start_time_query():
+    # query comes from REST endpoint is datetime support relevant?
     settings = nearcast.Settings(pattern=os.path.join(SAMPLE_DIR, "*GRIB2"))
     start_date = dt.datetime(2021, 1, 21, 0, 30, tzinfo=UTC)
-    query = {nearcast.DIMENSION.start_time.name: start_date}
+    query = json.dumps({nearcast.DIMENSION.start_time.name: str(start_date)})
     dim_name = nearcast.DIMENSION.time.name
     data_var = "U component of wind"
     response = driver.points(settings, data_var, dim_name, query=query)
@@ -91,9 +93,9 @@ def test_driver_points_given_start_time_query():
 def test_driver_tilable(settings, data_var):
     time = dt.datetime(2019, 12, 16, 14, 30, tzinfo=UTC)
     timestamp_ms = time.timestamp() * 1000
-    query = {
+    query = json.dumps({
         "time": timestamp_ms
-    }
+    })
     actual = driver.tilable(settings, data_var, query=query)
     expected = (300,)
     assert actual["latitude"].shape == expected
@@ -184,13 +186,13 @@ def test_tilable_given_real_file(real_file):
     time = dt.datetime(2021, 1, 25, 0, 0, 0, tzinfo=UTC)
     timestamp_ms = time.timestamp() * 1000
     level = 699999988
-    query = {
+    query = json.dumps({
         "start_time": 0,
         "time": timestamp_ms,
         "level": level
-    }
-    json = driver.tilable(settings, data_var, query=query)
-    actual = json["values"]
+    })
+    obj = driver.tilable(settings, data_var, query=query)
+    actual = obj["values"]
     expected = [1, 2, 3]
     assert actual[0, 0] == -7.644691467285156e-1
     # assert_array_almost_equal(actual, expected)

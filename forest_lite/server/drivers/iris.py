@@ -1,4 +1,5 @@
 """Support for iris loaded data"""
+import json
 import datetime as dt
 import numpy as np
 import iris
@@ -55,6 +56,7 @@ def tilable(settings, data_var, query=None):
             lons = cube.coord(name)[:].points
 
     # Constrain cube
+    query = json.loads(query)
     dims = {key: value for key, value in query.items()
             if key not in ["grid_latitude", "grid_longitude"]}
     kwargs = {}
