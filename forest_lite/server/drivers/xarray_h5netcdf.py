@@ -124,7 +124,6 @@ def _data_tile(path, engine, data_var, z, x, y, query):
 
     # Only allow 2D arrays for tile requests
     if array.ndim != 2:
-        assert False  # TODO support error response
         return {
             "errors": [
                 {"message": "incorrect number of dimensions",
@@ -139,12 +138,14 @@ def _data_tile(path, engine, data_var, z, x, y, query):
     if "moisture_content" in data_var:
         fill_value = values.max()
         values = np.ma.masked_equal(values, fill_value)
-    return core._tile({
-        "longitude": lons,
-        "latitude": lats,
-        "values": values,
-        "units": units
-    }, z, x, y)
+    return {
+        "data": core._tile({
+            "longitude": lons,
+            "latitude": lats,
+            "values": values,
+            "units": units
+        }, z, x, y)
+    }
 
 
 def convert_ms(dim, value):
