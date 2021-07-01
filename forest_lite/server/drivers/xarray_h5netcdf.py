@@ -1,5 +1,6 @@
 import os
 import glob
+import json
 import xarray
 from forest_lite.server.drivers.base import BaseDriver
 from forest_lite.server.lib import core
@@ -75,9 +76,6 @@ def points(settings, data_var, dim_name, query=None):
 
 
 def get_data_tile(pattern, engine, data_var, z, x, y, query=None):
-    if query is not None:
-        # Hashable query
-        query = frozenset(query.items())
     path = core.get_path(pattern)
     return _data_tile(path, engine, data_var, z, x, y, query)
 
@@ -109,7 +107,7 @@ def _data_tile(path, engine, data_var, z, x, y, query):
         if query is None:
             array = nc[data_var]
         else:
-            idx = dict(query)
+            idx = json.loads(query)
 
             # Map miliseconds to datetime
             idx = { key: convert_ms(key, value) for key, value in idx.items() }

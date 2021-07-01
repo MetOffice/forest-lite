@@ -6,7 +6,6 @@ from bokeh.core.json_encoder import serialize_json
 import numpy as np
 from forest_lite.server import config
 from typing import Optional
-import json
 import urllib.parse
 from forest_lite.server.config import Settings, get_settings
 
@@ -60,9 +59,6 @@ async def data_tiles(dataset_id: int,
                      query: Optional[str] = None,
                      settings: config.Settings = Depends(config.get_settings)):
     """GET data tile from dataset at particular time"""
-    # TODO: Stop decoding the query str
-    if query is not None:
-        query = json.loads(query)
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
     settings = dataset.driver.settings
@@ -183,8 +179,6 @@ async def axis(dataset_id: int,
                query: Optional[str] = None,
                settings: config.Settings = Depends(config.get_settings)):
     """GET dimension values related to particular data_var"""
-    if query is not None:
-        query = json.loads(query)
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
     settings = dataset.driver.settings

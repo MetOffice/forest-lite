@@ -2,7 +2,6 @@
 Map FOREST-Lite REST API to source API
 """
 import aiohttp
-import json
 import urllib.parse
 from pydantic import BaseModel
 from forest_lite.server.drivers.base import BaseDriver
@@ -38,7 +37,6 @@ async def data_tile(settings_dict, data_var, z, x, y, query=None):
     dataset_id = Settings(**settings_dict).dataset_id
     endpoint = f"{url}/datasets/{dataset_id}/{data_var}/tiles/{z}/{x}/{y}"
     if query is not None:
-        query = urllib.parse.quote(json.dumps(query))
         endpoint = f"{endpoint}?query={query}"
     return await http_get(endpoint)
 
