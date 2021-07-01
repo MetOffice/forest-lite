@@ -1,3 +1,4 @@
+import json
 import datetime as dt
 import os
 import iris
@@ -51,12 +52,12 @@ def test_driver_tilable(sample_file, time):
     settings = {"pattern": sample_file}
     data_var = "relative_humidity"
     pressure = 1000
-    query = {
+    query = json.dumps({
         "time": time,
         "pressure": pressure,
         "forecast_reference_time": time,
         "forecast_period": 0
-    }
+    })
     actual = driver.tilable(settings, data_var, query=query)
     assert actual["values"].shape == (8, 9)
 
