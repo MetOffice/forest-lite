@@ -21,10 +21,7 @@ async def description(settings_dict):
     url = Settings(**settings_dict).url
     dataset_id = Settings(**settings_dict).dataset_id
     endpoint = f"{url}/datasets/{dataset_id}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(endpoint) as response:
-            content = await response.json()
-    return content
+    return await http_get(endpoint)
 
 
 @driver.override("points")
@@ -32,10 +29,7 @@ async def points(settings_dict, data_var, dim_name, query=None):
     url = Settings(**settings_dict).url
     dataset_id = Settings(**settings_dict).dataset_id
     endpoint = f"{url}/datasets/{dataset_id}/{data_var}/axis/{dim_name}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(endpoint) as response:
-            content = await response.json()
-    return content
+    return await http_get(endpoint)
 
 
 @driver.override("data_tile")
@@ -46,7 +40,10 @@ async def data_tile(settings_dict, data_var, z, x, y, query=None):
     if query is not None:
         query = urllib.parse.quote(json.dumps(query))
         endpoint = f"{endpoint}?query={query}"
+    return await http_get(endpoint)
 
+
+async def http_get(endpoint):
     async with aiohttp.ClientSession() as session:
         async with session.get(endpoint) as response:
             content = await response.json()
