@@ -60,6 +60,7 @@ async def data_tiles(dataset_id: int,
                      query: Optional[str] = None,
                      settings: config.Settings = Depends(config.get_settings)):
     """GET data tile from dataset at particular time"""
+    # TODO: Stop decoding the query str
     if query is not None:
         query = json.loads(query)
     dataset = by_id(settings.datasets, dataset_id)
@@ -74,15 +75,6 @@ async def data_tiles(dataset_id: int,
     else:
         obj = obj_or_coroutine
 
-    # if "errors" in data:
-    #     # TODO formalise error handling
-    #     return data
-
-    # obj = {
-    #     "dataset_id": dataset_id,
-    #     "tile": [X, Y, Z],
-    #     "data": data
-    # }
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")
