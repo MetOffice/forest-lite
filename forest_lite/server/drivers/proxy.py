@@ -2,7 +2,6 @@
 Map FOREST-Lite REST API to source API
 """
 import aiohttp
-import urllib.parse
 from pydantic import BaseModel
 from forest_lite.server.drivers.base import BaseDriver
 
