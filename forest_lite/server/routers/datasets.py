@@ -1,3 +1,4 @@
+import inspect
 from fastapi import APIRouter, Response, Depends
 from forest_lite.server import drivers
 from forest_lite.server.lib import core
@@ -64,7 +65,15 @@ async def data_tiles(dataset_id: int,
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
     settings = dataset.driver.settings
-    data = driver.data_tile(settings, data_var, Z, X, Y, query=query)
+
+    # Support async methods
+    data_or_coroutine = driver.data_tile(settings, data_var, Z, X, Y, query=query)
+
+    if inspect.iscoroutine(data_or_coroutine):
+        data = await data_or_coroutine
+    else:
+        data = data_or_coroutine
+
     obj = {
         "dataset_id": dataset_id,
         "tile": [X, Y, Z],
@@ -82,7 +91,14 @@ async def description(dataset_id: int,
                       settings: config.Settings = Depends(config.get_settings)):
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
-    data = driver.description(dataset.driver.settings)
+
+    # Support async methods
+    data_or_coroutine = driver.description(dataset.driver.settings)
+    if inspect.iscoroutine(data_or_coroutine):
+        data = await data_or_coroutine
+    else:
+        data = data_or_coroutine
+
     if not isinstance(data, dict):
         data = data.dict()
     data["dataset_id"] = dataset_id
@@ -176,7 +192,14 @@ async def axis(dataset_id: int,
     dataset = by_id(settings.datasets, dataset_id)
     driver = drivers.from_spec(dataset.driver)
     settings = dataset.driver.settings
-    obj = driver.points(settings, data_var, dim_name, query=query)
+
+    # Support async methods
+    obj_or_coroutine = driver.points(settings, data_var, dim_name, query=query)
+    if inspect.iscoroutine(obj_or_coroutine):
+        obj = await obj_or_coroutine
+    else:
+        obj = obj_or_coroutine
+
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")
