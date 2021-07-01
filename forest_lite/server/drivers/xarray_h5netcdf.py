@@ -139,12 +139,12 @@ def _data_tile(path, engine, data_var, z, x, y, query):
         fill_value = values.max()
         values = np.ma.masked_equal(values, fill_value)
     return {
-        "data":  core._tile({
-                    "longitude": lons,
-                    "latitude": lats,
-                    "values": values,
-                    "units": units
-                }, z, x, y)
+        "data": core._tile({
+            "longitude": lons,
+            "latitude": lats,
+            "values": values,
+            "units": units
+        }, z, x, y)
     }
 
 

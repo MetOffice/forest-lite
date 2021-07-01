@@ -36,10 +36,6 @@ export const renderTiles = source => urls => {
     }
     let promises = urls.map(fetchTile)
     Promise.all(promises)
-        .then(response => {
-            console.log("promises", response)
-            return response
-        })
         .then(tiles => tiles.filter(tile => getErrors(tile).length === 0))
         .then(tiles => tiles.map(tile => tile.data))
         .then(tiles => tiles.reduce(imageReducer, emptyImage))
@@ -53,7 +49,6 @@ export const renderTiles = source => urls => {
             //     // Pan/zoom cases
             //     source.data = data
             // }
-            console.log(data)
             source.data = data
             source.change.emit()
         })
