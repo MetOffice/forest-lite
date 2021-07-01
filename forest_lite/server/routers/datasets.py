@@ -67,18 +67,22 @@ async def data_tiles(dataset_id: int,
     settings = dataset.driver.settings
 
     # Support async methods
-    data_or_coroutine = driver.data_tile(settings, data_var, Z, X, Y, query=query)
+    obj_or_coroutine = driver.data_tile(settings, data_var, Z, X, Y, query=query)
 
-    if inspect.iscoroutine(data_or_coroutine):
-        data = await data_or_coroutine
+    if inspect.iscoroutine(obj_or_coroutine):
+        obj = await obj_or_coroutine
     else:
-        data = data_or_coroutine
+        obj = obj_or_coroutine
 
-    obj = {
-        "dataset_id": dataset_id,
-        "tile": [X, Y, Z],
-        "data": data
-    }
+    # if "errors" in data:
+    #     # TODO formalise error handling
+    #     return data
+
+    # obj = {
+    #     "dataset_id": dataset_id,
+    #     "tile": [X, Y, Z],
+    #     "data": data
+    # }
     content = serialize_json(obj)
     response = Response(content=content,
                         media_type="application/json")

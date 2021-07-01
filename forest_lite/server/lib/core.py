@@ -11,6 +11,10 @@ TILE_SIZE = 256 # 256 # 64  # 128
 def _tile(tilable, z, x, y):
     """Convenient interface for extension drivers"""
     zxy = (z, x, y)
+    if "errors" in tilable:
+        # TODO formalise error handling
+        print(tilable)
+        return tilable
     if "longitude" in tilable:
         lons = tilable["longitude"]
         lats = tilable["latitude"]

@@ -23,7 +23,6 @@ function memoize(method) {
 const fetchTile = memoize(async url => {
     return fetch(url)
         .then(response => response.json())
-        .then(data => data.data)
 })
 
 
@@ -37,6 +36,12 @@ export const renderTiles = source => urls => {
     }
     let promises = urls.map(fetchTile)
     Promise.all(promises)
+        .then(response => {
+            console.log("promises", response)
+            return response
+        })
+        .then(tiles => tiles.filter(tile => getErrors(tile).length === 0))
+        .then(tiles => tiles.map(tile => tile.data))
         .then(tiles => tiles.reduce(imageReducer, emptyImage))
         .then(data => {
             // // Check if image positions can be re-used
@@ -48,9 +53,17 @@ export const renderTiles = source => urls => {
             //     // Pan/zoom cases
             //     source.data = data
             // }
+            console.log(data)
             source.data = data
             source.change.emit()
         })
+}
+
+/**
+ * Reported errors in response
+ */
+const getErrors = response => {
+    return response.errors || []
 }
 
 
