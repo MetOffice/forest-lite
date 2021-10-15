@@ -1,8 +1,6 @@
 module Colorbar.Menu exposing
     ( Msg(..)
-    , Order(..)
-    , Scheme
-    , leftToRight
+    , Swatch
     , parseScheme
     , update
     , view
@@ -10,9 +8,13 @@ module Colorbar.Menu exposing
 
 import Action exposing (Action(..))
 import Api.Enum.Kind exposing (Kind(..))
-import ColorSchemeRequest exposing (ColorScheme, ColorSchemeName)
+import ColorScheme.Colors exposing (Colors)
+import ColorScheme.Name exposing (Name)
+import ColorScheme.Order exposing (Order)
+import ColorScheme.Rank exposing (Rank)
+import ColorScheme.Request exposing (ColorScheme)
+import ColorScheme.Select exposing (Selected, getName, getRank)
 import Colorbar
-import DataVar.Select exposing (Select)
 import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
@@ -47,88 +49,31 @@ type alias GraphqlResult a =
 
 
 
--- COLOR ORDER
-
-
-type Order
-    = LeftToRight
-    | RightToLeft
-
-
-leftToRight : Order
-leftToRight =
-    LeftToRight
-
-
-orderFromBool : Bool -> Order
-orderFromBool flag =
-    if flag then
-        RightToLeft
-
-    else
-        LeftToRight
-
-
-orderIsFlipped : Order -> Bool
-orderIsFlipped order =
-    case order of
-        LeftToRight ->
-            False
-
-        RightToLeft ->
-            True
-
-
-
 -- UPDATE
 
 
 type alias Model a =
     { a
         | baseURL : String
-        , colorScheme : Maybe Scheme
+
+        -- All ColorSchemes
         , colorSchemes : Request (List ColorScheme)
-        , colorSchemeKind : Maybe Api.Enum.Kind.Kind
+
+        -- Intermediate choices
         , colorSchemeRanks : List Int
-        , colorSchemeRank : Maybe Int
+
+        -- Selected scheme
+        , colorSchemeSelected : Selected
         , colorSchemeOrder : Order
+        , colorSchemeColors : Maybe Colors
     }
-
-
-type alias Scheme =
-    { name : String
-    , colors : List String
-    }
-
-
-encodeScheme : Scheme -> String
-encodeScheme scheme =
-    Json.Encode.encode 0
-        (Json.Encode.object
-            [ ( "name", Json.Encode.string scheme.name )
-            , ( "colors", Json.Encode.list Json.Encode.string scheme.colors )
-            ]
-        )
-
-
-decodeScheme : String -> Result Json.Decode.Error Scheme
-decodeScheme =
-    Json.Decode.decodeString decoder
-
-
-decoder : Decoder Scheme
-decoder =
-    Json.Decode.map2 Scheme
-        (Json.Decode.field "name" Json.Decode.string)
-        (Json.Decode.field "colors" (Json.Decode.list Json.Decode.string))
 
 
 type Msg
     = GotKind (Maybe Api.Enum.Kind.Kind)
-    | GotRank Int
+    | GotRank Rank
+    | SetName Name
     | GotResponse (GraphqlResult (List ColorScheme))
-    | GotColorSchemeNames (GraphqlResult (List ColorSchemeName))
-    | SetColorScheme (Result Json.Decode.Error Scheme)
     | SetOrder Order
 
 
@@ -140,14 +85,18 @@ update msg model =
                 Just kind ->
                     let
                         query =
-                            ColorSchemeRequest.queryByKind kind
+                            ColorScheme.Request.queryByKind kind
 
                         cmd =
                             graphqlRequest model.baseURL query GotResponse
+
+                        selected =
+                            model.colorSchemeSelected
+                                |> ColorScheme.Select.setKind kind
                     in
                     ( { model
-                        | colorSchemeKind = Just kind
-                        , colorSchemes = Loading
+                        | colorSchemes = Loading
+                        , colorSchemeSelected = selected
                       }
                     , cmd
                     )
@@ -156,30 +105,26 @@ update msg model =
                     ( model, Cmd.none )
 
         GotRank rank ->
-            case model.colorSchemes of
-                Success colorSchemes ->
-                    case model.colorScheme of
-                        Nothing ->
-                            ( { model | colorSchemeRank = Just rank }
-                            , Cmd.none
-                            )
+            let
+                selected =
+                    model.colorSchemeSelected
+                        |> ColorScheme.Select.setRank rank
 
-                        Just scheme ->
-                            let
-                                maybeScheme =
-                                    parseScheme colorSchemes scheme.name rank
-                            in
-                            ( { model
-                                | colorSchemeRank = Just rank
-                                , colorScheme = maybeScheme
-                              }
-                            , setColorsCmd maybeScheme
-                            )
+                maybeColors =
+                    getColors_ selected model.colorSchemes
+                        |> Maybe.map ColorScheme.Colors.fromList
 
-                _ ->
-                    ( { model | colorSchemeRank = Just rank }
-                    , Cmd.none
-                    )
+                newModel =
+                    { model
+                        | colorSchemeSelected = selected
+                    }
+            in
+            case maybeColors of
+                Nothing ->
+                    ( newModel, Cmd.none )
+
+                Just colors ->
+                    ( { newModel | colorSchemeColors = Just colors }, Cmd.none )
 
         GotResponse result ->
             case result of
@@ -194,60 +139,78 @@ update msg model =
                 _ ->
                     ( { model | colorSchemes = Failure }, Cmd.none )
 
-        -- TODO implement update
-        GotColorSchemeNames _ ->
-            ( model, Cmd.none )
+        SetName name ->
+            let
+                selected =
+                    model.colorSchemeSelected
+                        |> ColorScheme.Select.setName name
 
-        -- TODO implement update
-        SetColorScheme result ->
-            case result of
-                Ok scheme ->
-                    let
-                        cmd =
-                            setColorsCmd (Just scheme)
-                    in
-                    ( { model | colorScheme = Just scheme }, cmd )
+                maybeColors =
+                    getColors_ selected model.colorSchemes
+                        |> Maybe.map ColorScheme.Colors.fromList
 
-                Err _ ->
-                    ( model, Cmd.none )
+                newModel =
+                    { model
+                        | colorSchemeSelected = selected
+                    }
+            in
+            case maybeColors of
+                Nothing ->
+                    ( newModel, Cmd.none )
+
+                Just colors ->
+                    ( { newModel | colorSchemeColors = Just colors }, Cmd.none )
 
         SetOrder order ->
-            case model.colorScheme of
+            let
+                selected =
+                    model.colorSchemeSelected
+
+                maybeColors =
+                    getColors_ selected model.colorSchemes
+                        |> Maybe.map ColorScheme.Colors.fromList
+
+                newModel =
+                    { model
+                        | colorSchemeOrder = order
+                    }
+            in
+            case maybeColors of
                 Nothing ->
-                    ( { model | colorSchemeOrder = order }
-                    , Cmd.none
-                    )
+                    ( newModel, Cmd.none )
 
-                Just scheme ->
-                    ( { model | colorSchemeOrder = order }
-                    , setColorsCmd (Just (applyOrder order scheme))
-                    )
-
-
-applyOrder : Order -> Scheme -> Scheme
-applyOrder order scheme =
-    case order of
-        LeftToRight ->
-            scheme
-
-        RightToLeft ->
-            { scheme | colors = List.reverse scheme.colors }
+                Just colors ->
+                    let
+                        newColors =
+                            ColorScheme.Order.arrange
+                                order
+                                (ColorScheme.Colors.toList colors)
+                                |> ColorScheme.Colors.fromList
+                    in
+                    ( { newModel | colorSchemeColors = Just newColors }, Cmd.none )
 
 
-parseScheme : List ColorScheme -> String -> Int -> Maybe Scheme
+parseScheme : List ColorScheme -> Name -> Rank -> Maybe Swatch
 parseScheme schemes name rank =
+    let
+        str =
+            ColorScheme.Name.toString name
+    in
     schemes
-        |> List.filter (\s -> s.name == name)
+        |> List.filter (\s -> s.name == str)
         |> List.head
         |> Maybe.andThen (pluckRank rank)
 
 
-pluckRank : Int -> ColorScheme -> Maybe Scheme
+pluckRank : Rank -> ColorScheme -> Maybe Swatch
 pluckRank rank colorScheme =
     let
+        n =
+            ColorScheme.Rank.toInt rank
+
         maybeColors =
             colorScheme.palettes
-                |> List.filter (\p -> p.rank == rank)
+                |> List.filter (\p -> p.rank == n)
                 |> List.map .rgbs
                 |> List.head
     in
@@ -259,16 +222,11 @@ pluckRank rank colorScheme =
             Just { name = colorScheme.name, colors = colors }
 
 
-setColorsCmd : Maybe Scheme -> Cmd Msg
-setColorsCmd maybeScheme =
-    case maybeScheme of
-        Nothing ->
-            Cmd.none
-
-        Just scheme ->
-            SetColors scheme.colors
-                |> Action.encode
-                |> sendAction
+setColorsCmd : List String -> Cmd Msg
+setColorsCmd colors =
+    SetColors colors
+        |> Action.encode
+        |> sendAction
 
 
 toRanks : List ColorScheme -> List Int
@@ -289,17 +247,22 @@ view : Model a -> Html Msg
 view model =
     case model.colorSchemes of
         Success colorSchemes ->
+            let
+                rank =
+                    getRank model.colorSchemeSelected
+            in
             div
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                [ viewKindRadioButtons model
+                [ viewPreview model
+                , viewKindRadioButtons model
                 , viewRankDropdown model
                 , viewOrderButton model.colorSchemeOrder
-                , viewColorSchemes model.colorScheme
-                    model.colorSchemeRank
+                , viewColorSchemes model.colorSchemeSelected
                     model.colorSchemeOrder
                     colorSchemes
+                , viewSelected model.colorSchemeSelected
                 ]
 
         NotStarted ->
@@ -307,7 +270,8 @@ view model =
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                [ viewKindRadioButtons model
+                [ viewPreview model
+                , viewKindRadioButtons model
                 ]
 
         Loading ->
@@ -315,7 +279,8 @@ view model =
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                [ viewKindRadioButtons model
+                [ viewPreview model
+                , viewKindRadioButtons model
                 , div [] [ div [ class "spinner" ] [] ]
                 ]
 
@@ -324,9 +289,65 @@ view model =
                 [ style "display" "grid"
                 , style "grid-row-gap" "0.5em"
                 ]
-                [ viewKindRadioButtons model
+                [ viewPreview model
+                , viewKindRadioButtons model
                 , div [] [ text "Could not load color schemes" ]
                 ]
+
+
+getColors_ : Selected -> Request (List ColorScheme) -> Maybe (List String)
+getColors_ selected request =
+    case request of
+        Success colorschemes ->
+            searchColors selected colorschemes
+
+        _ ->
+            Nothing
+
+
+searchColors : Selected -> List ColorScheme -> Maybe (List String)
+searchColors selected colorschemes =
+    case ( getRank selected, getName selected ) of
+        ( Just rank, Just name ) ->
+            let
+                n =
+                    ColorScheme.Rank.toInt rank
+            in
+            colorschemes
+                |> List.filter (hasName name)
+                |> List.filter (hasRank rank)
+                |> List.head
+                |> Maybe.map .palettes
+                |> Maybe.map
+                    (List.filter (\p -> p.rank == n))
+                |> Maybe.map
+                    (List.map .rgbs)
+                |> Maybe.andThen
+                    List.head
+
+        _ ->
+            Nothing
+
+
+viewPreview : Model a -> Html Msg
+viewPreview model =
+    let
+        palette =
+            model.colorSchemeColors
+                |> Maybe.map ColorScheme.Colors.toList
+                |> Maybe.withDefault [ "#FFFFFF", "#000000" ]
+    in
+    Colorbar.view
+        { high = 1
+        , low = 0
+        , palette = palette
+        , title = "Preview colorbar"
+        }
+
+
+viewSelected : ColorScheme.Select.Selected -> Html Msg
+viewSelected selected =
+    div [] [ text (ColorScheme.Select.toString selected) ]
 
 
 viewOrderButton : Order -> Html Msg
@@ -336,7 +357,7 @@ viewOrderButton order =
             "reverse-btn"
 
         toMsg =
-            SetOrder << orderFromBool
+            SetOrder << ColorScheme.Order.fromBool
     in
     div []
         [ input
@@ -344,7 +365,7 @@ viewOrderButton order =
             , class "toggle"
             , id buttonId
             , onCheck toMsg
-            , checked (orderIsFlipped order)
+            , checked (ColorScheme.Order.isRightToLeft order)
             ]
             []
         , label
@@ -360,11 +381,6 @@ viewKindRadioButtons model =
     let
         toMsg =
             GotKind << Api.Enum.Kind.fromString
-
-        kind =
-            model.colorSchemeKind
-                |> Maybe.map Api.Enum.Kind.toString
-                |> Maybe.withDefault "???"
     in
     div []
         [ div [ style "font-size" "0.9em" ]
@@ -390,14 +406,25 @@ viewKindRadioButtons model =
 
 viewRankDropdown : Model a -> Html Msg
 viewRankDropdown model =
+    let
+        maybeRank =
+            getRank model.colorSchemeSelected
+
+        name =
+            maybeRank
+                |> Maybe.map ColorScheme.Rank.toString
+                |> Maybe.withDefault "3"
+
+        toMsg =
+            GotRank
+                << Maybe.withDefault (ColorScheme.Rank.fromInt 3)
+                << ColorScheme.Rank.fromString
+    in
     dropdown []
         { names = List.map String.fromInt model.colorSchemeRanks
-        , toMsg = GotRank << Maybe.withDefault 3 << String.toInt
+        , toMsg = toMsg
         , label = "Select number of colors"
-        , name =
-            model.colorSchemeRank
-                |> Maybe.withDefault 3
-                |> String.fromInt
+        , name = name
         }
 
 
@@ -406,21 +433,28 @@ viewRankDropdown model =
     Helper view function to debug radio buttons
 
 -}
-viewSelectColorSchemeName : Maybe String -> Html Msg
+viewSelectColorSchemeName : Maybe Name -> Html Msg
 viewSelectColorSchemeName maybeName =
     case maybeName of
         Nothing ->
             div [] [ text "Select color scheme" ]
 
-        Just str ->
+        Just name ->
+            let
+                str =
+                    ColorScheme.Name.toString name
+            in
             div [] [ text ("Selected scheme: " ++ str) ]
 
 
-viewColorSchemes : Maybe Scheme -> Maybe Int -> Order -> List ColorScheme -> Html Msg
-viewColorSchemes maybeScheme maybeRank order schemes =
+viewColorSchemes : Selected -> Order -> List ColorScheme -> Html Msg
+viewColorSchemes selected order schemes =
     let
+        maybeRank =
+            getRank selected
+
         maybeName =
-            Maybe.map .name maybeScheme
+            getName selected
     in
     case maybeRank of
         Nothing ->
@@ -436,7 +470,7 @@ viewColorSchemes maybeScheme maybeRank order schemes =
                         |> List.map (flipSwatch order)
 
                 toMsg =
-                    SetColorScheme << decodeScheme
+                    SetName << ColorScheme.Name.fromString
             in
             div []
                 [ div [ style "font-size" "0.9em" ]
@@ -458,28 +492,24 @@ type alias Swatch =
 
 flipSwatch : Order -> Swatch -> Swatch
 flipSwatch order swatch =
-    case order of
-        LeftToRight ->
-            swatch
-
-        RightToLeft ->
-            { swatch | colors = List.reverse swatch.colors }
+    { swatch | colors = ColorScheme.Order.arrange order swatch.colors }
 
 
-viewSwatchButton : Maybe String -> (String -> Msg) -> Swatch -> Html Msg
+viewSwatchButton : Maybe Name -> (String -> Msg) -> Swatch -> Html Msg
 viewSwatchButton maybeName toMsg swatch =
     let
         name =
             "colors"
 
         swatchId =
-            encodeScheme { name = swatch.name, colors = swatch.colors }
+            swatch.name
 
         swatchValue =
-            encodeScheme { name = swatch.name, colors = swatch.colors }
+            swatch.name
 
         isChecked =
             maybeName
+                |> Maybe.map ColorScheme.Name.toString
                 |> Maybe.map (\n -> n == swatch.name)
                 |> Maybe.withDefault False
     in
@@ -504,20 +534,32 @@ viewSwatchButton maybeName toMsg swatch =
         ]
 
 
-hasRank : Int -> ColorScheme -> Bool
+hasRank : Rank -> ColorScheme -> Bool
 hasRank rank scheme =
+    let
+        n =
+            ColorScheme.Rank.toInt rank
+    in
     scheme.palettes
-        |> List.filter (\p -> p.rank == rank)
+        |> List.filter (\p -> p.rank == n)
         |> List.isEmpty
         |> not
 
 
-extractSwatch : Int -> ColorScheme -> Maybe Swatch
+hasName : Name -> ColorScheme -> Bool
+hasName name scheme =
+    ColorScheme.Name.fromString scheme.name == name
+
+
+extractSwatch : Rank -> ColorScheme -> Maybe Swatch
 extractSwatch rank scheme =
     let
+        n =
+            ColorScheme.Rank.toInt rank
+
         maybePalette =
             scheme.palettes
-                |> List.filter (\p -> p.rank == rank)
+                |> List.filter (\p -> p.rank == n)
                 |> List.head
     in
     case maybePalette of
